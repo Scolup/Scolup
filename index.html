@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <!-- iOS needs its own meta tags to install to the home screen. The status
+         bar stays solid because the app only pads for the bottom inset. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Scolup" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Scolup, ton assistant scolaire." />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#090b0c" media="(prefers-color-scheme: dark)" />
+    <link rel="preconnect" href="https://proxy.api.scolup.com" crossorigin />
+    <link rel="dns-prefetch" href="https://proxy.api.scolup.com" />
+    <title>Scolup</title>
+    <script>
+      try {
+        var t = JSON.parse(localStorage.getItem("scolup:theme") || "null");
+        if (t !== "dark" && t !== "light") {
+          t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.classList.add(t);
+      } catch (e) {}
+    </script>
+    <style>
+      /* Inlined on purpose: the CSS bundle only arrives with the JS, which is
+         exactly the blank screen this splash covers. */
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-items: center;
+        background: #fff;
+      }
+      #splash img {
+        width: 6rem;
+        height: 6rem;
+      }
+      .dark #splash {
+        /* Same token as --background in dark mode (src/index.css). */
+        background: oklch(0.148 0.004 228.8);
+      }
+      /* loader.svg has no fill, so it paints black and needs inverting. */
+      .dark #splash img {
+        filter: invert(1);
+      }
+      #splash.is-leaving {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 200ms ease-out;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="splash">
+      <img src="/logos/loader.svg" alt="" aria-hidden="true" />
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

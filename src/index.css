@@ -1,0 +1,246 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.148 0.004 228.8);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.148 0.004 228.8);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.148 0.004 228.8);
+  --primary: oklch(0.218 0.008 223.9);
+  --primary-foreground: oklch(0.987 0.002 197.1);
+  --secondary: oklch(0.963 0.002 197.1);
+  --secondary-foreground: oklch(0.218 0.008 223.9);
+  --muted: oklch(0.963 0.002 197.1);
+  --muted-foreground: oklch(0.56 0.021 213.5);
+  --accent: oklch(0.963 0.002 197.1);
+  --accent-foreground: oklch(0.218 0.008 223.9);
+  --destructive: oklch(0.577 0.245 27.325);
+  --primary-text: color-mix(in srgb, var(--primary) 60%, black);
+  --now: var(--color-orange-700);
+  --unread: var(--color-violet-600);
+  --done: var(--color-emerald-700);
+  --border: oklch(0.925 0.005 214.3);
+  --input: oklch(0.925 0.005 214.3);
+  --ring: oklch(0.723 0.014 214.4);
+  --chart-1: oklch(0.872 0.007 219.6);
+  --chart-2: oklch(0.56 0.021 213.5);
+  --chart-3: oklch(0.45 0.017 213.2);
+  --chart-4: oklch(0.378 0.015 216);
+  --chart-5: oklch(0.275 0.011 216.9);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.987 0.002 197.1);
+  --sidebar-foreground: oklch(0.148 0.004 228.8);
+  --sidebar-primary: oklch(0.218 0.008 223.9);
+  --sidebar-primary-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-accent: oklch(0.963 0.002 197.1);
+  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+  --sidebar-border: oklch(0.925 0.005 214.3);
+  --sidebar-ring: oklch(0.723 0.014 214.4);
+  --destructive-foreground: var(--color-red-700);
+  --info: var(--color-blue-500);
+  --info-foreground: var(--color-blue-700);
+  --success: var(--color-emerald-500);
+  --success-foreground: var(--color-emerald-700);
+  --warning: var(--color-amber-500);
+  --warning-foreground: var(--color-amber-700);
+}
+
+.dark {
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.218 0.008 223.9);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --popover: oklch(0.218 0.008 223.9);
+  --popover-foreground: oklch(0.987 0.002 197.1);
+  --primary: oklch(0.925 0.005 214.3);
+  --primary-foreground: oklch(0.218 0.008 223.9);
+  --secondary: oklch(0.275 0.011 216.9);
+  --secondary-foreground: oklch(0.987 0.002 197.1);
+  --muted: oklch(0.275 0.011 216.9);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --accent: oklch(0.275 0.011 216.9);
+  --accent-foreground: oklch(0.987 0.002 197.1);
+  --destructive: oklch(0.704 0.191 22.216);
+  --primary-text: color-mix(in srgb, var(--primary) 78%, white);
+  --now: var(--color-orange-400);
+  --unread: var(--color-violet-400);
+  --done: var(--color-emerald-400);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.56 0.021 213.5);
+  --chart-1: oklch(0.872 0.007 219.6);
+  --chart-2: oklch(0.56 0.021 213.5);
+  --chart-3: oklch(0.45 0.017 213.2);
+  --chart-4: oklch(0.378 0.015 216);
+  --chart-5: oklch(0.275 0.011 216.9);
+  --sidebar: oklch(0.218 0.008 223.9);
+  --sidebar-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-accent: oklch(0.275 0.011 216.9);
+  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.56 0.021 213.5);
+  --destructive-foreground: var(--color-red-400);
+  --info: var(--color-blue-500);
+  --info-foreground: var(--color-blue-400);
+  --success: var(--color-emerald-500);
+  --success-foreground: var(--color-emerald-400);
+  --warning: var(--color-amber-500);
+  --warning-foreground: var(--color-amber-400);
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", sans-serif;
+  --font-heading: "Geist Variable", sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-text: var(--primary-text);
+  --color-now: var(--now);
+  --color-unread: var(--unread);
+  --color-done: var(--done);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning: var(--warning);
+  --color-success-foreground: var(--success-foreground);
+  --color-success: var(--success);
+  --color-info-foreground: var(--info-foreground);
+  --color-info: var(--info);
+  --color-destructive-foreground: var(--destructive-foreground);
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes progress-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.4);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Tactile uniquement : aucun contour de focus ni flash au toucher dans les
+   graphiques. Le wrapper recharts prend le focus via accessibilityLayer et
+   chaque navigateur tactile l'habille à sa façon (contour blanc, halo gris)
+   sur un nœud imprévisible : on coupe tout, quel que soit l'élément.
+   Le clavier (hover: hover) garde ses anneaux d'accessibilité. */
+@media (hover: none) {
+  [data-slot="chart"] *,
+  [data-slot="chart"] *:focus,
+  [data-slot="chart"] *:focus-visible {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image: linear-gradient(
+      0deg,
+      var(--accent-bg-overlay, transparent) 0%,
+      var(--accent-bg-overlay, transparent) 100%
+    );
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+}

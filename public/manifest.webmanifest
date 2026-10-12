@@ -1,0 +1,68 @@
+{
+  "name": "Scolup, ton assistant scolaire",
+  "short_name": "Scolup",
+  "description": "Tes notes, ton agenda, tes devoirs et tes messages, au même endroit.",
+  "lang": "fr",
+  "dir": "ltr",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Devoirs",
+      "url": "/homework",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Notes",
+      "url": "/grades",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Absences",
+      "url": "/absences",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
