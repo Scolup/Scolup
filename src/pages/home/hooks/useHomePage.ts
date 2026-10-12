@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react"
 import { useLocation, useNavigate } from "react-router"
-import { ld } from "@/services/linkdirecte"
+import { ld } from "@/services/lowdirecte"
 import { useAsync } from "@/hooks/use-async"
 import {
   loadProfile,

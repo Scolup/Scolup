@@ -377,7 +377,7 @@ function signatureHtml(): string {
 export function withScolupSignature(content: string): string {
   const clean = content.trim()
   if (!clean) return clean
-  // L'encodage des accents en entités vit dans Linkdirecte (sendMessage) :
+  // L'encodage des accents en entités vit dans Lowdirecte (sendMessage) :
   // tous ses consommateurs en profitent, pas seulement Scolup.
   const body = escapeHtml(clean).replace(/\n/g, "<br>")
   return `${body}${signatureHtml()}`

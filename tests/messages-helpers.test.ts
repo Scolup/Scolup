@@ -30,7 +30,7 @@ describe("withScolupSignature", () => {
     expect(html).not.toContain("<script>alert")
   })
 
-  test("accents transmis tels quels (Linkdirecte les encode à l'envoi)", () => {
+  test("accents transmis tels quels (Lowdirecte les encode à l'envoi)", () => {
     const html = withScolupSignature("à moi et Paul, café")
     expect(html).toContain("à moi et Paul, café")
   })

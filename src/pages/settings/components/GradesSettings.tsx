@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ld } from "@/services/linkdirecte"
+import { ld } from "@/services/lowdirecte"
 import { getSetting, setSetting } from "@/services/storage"
 import { errorMessage } from "@/services/errors"
 import { useAsync } from "@/hooks/use-async"

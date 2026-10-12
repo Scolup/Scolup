@@ -57,7 +57,7 @@ export function Privacy() {
 
       <h2>Transparence et code source</h2>
       <p>
-        Scolup, Linkdirecte et Procsy sont open source sous licence AGPL-3.0 :
+        Scolup, Lowdirecte et Procsy sont open source sous licence AGPL-3.0 :
       </p>
       <OpenSourceRepos />
     </LegalPage>

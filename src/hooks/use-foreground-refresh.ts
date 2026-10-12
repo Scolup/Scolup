@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react"
-import { ld } from "@/services/linkdirecte"
+import { ld } from "@/services/lowdirecte"
 
 // Seuil minimal entre deux rafraîchissements pour éviter les tempêtes.
 const REFRESH_MIN_MS = 60_000
@@ -18,7 +18,7 @@ function shouldRefresh(): boolean {
 }
 
 // Refetch doux des ressources visibles, sans recharger la page. Utilise le
-// poll Linkdirecte existant (`getAll`) : aucune nouvelle requête ajoutée,
+// poll Lowdirecte existant (`getAll`) : aucune nouvelle requête ajoutée,
 // aucune logique de cache modifiée. Les écrans montés se mettent à jour via
 // `useLiveRefresh`.
 export function refreshVisibleResources(): void {

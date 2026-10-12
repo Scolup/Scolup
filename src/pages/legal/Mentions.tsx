@@ -44,7 +44,7 @@ export function Mentions() {
 
       <h2>Propriété intellectuelle</h2>
       <p>
-        Scolup, Linkdirecte et Procsy sont des logiciels libres distribués sous
+        Scolup, Lowdirecte et Procsy sont des logiciels libres distribués sous
         licence <strong>AGPL-3.0</strong>. Vous pouvez lire, modifier et
         redistribuer leur code, à condition de publier leurs modifications sous
         la même licence.

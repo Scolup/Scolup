@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react"
 import { useNavigate } from "react-router"
-import { ld } from "@/services/linkdirecte"
+import { ld } from "@/services/lowdirecte"
 import { errorMessage } from "@/services/errors"
 import { useAsync } from "@/hooks/use-async"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"

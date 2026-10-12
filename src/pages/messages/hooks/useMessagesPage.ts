@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
-import { ld } from "@/services/linkdirecte"
+import { ld } from "@/services/lowdirecte"
 import { errorMessage } from "@/services/errors"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import {

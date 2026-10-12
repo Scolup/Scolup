@@ -40,7 +40,7 @@ export function Terms() {
 
       <h2>Logiciel libre</h2>
       <p>
-        Scolup, Linkdirecte (le kit logiciel qui dialogue avec EcoleDirecte) et
+        Scolup, Lowdirecte (le kit logiciel qui dialogue avec EcoleDirecte) et
         Procsy (le relais technique) sont des logiciels libres distribués sous
         licence <strong>AGPL-3.0</strong> : vous pouvez lire, étudier et
         vérifier l'intégralité du code qui traite vos données.

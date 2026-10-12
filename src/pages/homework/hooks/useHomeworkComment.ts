@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
-import { ld } from "@/services/linkdirecte"
+import { ld } from "@/services/lowdirecte"
 import { errorMessage } from "@/services/errors"
 import { accountDisplayName } from "@/services/profile"
 import { appendComment } from "../helpers"

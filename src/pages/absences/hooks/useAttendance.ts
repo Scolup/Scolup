@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ld } from "@/services/linkdirecte"
+import { ld } from "@/services/lowdirecte"
 import { errorMessage } from "@/services/errors"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
 import {

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react"
-import { ld } from "@/services/linkdirecte"
-import type { Resource } from "linkdirecte"
+import { ld } from "@/services/lowdirecte"
+import type { Resource } from "lowdirecte"
 
 /**
- * Counts Linkdirecte cache writes for `resource`.
+ * Counts Lowdirecte cache writes for `resource`.
  *
- * Linkdirecte already refetches every resource on a timer, so a mounted screen
+ * Lowdirecte already refetches every resource on a timer, so a mounted screen
  * only has to learn that a poll landed. It fires on a changed payload only,
  * never on an identical one, so an idle app costs no re-renders.
  */

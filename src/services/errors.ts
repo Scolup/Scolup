@@ -1,4 +1,4 @@
-import { getFriendlyErrorMessage } from "linkdirecte"
+import { getFriendlyErrorMessage } from "lowdirecte"
 
 export function errorMessage(err: unknown, fallback: string): string {
   const code = (err as { code?: string } | null)?.code

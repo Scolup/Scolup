@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getFriendlyErrorMessage } from "linkdirecte"
-import { ld } from "@/services/linkdirecte"
+import { getFriendlyErrorMessage } from "lowdirecte"
+import { ld } from "@/services/lowdirecte"
 import { toDayKey } from "@/services/dates"
 import type { Course } from "../helpers"
 import type { HomeworkDocument } from "@/pages/homework/helpers"

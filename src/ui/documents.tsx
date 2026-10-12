@@ -8,7 +8,7 @@ import {
   Download01Icon,
   LoaderCircleIcon,
 } from "@hugeicons/core-free-icons"
-import { ld } from "@/services/linkdirecte"
+import { ld } from "@/services/lowdirecte"
 import { cn } from "@/lib/utils"
 import { errorMessage } from "@/services/errors"
 import {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react"
-import type { LoginChallenge } from "linkdirecte"
-import { ld } from "@/services/linkdirecte"
+import type { LoginChallenge } from "lowdirecte"
+import { ld } from "@/services/lowdirecte"
 import { errorMessage } from "@/services/errors"
 type LoginPhase = "credentials" | "2fa"
 

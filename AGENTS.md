@@ -9,7 +9,7 @@ Scolup is an alternative front-end for EcoleDirecte (French school portal): grad
 - **Stack:** React 19 + Vite + TypeScript (strict) + Tailwind v4 + react-router. Node >= 22.
 - **Mobile-first.** It needs to be thought with mobile in mind (with PWA)
 - **UI:** shadcn/ui (style `base-rhea`, Base UI primitives, `hugeicons` icons, `motion` for animation, `vaul` drawers, `recharts` charts). Extra registry: `@shark` (`https://shark.vini.one/r/{name}.json`).
-- **Data:** EcoleDirecte data goes through **Linkdirecte** (docs: https://github.com/Scolup/Linkdirecte/wiki), which calls the **Procsy** proxy (Cloudflare Worker, needed because of CORS and the required user agent). Check the wiki before writing any new data call or mapping.
+- **Data:** EcoleDirecte data goes through **Lowdirecte** (docs: https://github.com/Scolup/Lowdirecte/wiki), which calls the **Procsy** proxy (Cloudflare Worker, needed because of CORS and the required user agent). Check the wiki before writing any new data call or mapping.
 
 ## 2. Commands
 
@@ -43,7 +43,7 @@ src/
     helpers.ts                   pure logic (this is what gets unit-tested)
   components/ui/                 shadcn components (+ ui/shark/ from the registry)
   hooks/                         shared hooks (use-async, use-media-query, ...)
-  services/                      linkdirecte.ts, storage.ts, errors.ts, haptics.ts,
+  services/                      lowdirecte.ts, storage.ts, errors.ts, haptics.ts,
                                  dates.ts, subjects.ts, ...
   lib/utils.ts                   cn()
 tests/                           bun:test files, e.g. grades-helpers.test.ts
@@ -68,10 +68,10 @@ Follow the existing split when adding a page: data hook, page-state hook, pure `
 - Design guidance lives in `.agents/skills/` (`frontend-design`, `impeccable`, `microinteractions`, `shadcn`). Read the relevant one for UI work.
 
 ### Data, storage and errors
-- All EcoleDirecte access goes through the shared `ld` client in `src/services/linkdirecte.ts`. Don't call EcoleDirecte or the proxy directly.
+- All EcoleDirecte access goes through the shared `ld` client in `src/services/lowdirecte.ts`. Don't call EcoleDirecte or the proxy directly.
 - Async data in hooks: use `useAsync` from `@/hooks/use-async` (handles cancellation) rather than hand-rolled effects.
 - Persistent app data: IndexedDB via `src/services/storage.ts` (`idb`). Changing the schema means bumping the DB version and handling the upgrade path in `getDB()`.
-- Show errors to users with `errorMessage(err, fallback)` from `src/services/errors.ts` so Linkdirecte error codes become friendly French messages.
+- Show errors to users with `errorMessage(err, fallback)` from `src/services/errors.ts` so Lowdirecte error codes become friendly French messages.
 - Credentials, tokens and student data are sensitive: never log them, commit them, or put them in URLs.
 
 ### TypeScript

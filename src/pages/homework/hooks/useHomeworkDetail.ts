@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ld } from "@/services/linkdirecte"
+import { ld } from "@/services/lowdirecte"
 import { errorMessage } from "@/services/errors"
 import { mergeDayDetails, normalizeCalendar } from "../helpers"
 import type { Assignment, AssignmentsSetter } from "../helpers"
