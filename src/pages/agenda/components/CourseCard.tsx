@@ -167,13 +167,11 @@ export function CourseCard({
   course,
   now,
   isNext,
-  nowOffset,
   onSelect,
 }: {
   course: Course
   now: Date | null
   isNext: boolean
-  nowOffset?: number | null
   onSelect: (course: Course) => void
 }) {
   const { display, color } = useSubjectDisplay(course.subjectCode, course.title)
@@ -193,22 +191,9 @@ export function CourseCard({
         "flex min-w-0 items-stretch gap-3 rounded-2xl border p-3.5 text-left outline-none",
         "transition duration-200 active:scale-[0.99]",
         "hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring/50",
-        nowOffset != null && "relative",
         card.surface
       )}
     >
-      {nowOffset != null && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-4"
-          style={{ top: `${nowOffset * 100}%` }}
-        >
-          <span className="flex items-center gap-1">
-            <span className="size-2 shrink-0 rounded-full bg-now" />
-            <span className="min-w-0 flex-1 border-t-2 border-now/80" />
-          </span>
-        </span>
-      )}
       <span
         aria-hidden="true"
         className={cn("w-1.5 shrink-0 self-stretch rounded-full", card.stripe)}

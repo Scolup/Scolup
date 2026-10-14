@@ -4,7 +4,6 @@ import {
   buildGaps,
   concurrentGroups,
   groupColumns,
-  isOngoing,
   nextCourse,
   SEPARATOR_MIN_MINUTES,
   type Course,
@@ -34,19 +33,6 @@ function TimeSpacer({ minutes }: { minutes: number }) {
   return <div aria-hidden="true" style={{ height: minutes * PX_PER_MIN }} />
 }
 
-function NowMarker({ now }: { now: Date }) {
-  return (
-    <div className="flex w-full items-center gap-2.5" aria-hidden="true">
-      <span className="w-14 shrink-0 text-center text-[11px] font-bold text-now tabular-nums">
-        {formatTime(now)}
-      </span>
-      <span className="relative min-w-0 flex-1 border-t-2 border-now/80">
-        <span className="absolute -top-[5px] -left-0.5 size-2 rounded-full bg-now" />
-      </span>
-    </div>
-  )
-}
-
 function longGaps(courses: TimedCourse[]): Map<number, Gap> {
   return new Map(
     buildGaps(courses)
@@ -59,13 +45,11 @@ function CourseCluster({
   courses,
   now,
   nextKey,
-  ongoingKey,
   onSelect,
 }: {
   courses: TimedCourse[]
   now: Date | null
   nextKey: string | null
-  ongoingKey: string | null
   onSelect: (course: Course) => void
 }) {
   const columns = groupColumns(courses)
@@ -96,19 +80,6 @@ function CourseCluster({
                     ? minutesOfDay(course.start) -
                       minutesOfDay(column[i - 1].end)
                     : 0
-                // Position of "now" inside the ongoing course, as a 0..1
-                // fraction of its duration. Rendered as a line over the card.
-                const nowOffset =
-                  now && course.key === ongoingKey
-                    ? Math.min(
-                        0.94,
-                        Math.max(
-                          0.06,
-                          (now.getTime() - course.start.getTime()) /
-                            (course.end.getTime() - course.start.getTime())
-                        )
-                      )
-                    : null
                 return (
                   <Fragment key={course.key}>
                     {pause && <GapSeparator bare gap={pause} />}
@@ -117,7 +88,6 @@ function CourseCluster({
                       course={course}
                       now={now}
                       isNext={course.key === nextKey}
-                      nowOffset={nowOffset}
                       onSelect={onSelect}
                     />
                   </Fragment>
@@ -145,26 +115,13 @@ export function DaySchedule({
   const timed = groups.flat()
   const nextKey = now ? (nextCourse(timed, now)?.key ?? null) : null
   const separators = longGaps(timed)
-  // When a course is ongoing, the line lives inside its card (see nowOffset).
-  // Otherwise it sits between two courses, before the next one ending after now.
-  const ongoingKey = now
-    ? (timed.find((course) => isOngoing(course, now))?.key ?? null)
-    : null
-  const markerIndex =
-    now && !ongoingKey ? timed.findIndex((course) => course.end > now) : -1
 
   return (
     <ol className="flex flex-col gap-1.5">
       {groups.map((group) => {
         const separator = separators.get(minutesOfDay(group[0].start))
-        const marked = markerIndex >= 0 && group.includes(timed[markerIndex])
         return (
           <Fragment key={group[0].key}>
-            {marked && now && (
-              <li>
-                <NowMarker now={now} />
-              </li>
-            )}
             {separator && (
               <li>
                 <GapSeparator gap={separator} />
@@ -175,7 +132,6 @@ export function DaySchedule({
                 courses={group}
                 now={now}
                 nextKey={nextKey}
-                ongoingKey={ongoingKey}
                 onSelect={onSelect}
               />
             </li>
