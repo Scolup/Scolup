@@ -3,7 +3,7 @@ import { ld } from "@/services/lowdirecte"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticLight } from "@/services/haptics"
 
-import { normalizeCalendar } from "../helpers"
+import { normalizeCalendar, preserveEnrichedDetails } from "../helpers"
 import { ensureSubjects, resolveSubjectColor } from "@/services/subjects"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
 import type { Assignment } from "../helpers"
@@ -47,7 +47,9 @@ export function useHomework() {
         }))
         if (cancelled) return
         loaded.current = true
-        setAssignments(colored)
+        // ponytail: the index is light (no contenu) and a background poll
+        // would otherwise wipe details merged by getHomeworkForDate.
+        setAssignments((prev) => preserveEnrichedDetails(prev, colored))
         setError(null)
         setLoading(false)
       } catch (err) {

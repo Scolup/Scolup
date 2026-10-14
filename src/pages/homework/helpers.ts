@@ -235,6 +235,30 @@ export function mergeDayDetails(
   })
 }
 
+export function preserveEnrichedDetails(
+  prev: Assignment[],
+  fresh: Assignment[]
+): Assignment[] {
+  if (prev.length === 0) return fresh
+  const prevByKey = new Map(prev.map((a) => [a.key, a]))
+  return fresh.map((item) => {
+    const old = prevByKey.get(item.key)
+    if (!old || old.content === undefined || item.content !== undefined)
+      return item
+    const localOnly = old.comments.filter(
+      (c) => !item.comments.some((freshC) => freshC.id === c.id)
+    )
+    return {
+      ...item,
+      content: old.content,
+      documents: item.documents.length === 0 ? old.documents : item.documents,
+      comments: [...item.comments, ...localOnly],
+      givenOn: item.givenOn ?? old.givenOn,
+      teacher: item.teacher ?? old.teacher,
+    }
+  })
+}
+
 export function groupByDay(assignments: Assignment[]): DayGroup[] {
   const groups = new Map<string, DayGroup>()
 

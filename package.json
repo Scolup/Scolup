@@ -10,7 +10,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "vite --host --port 2323",
+    "dev": "vite --host --port 2326",
     "build": "bun run typecheck && vite build",
     "format": "oxfmt --write \"**/*.{ts,tsx}\"",
     "format:check": "oxfmt --check \"**/*.{ts,tsx}\"",
