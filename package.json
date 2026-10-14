@@ -2,7 +2,7 @@
   "name": "scolup",
   "description": "Your top-notch scholar assistant.",
   "private": true,
-  "version": "2026.11.0b0",
+  "version": "2026.11.0b1",
   "type": "module",
   "author": "Scolup",
   "license": "AGPL-3.0-or-later",

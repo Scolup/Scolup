@@ -70,7 +70,7 @@ export function AboutDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const [copied, setCopied] = useState(false)
-  const buildInfo = `version ${__APP_VERSION__} · build ${__APP_BUILD__}`
+  const versionInfo = `version ${__APP_VERSION__}`
 
   useEffect(() => {
     if (!copied) return
@@ -78,9 +78,9 @@ export function AboutDialog({
     return () => clearTimeout(timeout)
   }, [copied])
 
-  async function copyBuildInfo() {
+  async function copyVersionInfo() {
     try {
-      await navigator.clipboard.writeText(buildInfo)
+      await navigator.clipboard.writeText(versionInfo)
     } catch {
       return // clipboard blocked, nothing to confirm
     }
@@ -106,12 +106,12 @@ export function AboutDialog({
             <p className="font-heading text-lg leading-none font-semibold tracking-tight">
               Scolup
             </p>
-            <p className="text-xs text-muted-foreground">{buildInfo}</p>
+            <p className="text-xs text-muted-foreground">{versionInfo}</p>
           </div>
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={copyBuildInfo}
+            onClick={copyVersionInfo}
             title="Copier la version"
             aria-label={copied ? "Version copiée" : "Copier la version"}
             className="-my-2 size-11 shrink-0 text-muted-foreground"
