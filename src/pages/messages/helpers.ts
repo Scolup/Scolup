@@ -353,15 +353,7 @@ export function validateCompose(
   return null
 }
 
-export const SCOLUP_SIGNATURE_TEXT = "Envoyé avec Scolup"
-
-// Étoile Scolup grise (PNG 48 px, ~1,8 Ko en base64) en data URI :
-// le logo voyage dans le message, lisible même hors-ligne. PNG plutôt
-// que SVG : bien plus de clients mails affichent les PNG embarqués.
-export const SCOLUP_LOGO_DATA_URI =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABmJLR0QA/wD/AP+gvaeTAAAFDklEQVRoge1ZXWwUVRT+zp2utdsmK4koPIgKSiQ+wQtGlPCgiT+AGgkYMf4kmJoQNLK7M9u+dE2kdu60NcanffHFNkAq8KCAMRCJGGOICREF0mDRoBEDmlqDW2vn3uNDZ2Ntd2fuTEeLCd/Tzr3nnO/7Zmfm3DtDSBm9vb03aq13MPMGIloeDA8z8/tKqbc7Ozt/SZOP0izmed6jzDwA4IYGIaNCiK2FQuFwWpypGXBd90EiOgSgKSJUCSE2pGUiFQOe57Uy8zcAFpnEM/NFIcSdxWLx97lyi7kWCAQ9C0PxAEBEiwE8kwZ3KgYAPBw3gZlj59RDWgZujZtARLelQZyWgcm4CcwcO6ceUjFARN8myPkuDe60/oFTcROY+cs0iFMxoLWOLYaIUjHQsOn09/e3TExMLLYsq2rb9k9hRbTWpyzLikXs+/5XUTFSykVKqWxzc/PFnTt3jteLmdXIpJRbiOhlZl4NoKbqewCDRPRmsVi8NDOHmcnzvFEAOUP9Y8VicQER8cwJz/NuYuZXAWwFcEswrAB8DuAt27aH6hro7+9v8X1/D4CNjViJ6IrWum98fLy3XC5fmT4npfwEwP2GBo7btr12+kC5XG5raWkpCCHyzNwWknugWq0+XS6X/wCCe4CZyff93WHig7g2IurKZrMjUsrtlUolM2162FD8P2IrlUpGSrk9m82OEFFXhHgAeKK1tXWwdkDA1GUDYE8MATWMMHOXZVkntdb7ANxlmHdWCLFJKbWSiF4DsCwB92bbtodqN/GOBAUAYBkRDWit4+at0FqfJprTWvIVAEMUrCR/RfQy+GqDX61Wc8L3/Zvx/xMPAE1tbW0LhWVZ1flWkhTMPC6CJvXjfItJgB+KxeIlAQBE9O58q0mAASDoA77vuwBClwtXE5j5olJKAoGBjo6OUWZ+DMBv86rMDGMANnZ0dIwC01ajjuOcALAKwJF5EmaCj5RSqxzH+aI2ULeT9PT03C2EeADACkx1yaUAluC/e9z6AC4AOA9gBMBZrfWRUql0emagcSusVCqZsbGxJcy8lIhWAyjj79XqXKGIqEtrfYKIzudyuQvt7e1GW87EvdzzvOPMfF/S/BmYtTo1RaIdmed564L9Qlq4x/O8dUkSYxuQUj7EzIcAZCKDzZFh5g9d1w1dztdDLANSyvUADgBoiUtkgGYiGpJSPhknydiA53lPAdgP4Pq4ymLgOgB7Xdd9zjTByICUchszDyLdy6YRLCJ6R0q5zSQ48inkuu4mItqL9N4hmUIz8xbHcd4LCwo10N3dvbCpqWkYwIKEAko0te16A8lOwKgQYnmhUPi5UUBo0Uwm8xKSiQcR7Xccx7NtW2Lqxk+CBUqpF8MCQg3M4RU4CyG6aweWZe0CMOsdkAmEEI+Ezkfk356EFMDhfD5/snYQ/E70SYmZQzVEGZhIQqq13mUyZog/wyajLqGvExB+XCqVPps5GIwdS1Av9B1qqAEiCn2E1QMzNzzTzPx63HoA9oVNhhrI5XKDAM6YMjHzQcdxjjaadxznKDMfNK0H4HQul9sdFhBqoL29fVJrvRnAZQOyYcuyno8KUkq9AOCcQb3LQojNUfuCyOYS7ILWENGnjWKIaL/v+2vCGk4NnZ2dl4UQ9yKkNwRcawqFQuS/b7yhCb4BrAWwHsAdACaZ+QwzHyiVSom+tvT19a1USj2Oqa1rhojOEdEH+Xz+eL1vB9dwDf8C/gIoqug7yte3YgAAAABJRU5ErkJggg=="
-
-export function escapeHtml(text: string): string {
+function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -370,17 +362,10 @@ export function escapeHtml(text: string): string {
     .replace(/'/g, "&#39;")
 }
 
-function signatureHtml(): string {
-  return `<br><br><p><i style="font-size:12px;color:#8a8a8a">${SCOLUP_SIGNATURE_TEXT} <img src="${SCOLUP_LOGO_DATA_URI}" alt="Scolup" width="12" height="12" style="width:12px;height:12px;vertical-align:-2px;border:0"></i></p>`
-}
-
-export function withScolupSignature(content: string): string {
-  const clean = content.trim()
-  if (!clean) return clean
+export function toMessageHtml(content: string): string {
   // L'encodage des accents en entités vit dans Lowdirecte (sendMessage) :
   // tous ses consommateurs en profitent, pas seulement Scolup.
-  const body = escapeHtml(clean).replace(/\n/g, "<br>")
-  return `${body}${signatureHtml()}`
+  return escapeHtml(content.trim()).replace(/\n/g, "<br>")
 }
 
 export const MAX_SUBJECT_LENGTH = 120

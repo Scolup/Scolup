@@ -1,5 +1,5 @@
 import { daysUntil, fullDateLabel, parseDateKey } from "@/services/dates"
-import { decodeHtmlEntities } from "@/services/html"
+import { decodeHtmlEntities, htmlToText } from "@/services/html"
 
 export interface RawDocument {
   id?: number
@@ -122,7 +122,7 @@ function toComments(raw: RawComment[] | undefined): HomeworkComment[] {
           : comment.auteur,
       message:
         typeof comment.message === "string"
-          ? decodeHtmlEntities(comment.message)
+          ? htmlToText(comment.message)
           : comment.message,
       date: comment.date instanceof Date ? comment.date : undefined,
     }))

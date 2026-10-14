@@ -29,7 +29,6 @@ import {
   contactTypeLabel,
   filterContacts,
   MAX_SUBJECT_LENGTH,
-  SCOLUP_LOGO_DATA_URI,
   type Contact,
 } from "../helpers"
 import type { ComposeState } from "../hooks/useCompose"
@@ -391,15 +390,6 @@ function MessageStep({ compose }: { compose: ComposeState }) {
           className="min-h-44"
           rows={10}
         />
-        <p className="flex items-center gap-1.5 pt-2 text-xs text-muted-foreground">
-          <img
-            src={SCOLUP_LOGO_DATA_URI}
-            alt=""
-            aria-hidden="true"
-            className="size-3"
-          />
-          <em>« Envoyé avec Scolup » sera ajouté à la fin du message.</em>
-        </p>
 
         <input
           ref={fileRef}

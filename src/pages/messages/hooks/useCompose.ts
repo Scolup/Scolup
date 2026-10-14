@@ -7,8 +7,8 @@ import {
   isDraftDirty,
   isDraftEmpty,
   resolveReplyRecipient,
+  toMessageHtml,
   validateCompose,
-  withScolupSignature,
   type ComposeDraft,
   type Contact,
   type Message,
@@ -180,7 +180,7 @@ export function useCompose(onSent?: () => void) {
       }
       await ld.messages.sendMessage({
         subject: subject.trim(),
-        content: withScolupSignature(content.trim()),
+        content: toMessageHtml(content),
         destinataires: recipients.map((r) => r.raw),
         files,
       })
