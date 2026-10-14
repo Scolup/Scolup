@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/shark/bottom-navigation"
 import { Spinner } from "@/components/ui/spinner"
 import { OfflineBanner } from "@/ui/offline-banner"
+import { ReauthSheet } from "@/ui/reauth-sheet"
 import {
   refreshVisibleResources,
   useForegroundRefresh,
@@ -271,6 +272,7 @@ export function MainFlow({ className, ...props }: React.ComponentProps<"div">) {
         }}
       >
         <OfflineBanner />
+        <ReauthSheet />
 
         <div
           ref={scrollRef}

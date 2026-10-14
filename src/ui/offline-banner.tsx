@@ -3,7 +3,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { WifiDisconnected01Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 import { ld } from "@/services/lowdirecte"
-import { syncTimeLabel } from "@/hooks/use-last-sync"
 
 function readBrowserOffline(): boolean {
   try {
@@ -24,13 +23,6 @@ export function OfflineBanner() {
     }
   })
   const [browserOffline, setBrowserOffline] = useState(readBrowserOffline)
-  const [lastSync, setLastSync] = useState<number | null>(() => {
-    try {
-      return ld.sync.getState().lastSync
-    } catch {
-      return null
-    }
-  })
   // Transition de sortie : garde le bandeau monté 300 ms après le retour
   // en ligne pour un fondu, sans recharger la page.
   const [render, setRender] = useState(syncOffline || readBrowserOffline())
@@ -39,12 +31,8 @@ export function OfflineBanner() {
   useEffect(() => {
     setSyncOffline(ld.sync.getState().state === "offline")
     setBrowserOffline(readBrowserOffline())
-    try {
-      setLastSync(ld.sync.getState().lastSync)
-    } catch {}
     const offSync = ld.sync.onChange((state) => {
       setSyncOffline(state.state === "offline")
-      setLastSync(state.lastSync)
     })
     const onOffline = () => setBrowserOffline(true)
     const onOnline = () => setBrowserOffline(false)
@@ -73,27 +61,24 @@ export function OfflineBanner() {
 
   if (!render) return null
 
-  const syncLabel = syncTimeLabel(lastSync)
-
   return (
     <div
       role="status"
       aria-hidden={!offline}
       className={cn(
-        "flex items-center justify-center gap-1.5 px-4 py-1 text-center text-xs text-muted-foreground transition-opacity duration-300",
+        "flex min-h-0 items-center justify-center px-4 py-0.5 transition-opacity duration-300",
         offline ? "opacity-100" : "pointer-events-none opacity-0"
       )}
     >
-      <HugeiconsIcon
-        icon={WifiDisconnected01Icon}
-        strokeWidth={2}
-        className="size-3.5"
-        aria-hidden="true"
-      />
-      <span>
-        Hors ligne, les données ne sont pas à jour
-        {syncLabel ? ` · ${syncLabel}` : ""}
-      </span>
+      <p className="flex min-w-0 items-center justify-center gap-1 text-center text-[11px] leading-tight text-muted-foreground/60">
+        <HugeiconsIcon
+          icon={WifiDisconnected01Icon}
+          strokeWidth={2}
+          className="size-3 shrink-0"
+          aria-hidden="true"
+        />
+        <span className="truncate">Hors ligne</span>
+      </p>
     </div>
   )
 }

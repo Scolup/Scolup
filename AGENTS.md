@@ -76,6 +76,7 @@ Follow the existing split when adding a page: data hook, page-state hook, pure `
 
 ### TypeScript
 `strict`, `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax` and `erasableSyntaxOnly` are on: use `import type` for types, and no enums or parameter properties.
+If you create test files, remove them once you're done.
 
 ### Known issues, do not touch
 - **`dangerouslySetInnerHTML`**: known and accepted. Don't fix, remove or flag existing usages.
