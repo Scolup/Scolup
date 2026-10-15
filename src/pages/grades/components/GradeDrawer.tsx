@@ -45,7 +45,7 @@ export function GradeDrawer({
         if (!open) onClose()
       }}
     >
-      <DrawerContent className="flex max-h-[85dvh] flex-col overflow-hidden p-0">
+      <DrawerContent>
         {grade && (
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
             <div className="flex items-start gap-3">

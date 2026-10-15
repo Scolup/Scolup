@@ -4,7 +4,6 @@ import { useRef } from "react"
 import { m, AnimatePresence } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  AlertCircleIcon,
   ArrowLeft01Icon,
   Attachment01Icon,
   Cancel01Icon,
@@ -163,41 +162,6 @@ function ComposeSuccess({ onClose }: { onClose: () => void }) {
   )
 }
 
-function DiscardConfirm({
-  onKeep,
-  onDiscard,
-}: {
-  onKeep: () => void
-  onDiscard: () => void
-}) {
-  return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto p-6 text-center">
-      <span className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-        <HugeiconsIcon icon={AlertCircleIcon} className="size-7" />
-      </span>
-      <p className="text-lg font-semibold text-card-foreground">
-        Abandonner ce brouillon&nbsp;?
-      </p>
-      <p className="max-w-xs text-sm text-muted-foreground">
-        Tes destinataires, l'objet et le message seront perdus.
-      </p>
-      <div className="mt-2 flex w-full max-w-xs flex-col gap-2">
-        <Button onClick={onKeep} className="min-h-11 w-full" size="lg">
-          Continuer la rédaction
-        </Button>
-        <Button
-          variant="destructive"
-          onClick={onDiscard}
-          className="min-h-11 w-full"
-          size="lg"
-        >
-          Tout abandonner
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 function RecipientStep({
   compose,
   contacts,
@@ -215,23 +179,6 @@ function RecipientStep({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 flex-col gap-3 px-4 pt-4 pb-3">
-        {compose.recipients.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {compose.recipients.map((r) => (
-              <button
-                key={`${r.type}-${r.id}`}
-                type="button"
-                onClick={() => compose.removeRecipient(r)}
-                aria-label={`Retirer ${r.name}`}
-                className="flex min-h-11 items-center gap-1.5 rounded-full bg-primary/10 py-1 pr-2 pl-3 text-sm font-medium text-primary-text active:bg-primary/20"
-              >
-                {r.name}
-                <HugeiconsIcon icon={Cancel01Icon} className="size-4" />
-              </button>
-            ))}
-          </div>
-        )}
-
         <div className="relative">
           <HugeiconsIcon
             icon={Search01Icon}
@@ -504,13 +451,6 @@ function ComposeBody({
   onRetryContacts: () => void
 }) {
   if (compose.sent) return <ComposeSuccess onClose={compose.discardDraft} />
-  if (compose.confirmingClose)
-    return (
-      <DiscardConfirm
-        onKeep={compose.cancelClose}
-        onDiscard={compose.discardDraft}
-      />
-    )
   if (compose.step === 1) {
     return (
       <RecipientStep
@@ -552,7 +492,7 @@ export function ComposeDrawer({
         if (!open) compose.requestClose()
       }}
     >
-      <DrawerContent className="flex max-h-[92dvh] flex-col overflow-hidden p-0">
+      <DrawerContent>
         <div className="flex shrink-0 items-center gap-2 border-b border-border p-4 pb-[calc(1rem+env(safe-area-inset-top))]">
           <Button
             variant="ghost"

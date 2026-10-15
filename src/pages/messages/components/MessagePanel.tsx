@@ -29,8 +29,8 @@ export function MessagePanel(props: MessageViewProps) {
 
   return (
     <Drawer open onOpenChange={(open) => !open && props.onClose?.()}>
-      <DrawerContent className="flex max-h-[92dvh] flex-col overflow-hidden p-0">
-        <div className="m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[min(var(--radius-4xl),24px)]">
+      <DrawerContent>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <MessageView {...props} closeIcon="close" />
         </div>
       </DrawerContent>

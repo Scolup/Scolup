@@ -1,15 +1,12 @@
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useState } from "react"
 import { ld } from "@/services/lowdirecte"
 import { errorMessage } from "@/services/errors"
 import {
   buildReplyBody,
   buildReplySubject,
-  isDraftDirty,
-  isDraftEmpty,
   resolveReplyRecipient,
   toMessageHtml,
   validateCompose,
-  type ComposeDraft,
   type Contact,
   type Message,
 } from "../helpers"
@@ -17,12 +14,6 @@ import {
 export type ComposeMode = "new" | "reply"
 
 export type ComposeStep = 1 | 2
-
-const EMPTY_INITIAL: ComposeDraft = {
-  recipients: [],
-  subject: "",
-  content: "",
-}
 
 export function useCompose(onSent?: () => void) {
   const [open, setOpen] = useState(false)
@@ -37,8 +28,6 @@ export function useCompose(onSent?: () => void) {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
-  const [confirmingClose, setConfirmingClose] = useState(false)
-  const initialRef = useRef<ComposeDraft>(EMPTY_INITIAL)
 
   const reset = useCallback(() => {
     setMode("new")
@@ -52,29 +41,12 @@ export function useCompose(onSent?: () => void) {
     setSending(false)
     setError(null)
     setSent(false)
-    setConfirmingClose(false)
-    initialRef.current = EMPTY_INITIAL
   }, [])
 
   const openNew = useCallback(() => {
-    // ponytail: fermer sans abandonner garde le brouillon en mémoire.
-    // Rouvrir via le "+" restaure ce brouillon au lieu de repartir de zéro.
-    if (!open) {
-      if (sent) {
-        reset()
-      } else if (
-        !isDraftEmpty({ recipients, subject, content }) ||
-        isDraftDirty({ recipients, subject, content }, initialRef.current) ||
-        attachments.length > 0
-      ) {
-        setConfirmingClose(false)
-        setOpen(true)
-        return
-      }
-    }
     reset()
     setOpen(true)
-  }, [open, sent, recipients, subject, content, attachments, reset])
+  }, [reset])
 
   const openReply = useCallback(
     (message: Message, contacts: Contact[]) => {
@@ -90,11 +62,6 @@ export function useCompose(onSent?: () => void) {
       setSubject(nextSubject)
       setContent(nextBody)
       setStep(resolved ? 2 : 1)
-      initialRef.current = {
-        recipients: nextRecipients,
-        subject: nextSubject,
-        content: nextBody,
-      }
       setMode("reply")
       setReplySender(message.sender)
       setOpen(true)
@@ -102,32 +69,11 @@ export function useCompose(onSent?: () => void) {
     [reset]
   )
 
-  const isDirty =
-    !sent &&
-    (isDraftDirty({ recipients, subject, content }, initialRef.current) ||
-      attachments.length > 0)
-
   const requestClose = useCallback(() => {
     if (sending) return
-    if (sent) {
-      reset()
-      setOpen(false)
-      return
-    }
-    if (
-      isDraftDirty({ recipients, subject, content }, initialRef.current) ||
-      attachments.length > 0
-    ) {
-      setConfirmingClose(true)
-      return
-    }
     reset()
     setOpen(false)
-  }, [sending, sent, recipients, subject, content, attachments, reset])
-
-  const cancelClose = useCallback(() => {
-    setConfirmingClose(false)
-  }, [])
+  }, [sending, reset])
 
   const clearError = useCallback(() => {
     setError(null)
@@ -185,7 +131,6 @@ export function useCompose(onSent?: () => void) {
         files,
       })
       setSent(true)
-      setConfirmingClose(false)
       onSent?.()
     } catch (err) {
       setError(errorMessage(err, "Impossible d'envoyer ce message."))
@@ -213,15 +158,11 @@ export function useCompose(onSent?: () => void) {
     sending,
     error,
     sent,
-    isDirty,
-    confirmingClose,
     openNew,
     openReply,
     requestClose,
-    cancelClose,
     discardDraft,
     toggleRecipient,
-    removeRecipient: (contact: Contact) => toggleRecipient(contact),
     send,
     clearError,
     reset,

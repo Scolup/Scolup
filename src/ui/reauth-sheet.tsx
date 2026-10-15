@@ -243,8 +243,8 @@ export function ReauthSheet() {
 
   return (
     <Drawer open dismissible={false} onOpenChange={() => {}}>
-      <DrawerContent className="p-0 [&>div:first-child]:hidden">
-        <div className="m-2 flex flex-col gap-4 rounded-[min(var(--radius-4xl),24px)] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      <DrawerContent className="[&>div:first-child]:hidden">
+        <div className="flex flex-col gap-4 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <div className="flex flex-col items-center gap-3 text-center">
             <HeaderIcon />
             <div className="flex flex-col gap-1">
