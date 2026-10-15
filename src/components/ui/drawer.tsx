@@ -6,7 +6,61 @@ import { cn } from "@/lib/utils"
 function Drawer({
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" {...props} />
+  // ponytail: on désactive le repositionnement clavier de Vaul (il fige une
+  // hauteur inline qui reste fausse après fermeture du clavier). Le décalage
+  // au-dessus du clavier est géré par `--kb-offset` dans DrawerContent.
+  return (
+    <DrawerPrimitive.Root
+      data-slot="drawer"
+      repositionInputs={false}
+      {...props}
+    />
+  )
+}
+
+// Hauteur du clavier à partir du visualViewport. Vaut 0 quand le focus
+// n'est pas dans un champ, donc la barre d'outils Safari n'a aucun effet.
+function useKeyboardOffset(): number {
+  const [offset, setOffset] = React.useState(0)
+
+  React.useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    let raf = 0
+    const update = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const el = document.activeElement
+        const typing =
+          el instanceof HTMLElement &&
+          (el.tagName === "INPUT" ||
+            el.tagName === "TEXTAREA" ||
+            el.tagName === "SELECT" ||
+            el.isContentEditable)
+        if (!typing) {
+          setOffset(0)
+          return
+        }
+        setOffset(
+          Math.max(0, Math.round(window.innerHeight - vv.offsetTop - vv.height))
+        )
+      })
+    }
+    update()
+    vv.addEventListener("resize", update)
+    vv.addEventListener("scroll", update)
+    document.addEventListener("focusin", update)
+    document.addEventListener("focusout", update)
+    return () => {
+      cancelAnimationFrame(raf)
+      vv.removeEventListener("resize", update)
+      vv.removeEventListener("scroll", update)
+      document.removeEventListener("focusin", update)
+      document.removeEventListener("focusout", update)
+    }
+  }, [])
+
+  return offset
 }
 
 function DrawerTrigger({
@@ -46,17 +100,25 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
+  style,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
+  const kbOffset = useKeyboardOffset()
   return (
     <DrawerPortal data-slot="drawer-portal">
       <DrawerOverlay />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "group/drawer-content fixed z-50 flex h-auto flex-col overflow-hidden border border-border bg-popover text-sm shadow-xl data-[vaul-drawer-direction=bottom]:inset-x-2 data-[vaul-drawer-direction=bottom]:bottom-2 data-[vaul-drawer-direction=bottom]:max-h-[92dvh] data-[vaul-drawer-direction=bottom]:rounded-[24px] data-[vaul-drawer-direction=left]:inset-y-2 data-[vaul-drawer-direction=left]:left-2 data-[vaul-drawer-direction=left]:w-[calc(75%-8px)] data-[vaul-drawer-direction=left]:rounded-[24px] data-[vaul-drawer-direction=right]:inset-y-2 data-[vaul-drawer-direction=right]:right-2 data-[vaul-drawer-direction=right]:w-[calc(75%-8px)] data-[vaul-drawer-direction=right]:rounded-[24px] data-[vaul-drawer-direction=top]:inset-x-2 data-[vaul-drawer-direction=top]:top-2 data-[vaul-drawer-direction=top]:max-h-[92dvh] data-[vaul-drawer-direction=top]:rounded-[24px] data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm",
+          "group/drawer-content fixed z-50 flex h-auto flex-col overflow-hidden border border-border bg-popover text-sm shadow-xl data-[vaul-drawer-direction=bottom]:inset-x-2 data-[vaul-drawer-direction=bottom]:bottom-[calc(0.5rem_+_var(--kb-offset,0px))] data-[vaul-drawer-direction=bottom]:max-h-[calc(92dvh_-_var(--kb-offset,0px))] data-[vaul-drawer-direction=bottom]:rounded-[24px] data-[vaul-drawer-direction=left]:inset-y-2 data-[vaul-drawer-direction=left]:left-2 data-[vaul-drawer-direction=left]:w-[calc(75%-8px)] data-[vaul-drawer-direction=left]:rounded-[24px] data-[vaul-drawer-direction=right]:inset-y-2 data-[vaul-drawer-direction=right]:right-2 data-[vaul-drawer-direction=right]:w-[calc(75%-8px)] data-[vaul-drawer-direction=right]:rounded-[24px] data-[vaul-drawer-direction=top]:inset-x-2 data-[vaul-drawer-direction=top]:top-2 data-[vaul-drawer-direction=top]:max-h-[92dvh] data-[vaul-drawer-direction=top]:rounded-[24px] data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm",
           className
         )}
+        style={
+          {
+            ...style,
+            ...(kbOffset > 0 ? { "--kb-offset": `${kbOffset}px` } : null),
+          } as React.CSSProperties
+        }
         {...props}
       >
         <div className="mx-auto mt-2 hidden h-1.5 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
