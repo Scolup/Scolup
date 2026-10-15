@@ -2,26 +2,24 @@ import { useSyncExternalStore } from "react"
 import { getDB, type SubjectRecord } from "@/services/storage"
 
 const SUBJECT_COLORS = [
-  "#C50017",
-  "#DA2400",
-  "#DD6B00",
-  "#E8901C",
-  "#E8B048",
-  "#6BAE00",
-  "#37BB12",
-  "#12BB67",
-  "#26B290",
-  "#26ABB2",
-  "#2DB9D8",
-  "#009EC5",
-  "#007FDA",
-  "#3A56D0",
-  "#7600CA",
-  "#962DD8",
-  "#B300CA",
-  "#C50066",
-  "#DD004A",
-  "#DD0030",
+  "#DC2626",
+  "#EA580C",
+  "#D97706",
+  "#EAB308",
+  "#65A30D",
+  "#16A34A",
+  "#059669",
+  "#0D9488",
+  "#0891B2",
+  "#0284C7",
+  "#2563EB",
+  "#4F46E5",
+  "#7C3AED",
+  "#C026D3",
+  "#DB2777",
+  "#E11D48",
+  "#92400E",
+  "#475569",
 ]
 
 export function seedColor(name: string): string {
@@ -32,28 +30,10 @@ export function seedColor(name: string): string {
   return SUBJECT_COLORS[Math.abs(hash) % SUBJECT_COLORS.length]
 }
 
-export const SUBJECT_PICKER_COLORS = [
-  ...SUBJECT_COLORS,
-  "#EAB308",
-  "#65A30D",
-  "#16A34A",
-  "#0F766E",
-  "#1D4ED8",
-  "#6D28D9",
-  "#A21CAF",
-  "#F472B6",
-  "#92400E",
-  "#475569",
-]
+export const SUBJECT_PICKER_COLORS = [...SUBJECT_COLORS]
 
 function isSubjectColor(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    /^#[0-9a-fA-F]{6}$/.test(value) &&
-    SUBJECT_PICKER_COLORS.some(
-      (color) => color.toLowerCase() === value.toLowerCase()
-    )
-  )
+  return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)
 }
 
 function normalizeCode(code: string): string {

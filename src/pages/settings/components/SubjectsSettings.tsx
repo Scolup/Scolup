@@ -20,7 +20,6 @@ import {
   resetSubject,
   resolveSubjectColor,
   resolveSubjectName,
-  seedColor,
   SUBJECT_PICKER_COLORS,
   subjectId,
   updateSubject,
@@ -71,7 +70,6 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
   const record = records?.find((entry) => entry.id === subject.id)
   const display = resolveSubjectName(subject.code, subject.name)
   const color = resolveSubjectColor(subject.code, subject.name)
-  const autoColor = seedColor(record?.name ?? subject.name)
   const customized = !!record?.customName?.trim() || !!record?.customColor
 
   const inputValue = draft ?? record?.customName ?? ""
@@ -145,11 +143,6 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
             <span className="truncate text-sm font-semibold text-card-foreground">
               {display}
             </span>
-            {display !== subject.name && (
-              <span className="truncate text-xs text-muted-foreground">
-                {subject.name}
-              </span>
-            )}
             {subject.teacher && (
               <span className="truncate text-xs text-muted-foreground">
                 {subject.teacher}
@@ -182,9 +175,6 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
                   if (e.key === "Escape") setDraft(null)
                 }}
               />
-              <p className="text-xs text-muted-foreground">
-                Vide = nom d'origine.
-              </p>
             </div>
             <div className="flex flex-col gap-2">
               <span className="text-sm font-medium text-card-foreground">
@@ -193,7 +183,7 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
               <div
                 role="group"
                 aria-label={`Couleur de ${display}`}
-                className="grid grid-cols-6 gap-1 sm:grid-cols-10"
+                className="grid grid-cols-6 gap-3"
               >
                 {SUBJECT_PICKER_COLORS.map((option) => {
                   const active = color.toLowerCase() === option.toLowerCase()
@@ -210,7 +200,7 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
                         aria-hidden="true"
                         style={{ backgroundColor: option }}
                         className={cn(
-                          "flex size-8 items-center justify-center rounded-full transition-shadow",
+                          "flex size-9 items-center justify-center rounded-full transition-shadow",
                           active &&
                             "ring-2 ring-foreground ring-offset-2 ring-offset-card"
                         )}
@@ -228,35 +218,6 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
                   )
                 })}
               </div>
-              <p className="text-xs text-muted-foreground">
-                {record?.customColor ? (
-                  <>
-                    Personnalisée —{" "}
-                    <span className="font-medium">
-                      {record.customColor.toUpperCase()}
-                    </span>
-                    . Couleur automatique :{" "}
-                    <span
-                      aria-hidden="true"
-                      style={{ backgroundColor: autoColor }}
-                      className="mr-1 inline-block size-2.5 rounded-full align-middle"
-                    />
-                    <span className="font-medium">
-                      {autoColor.toUpperCase()}
-                    </span>
-                    .
-                  </>
-                ) : (
-                  <>
-                    Automatique :{" "}
-                    <span className="font-medium">
-                      {autoColor.toUpperCase()}
-                    </span>
-                    . Touche une couleur pour la sélectionner, retouche-la pour
-                    revenir à l'automatique.
-                  </>
-                )}
-              </p>
             </div>
             {customized && (
               <div className="flex justify-end">

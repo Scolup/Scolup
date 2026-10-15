@@ -7,21 +7,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { SECTIONS, type SectionId } from "./sections"
-import { AgendaSettings } from "./components/AgendaSettings"
 import { GeneralSettings } from "./components/GeneralSettings"
-import { GradesSettings } from "./components/GradesSettings"
-import { ProfileSettings } from "./components/ProfileSettings"
 import { SettingsNav } from "./components/SettingsNav"
 import { SubjectsSettings } from "./components/SubjectsSettings"
 
 export type { SectionId }
 
 const VIEWS: Record<SectionId, ComponentType> = {
-  profil: ProfileSettings,
   general: GeneralSettings,
   subjects: SubjectsSettings,
-  agenda: AgendaSettings,
-  grades: GradesSettings,
 }
 
 export function SettingsDialog({
