@@ -5,6 +5,7 @@ import {
   formatAverageValue,
   type TrendPoint,
 } from "../helpers"
+import { useAverageSettings } from "@/services/average-settings"
 import { AnimatedNumber } from "@/ui/animated-number"
 
 const GradesTrendChart = lazy(() =>
@@ -60,13 +61,14 @@ export function AverageCard({
   trendDomain: [number, number]
   hasTrend: boolean
 }) {
+  const { scale } = useAverageSettings()
   const animated = useCountUp(average)
   // Tant qu'un point du graphe a le focus, sa moyenne s'affiche en direct
   // (sans count-up : le doigt pilote) ; au relâcher, retour à la moyenne.
   const shown = focusedAverage ?? animated
   return (
     <section
-      aria-label={`Moyenne générale : ${formatAverage(average)}`}
+      aria-label={`Moyenne générale : ${formatAverage(average, scale)}`}
       className="flex flex-col gap-1 rounded-3xl border border-border/70 bg-card px-4 pt-3.5 pb-2"
     >
       <div className="flex items-center justify-between gap-3">
@@ -75,10 +77,12 @@ export function AverageCard({
         </span>
         <span className="tabular-nums">
           <AnimatedNumber
-            value={formatAverageValue(shown)}
+            value={formatAverageValue(shown, scale)}
             className="text-2xl font-bold text-card-foreground"
           />
-          <span className="text-xs text-muted-foreground">/20</span>
+          <span className="text-xs text-muted-foreground">
+            {scale === 100 ? " %" : `/${scale}`}
+          </span>
         </span>
       </div>
       {hasTrend && (

@@ -1,6 +1,10 @@
-import { Book02Icon, Settings01Icon } from "@hugeicons/core-free-icons"
+import {
+  Book02Icon,
+  Mortarboard01Icon,
+  Settings01Icon,
+} from "@hugeicons/core-free-icons"
 
-export type SectionId = "general" | "subjects"
+export type SectionId = "general" | "subjects" | "grades"
 
 export type SectionIcon = typeof Settings01Icon
 
@@ -11,6 +15,7 @@ export const SECTIONS: {
 }[] = [
   { id: "general", label: "Général", icon: Settings01Icon },
   { id: "subjects", label: "Matières", icon: Book02Icon },
+  { id: "grades", label: "Notes", icon: Mortarboard01Icon },
 ]
 
 export function settingsPath(section: SectionId): string {

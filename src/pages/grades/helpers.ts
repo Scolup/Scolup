@@ -207,12 +207,35 @@ export function resolvePeriod(
   )
 }
 
-export function formatAverage(average: number): string {
-  return `${formatAverageValue(average)}/20`
+export type AverageMethod = "subject" | "weighted" | "median"
+
+export type AverageScale = 20 | 10 | 100
+
+export function isAverageMethod(value: unknown): value is AverageMethod {
+  return value === "subject" || value === "weighted" || value === "median"
 }
 
-export function formatAverageValue(average: number): string {
-  return average.toFixed(2).replace(".", ",")
+export function isAverageScale(value: unknown): value is AverageScale {
+  return value === 20 || value === 10 || value === 100
+}
+
+export function convertAverage(average20: number, scale: AverageScale): number {
+  return (average20 * scale) / 20
+}
+
+export function formatAverage(
+  average: number,
+  scale: AverageScale = 20
+): string {
+  if (scale === 100) return `${formatAverageValue(average, scale)} %`
+  return `${formatAverageValue(average, scale)}/${scale}`
+}
+
+export function formatAverageValue(
+  average: number,
+  scale: AverageScale = 20
+): string {
+  return convertAverage(average, scale).toFixed(2).replace(".", ",")
 }
 
 // Seuil du moment signature "belle note" : une note qui fait plaisir,
@@ -288,6 +311,55 @@ export function generalAverage(groups: SubjectGroup[]): number | null {
   return weights > 0 ? sum / weights : null
 }
 
+// Moyenne pondérée globale : toutes les notes dans un seul panier, chacune
+// pesée par coef du devoir × coef de sa matière.
+export function weightedAverage(
+  grades: Grade[],
+  coefOf?: SubjectCoefOf
+): number | null {
+  let weighted = 0
+  let weights = 0
+  for (const grade of grades) {
+    const score = gradeScore20(grade)
+    if (score === null) continue
+    const gradeCoef = parseGradeNumber(grade.coef)
+    const subjectCoef = coefOf?.(grade.subjectCode, grade.subject) ?? 1
+    const safeSubject =
+      Number.isFinite(subjectCoef) && subjectCoef > 0 ? subjectCoef : 1
+    const safeGrade = gradeCoef !== null && gradeCoef > 0 ? gradeCoef : 1
+    const weight = safeGrade * safeSubject
+    weighted += score * weight
+    weights += weight
+  }
+  return weights > 0 ? weighted / weights : null
+}
+
+// Médiane des notes ramenées sur 20 (chaque note compte une fois,
+// sans pondération).
+export function medianAverage(grades: Grade[]): number | null {
+  const scores = grades.flatMap((grade) => {
+    const score = gradeScore20(grade)
+    return score === null ? [] : [score]
+  })
+  if (scores.length === 0) return null
+  scores.sort((a, b) => a - b)
+  const middle = Math.floor(scores.length / 2)
+  return scores.length % 2 === 1
+    ? scores[middle]
+    : (scores[middle - 1] + scores[middle]) / 2
+}
+
+export function computeOverallAverage(
+  grades: Grade[],
+  groups: SubjectGroup[],
+  coefOf?: SubjectCoefOf,
+  method: AverageMethod = "subject"
+): number | null {
+  if (method === "weighted") return weightedAverage(grades, coefOf)
+  if (method === "median") return medianAverage(grades)
+  return generalAverage(groups)
+}
+
 function startOfDayTime(date: Date): number {
   const day = new Date(date)
   day.setHours(0, 0, 0, 0)
@@ -307,11 +379,22 @@ export function gradeLabel(grade: Grade): string {
   return `${grade.value.replace(".", ",")}/${grade.outOf}`
 }
 
+function averageForTrend(
+  grades: Grade[],
+  coefOf?: SubjectCoefOf,
+  method: AverageMethod = "subject"
+): number | null {
+  if (method === "weighted") return weightedAverage(grades, coefOf)
+  if (method === "median") return medianAverage(grades)
+  return generalAverage(groupBySubject(grades, coefOf))
+}
+
 export function cumulativeGeneralAverageByDay(
   grades: Grade[],
   coefOf?: SubjectCoefOf,
   days = 30,
-  now: Date = new Date()
+  now: Date = new Date(),
+  method: AverageMethod = "subject"
 ): TrendPoint[] {
   const midnight = new Date(now)
   midnight.setHours(0, 0, 0, 0)
@@ -328,14 +411,14 @@ export function cumulativeGeneralAverageByDay(
     const upto = dated
       .filter((entry) => entry.time <= dayTime)
       .map((entry) => entry.grade)
-    const average = generalAverage(groupBySubject(upto, coefOf))
+    const average = averageForTrend(upto, coefOf, method)
     const rounded = average === null ? null : Math.round(average * 100) / 100
     const newcomers: TrendNewcomer[] = []
     if (rounded !== null) {
       for (const entry of dated) {
         if (entry.time !== dayTime) continue
         const rest = upto.filter((grade) => grade !== entry.grade)
-        const without = generalAverage(groupBySubject(rest, coefOf))
+        const without = averageForTrend(rest, coefOf, method)
         const impact = Math.round((rounded - (without ?? 0)) * 100) / 100
         if (impact === 0) continue
         newcomers.push({

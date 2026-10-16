@@ -8,9 +8,10 @@ import {
   useSubjects,
 } from "@/services/subjects"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
+import { useAverageSettings } from "@/services/average-settings"
 import {
+  computeOverallAverage,
   cumulativeGeneralAverageByDay,
-  generalAverage,
   groupBySubject,
   resolvePeriod,
   toGrade,
@@ -138,14 +139,26 @@ export function useGrades(): GradesModel {
     return grades.filter((grade) => grade.period === selectedPeriod)
   }, [grades, periods, selectedPeriod])
 
+  const { method } = useAverageSettings()
+
   const groups = useMemo(
     () => groupBySubject(visibleGrades, coefOf),
     [visibleGrades, coefOf]
   )
-  const overallAverage = useMemo(() => generalAverage(groups), [groups])
+  const overallAverage = useMemo(
+    () => computeOverallAverage(visibleGrades, groups, coefOf, method),
+    [visibleGrades, groups, coefOf, method]
+  )
   const trend = useMemo(
-    () => cumulativeGeneralAverageByDay(visibleGrades, coefOf),
-    [visibleGrades, coefOf]
+    () =>
+      cumulativeGeneralAverageByDay(
+        visibleGrades,
+        coefOf,
+        30,
+        new Date(),
+        method
+      ),
+    [visibleGrades, coefOf, method]
   )
   const hasTrend = useMemo(
     () => trend.some((point) => point.average !== null),

@@ -23,10 +23,11 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { useSplashTask } from "@/services/splash"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useAverageSettings } from "@/services/average-settings"
 import {
-  formatAverageValue,
+  computeOverallAverage,
   cumulativeGeneralAverageByDay,
-  generalAverage,
+  formatAverageValue,
   gradeLabel,
   groupBySubject,
   resolvePeriod,
@@ -58,6 +59,7 @@ export function GradesWidget() {
   const [focusedAverage, setFocusedAverage] = useState<number | null>(null)
   const { data: lastSeen = 0 } = useAsync(() => readLastSeen("grades"), [])
   const liveGrades = useLiveRefresh("grades")
+  const { method, scale } = useAverageSettings()
   const { data, error, loading } = useAsync(async () => {
     if (!(await ld.auth.loadSession())) throw new Error("no session")
     const result = (await ld.grades.getGrades()) as {
@@ -107,7 +109,13 @@ export function GradesWidget() {
             (b.enteredOn as Date).getTime() - (a.enteredOn as Date).getTime()
         )
         .slice(0, 3)
-      const points = cumulativeGeneralAverageByDay(visible, coefOf)
+      const points = cumulativeGeneralAverageByDay(
+        visible,
+        coefOf,
+        30,
+        new Date(),
+        method
+      )
       let min = Number.POSITIVE_INFINITY
       let max = Number.NEGATIVE_INFINITY
       for (const point of points) {
@@ -116,7 +124,7 @@ export function GradesWidget() {
         if (point.average > max) max = point.average
       }
       return {
-        average: generalAverage(groups),
+        average: computeOverallAverage(visible, groups, coefOf, method),
         recent: fresh,
         trend: points,
         impacts: new Map(
@@ -131,7 +139,7 @@ export function GradesWidget() {
           : [0, 20]) as [number, number],
         hasTrend: points.some((point) => point.average !== null),
       }
-    }, [grades, period, coefOf])
+    }, [grades, period, coefOf, method])
 
   if (error)
     return <WidgetError onRetry={() => setReloadKey((key) => key + 1)} />
@@ -164,17 +172,19 @@ export function GradesWidget() {
 
   return (
     <section
-      aria-label={`Moyenne générale : ${formatAverageValue(average)}/20`}
+      aria-label={`Moyenne générale : ${formatAverageValue(average, scale)}${scale === 100 ? " %" : `/${scale}`}`}
       className="flex flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
     >
       <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-end gap-3 px-3.5">
           <span className="shrink-0 tabular-nums">
             <AnimatedNumber
-              value={formatAverageValue(focusedAverage ?? average)}
+              value={formatAverageValue(focusedAverage ?? average, scale)}
               className="text-2xl font-bold text-card-foreground"
             />
-            <span className="text-xs text-muted-foreground">/20</span>
+            <span className="text-xs text-muted-foreground">
+              {scale === 100 ? " %" : `/${scale}`}
+            </span>
           </span>
         </div>
         {hasTrend && (

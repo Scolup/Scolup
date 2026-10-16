@@ -4,6 +4,7 @@ import { fr } from "date-fns/locale/fr"
 import { cn } from "@/lib/utils"
 import { EASE_OUT, SPRING_POP } from "@/hooks/use-micro-interactions"
 import { resolveSubjectColor, resolveSubjectName } from "@/services/subjects"
+import { useAverageSettings } from "@/services/average-settings"
 import {
   formatAverageValue,
   gradeLabel,
@@ -22,6 +23,7 @@ export function RecentGradesStrip({
   impacts?: Map<string, number>
   onPick: (key: string) => void
 }) {
+  const { scale } = useAverageSettings()
   if (grades.length === 0) return null
   return (
     <section aria-label="Notes ajoutées récemment">
@@ -109,7 +111,8 @@ export function RecentGradesStrip({
                       )}
                     >
                       {impact > 0 ? "+" : ""}
-                      {formatAverageValue(impact)}
+                      {formatAverageValue(impact, scale)}
+                      {scale === 100 ? " %" : null}
                     </span>
                   )}
                 </span>

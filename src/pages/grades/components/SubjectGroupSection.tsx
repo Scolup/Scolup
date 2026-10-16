@@ -4,6 +4,7 @@ import { EASE_OUT } from "@/hooks/use-micro-interactions"
 import { resolveSubjectColor, resolveSubjectName } from "@/services/subjects"
 import { Badge } from "@/components/ui/badge"
 import { CompetencyDots } from "./CompetencyDots"
+import { useAverageSettings } from "@/services/average-settings"
 import {
   formatAverage,
   formatAverageValue,
@@ -27,6 +28,7 @@ export function SubjectGroupSection({
   registerRow: (key: string, el: HTMLElement | null) => void
   onOpen: (key: string) => void
 }) {
+  const { scale } = useAverageSettings()
   const color = resolveSubjectColor(group.subjectCode, group.subject)
   const display = resolveSubjectName(group.subjectCode, group.subject)
 
@@ -49,7 +51,7 @@ export function SubjectGroupSection({
         <span
           aria-label={
             group.average !== null
-              ? `Moyenne : ${formatAverage(group.average)}`
+              ? `Moyenne : ${formatAverage(group.average, scale)}`
               : "Moyenne non calculable"
           }
           className="shrink-0 tabular-nums"
@@ -57,9 +59,11 @@ export function SubjectGroupSection({
           {group.average !== null ? (
             <>
               <span className="text-base font-bold text-card-foreground">
-                {formatAverageValue(group.average)}
+                {formatAverageValue(group.average, scale)}
               </span>
-              <span className="text-xs text-muted-foreground">/20</span>
+              <span className="text-xs text-muted-foreground">
+                {scale === 100 ? " %" : `/${scale}`}
+              </span>
             </>
           ) : (
             <span className="text-sm text-muted-foreground">—</span>
