@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { ld } from "@/services/lowdirecte"
+import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { getSetting } from "@/services/storage"
 import { ensureSubjects } from "@/services/subjects"

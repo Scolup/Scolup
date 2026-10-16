@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { ld } from "@/services/lowdirecte"
+import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticLight } from "@/services/haptics"
 

@@ -1,7 +1,7 @@
 import type { FormEvent, ReactNode } from "react"
 import { Link } from "react-router"
 import { m, AnimatePresence } from "motion/react"
-import type { LoginChallenge } from "lowdirecte"
+import type { LoginChallenge } from "litedirecte"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {

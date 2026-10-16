@@ -34,10 +34,10 @@ export function Security() {
       <h2>Périmètre</h2>
       <p>
         Scolup s'appuie sur d'autres projets de notre organisation, notamment{" "}
-        <strong>Lowdirecte</strong> et <strong>Procsy</strong>. Une faille
+        <strong>Litedirecte</strong> et <strong>Procsy</strong>. Une faille
         trouvée dans l'un d'eux doit être signalée à{" "}
         <a
-          href="https://github.com/Scolup/Lowdirecte"
+          href="https://github.com/Scolup/Litedirecte"
           target="_blank"
           rel="noopener noreferrer"
         >

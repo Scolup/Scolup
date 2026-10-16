@@ -1,5 +1,5 @@
 import { m, AnimatePresence } from "motion/react"
-import type { LoginChallenge } from "lowdirecte"
+import type { LoginChallenge } from "litedirecte"
 import { cn } from "@/lib/utils"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { fadeUp } from "@/hooks/use-micro-interactions"

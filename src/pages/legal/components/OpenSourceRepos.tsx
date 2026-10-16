@@ -4,8 +4,8 @@ const REPOS = [
     label: "github.com/Scolup/Scolup",
   },
   {
-    href: "https://github.com/Scolup/Lowdirecte",
-    label: "github.com/Scolup/Lowdirecte",
+    href: "https://github.com/Scolup/Litedirecte",
+    label: "github.com/Scolup/Litedirecte",
   },
   {
     href: "https://github.com/Scolup/Procsy",

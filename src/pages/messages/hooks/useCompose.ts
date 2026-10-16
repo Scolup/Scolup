@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import { ld } from "@/services/lowdirecte"
+import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import {
   buildReplyBody,

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react"
-import type { LoginChallenge } from "lowdirecte"
-import { ld } from "@/services/lowdirecte"
+import type { LoginChallenge } from "litedirecte"
+import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { resetOnboarding } from "@/services/onboarding"
 
 export type ReauthPhase = "credentials" | "2fa"
 
 export interface ReauthModel {
-  /** True while Lowdirecte reports that the session needs a fresh login. */
+  /** True while Litedirecte reports that the session needs a fresh login. */
   required: boolean
   phase: ReauthPhase
   challenge: LoginChallenge | null
@@ -32,7 +32,7 @@ function isAuthRequired(): boolean {
 }
 
 /**
- * Drives the re-authentication sheet. Lowdirecte flags an unrecoverable
+ * Drives the re-authentication sheet. Litedirecte flags an unrecoverable
  * session through `ld.sync` (`auth-required`); a successful `ld.auth.login`
  * clears it, which closes the sheet on its own.
  */

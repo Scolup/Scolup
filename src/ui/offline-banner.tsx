@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { WifiDisconnected01Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
-import { ld } from "@/services/lowdirecte"
+import { ld } from "@/services/litedirecte"
 
 function readBrowserOffline(): boolean {
   try {

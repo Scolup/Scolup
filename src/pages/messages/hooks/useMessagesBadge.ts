@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { ld } from "@/services/lowdirecte"
+import { ld } from "@/services/litedirecte"
 
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
 import { MESSAGE_YEAR } from "../helpers"

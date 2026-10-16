@@ -363,7 +363,7 @@ function escapeHtml(text: string): string {
 }
 
 export function toMessageHtml(content: string): string {
-  // L'encodage des accents en entités vit dans Lowdirecte (sendMessage) :
+  // L'encodage des accents en entités vit dans Litedirecte (sendMessage) :
   // tous ses consommateurs en profitent, pas seulement Scolup.
   return escapeHtml(content.trim()).replace(/\n/g, "<br>")
 }

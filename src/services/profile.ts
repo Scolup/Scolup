@@ -1,4 +1,4 @@
-import { ld } from "@/services/lowdirecte"
+import { ld } from "@/services/litedirecte"
 import {
   delSetting,
   getSetting,

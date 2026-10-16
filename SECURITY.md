@@ -24,7 +24,7 @@ Security patches are applied to the **latest release** only.
 
 ### 🌐 Scope
 
-If you find vulnerabilities in other projects from us that are used by Scolup, like Lowdirecte or Procsy, please go to their respective repo and follow their own security policy.
+If you find vulnerabilities in other projects from us that are used by Scolup, like Litedirecte or Procsy, please go to their respective repo and follow their own security policy.
 
 <div align="center">
 
