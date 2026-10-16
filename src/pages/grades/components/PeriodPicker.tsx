@@ -4,6 +4,7 @@ import { Calendar02Icon } from "@hugeicons/core-free-icons"
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -47,12 +48,14 @@ export function PeriodPicker({
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {periods.map((period) => (
-          <SelectItem key={period.id} value={period.id}>
-            <HugeiconsIcon icon={Calendar02Icon} className="size-4" />
-            {period.label}
-          </SelectItem>
-        ))}
+        <SelectGroup>
+          {periods.map((period) => (
+            <SelectItem key={period.id} value={period.id}>
+              <HugeiconsIcon icon={Calendar02Icon} className="size-4" />
+              {period.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
       </SelectContent>
     </Select>
   )

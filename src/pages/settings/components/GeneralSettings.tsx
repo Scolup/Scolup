@@ -8,6 +8,7 @@ import { getSetting, setSetting } from "@/services/storage"
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -52,11 +53,13 @@ export function GeneralSettings() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {THEME_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  {THEME_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </div>

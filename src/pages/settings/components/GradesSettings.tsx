@@ -13,6 +13,7 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -65,11 +66,13 @@ export function GradesSettings() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {METHOD_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  {METHOD_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
@@ -95,11 +98,13 @@ export function GradesSettings() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {SCALE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  {SCALE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </div>

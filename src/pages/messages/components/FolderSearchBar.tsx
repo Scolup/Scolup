@@ -8,6 +8,7 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -53,14 +54,16 @@ export function FolderSearchBar({
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="inbox">
-            <HugeiconsIcon icon={Archive04Icon} className="size-4" />
-            Principal
-          </SelectItem>
-          <SelectItem value="sent">
-            <HugeiconsIcon icon={SentIcon} className="size-4" />
-            Envoyés
-          </SelectItem>
+          <SelectGroup>
+            <SelectItem value="inbox">
+              <HugeiconsIcon icon={Archive04Icon} className="size-4" />
+              Principal
+            </SelectItem>
+            <SelectItem value="sent">
+              <HugeiconsIcon icon={SentIcon} className="size-4" />
+              Envoyés
+            </SelectItem>
+          </SelectGroup>
         </SelectContent>
       </Select>
 
