@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
+import { triggerHapticLight } from "@/services/haptics"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import {
   buildPagination,
@@ -133,6 +134,7 @@ export function useMessagesPage() {
 
   const selectMessage = useCallback(
     (message: Message) => {
+      triggerHapticLight()
       pushedDrawer.current = true
       const params = new URLSearchParams(searchParams.toString())
       params.set("message", String(message.id))
@@ -175,6 +177,7 @@ export function useMessagesPage() {
     totalPages,
     ...pagination,
     setFolder: (value: FolderKey) => {
+      if (value !== folder) triggerHapticLight()
       detail.dismissSelected()
       pushedDrawer.current = false
       commit((params) => {
@@ -186,6 +189,7 @@ export function useMessagesPage() {
       })
     },
     setPage: (value: number) => {
+      if (value !== currentPage) triggerHapticLight()
       commit((params) => {
         if (value > 1) params.set("page", String(value))
         else params.delete("page")
@@ -205,6 +209,7 @@ export function useMessagesPage() {
       )
       ld.messages
         .markAsUnread(message.id, { year: MESSAGE_YEAR })
+        .then(() => triggerHapticLight())
         .catch((err) => {
           // État précédent restauré visiblement + toast (pas d'erreur
           // silencieuse).

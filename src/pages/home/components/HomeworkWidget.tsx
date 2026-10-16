@@ -16,6 +16,7 @@ import { WidgetSkeleton } from "@/pages/home/components/WidgetSkeleton"
 import { WidgetError } from "@/pages/home/components/WidgetState"
 import { useSplashTask } from "@/services/splash"
 import { ProgressRing } from "@/ui/progress-ring"
+import { triggerHapticLight } from "@/services/haptics"
 
 export function HomeworkWidget() {
   const navigate = useNavigate()
@@ -65,7 +66,10 @@ export function HomeworkWidget() {
         <div className="px-4 pt-3">
           <button
             type="button"
-            onClick={() => navigate("/homework")}
+            onClick={() => {
+              triggerHapticLight()
+              navigate("/homework")
+            }}
             className="flex min-h-11 w-full items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <span className="truncate text-sm font-semibold text-card-foreground">

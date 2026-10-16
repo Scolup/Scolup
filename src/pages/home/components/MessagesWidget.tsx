@@ -7,6 +7,7 @@ import { fr } from "date-fns/locale/fr"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowRight01Icon, MailOpen01Icon } from "@hugeicons/core-free-icons"
 import { ld } from "@/services/litedirecte"
+import { triggerHapticLight } from "@/services/haptics"
 import { useAsync } from "@/hooks/use-async"
 import { useDelayedLoading } from "@/hooks/use-delayed-loading"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
@@ -72,7 +73,10 @@ export function MessagesWidget() {
     >
       <button
         type="button"
-        onClick={() => navigate("/messages")}
+        onClick={() => {
+          triggerHapticLight()
+          navigate("/messages")
+        }}
         className="flex min-h-11 items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         <span className="truncate text-sm font-semibold text-card-foreground">
@@ -91,7 +95,10 @@ export function MessagesWidget() {
         <button
           key={message.id}
           type="button"
-          onClick={() => navigate(`/messages?message=${message.id}`)}
+          onClick={() => {
+            triggerHapticLight()
+            navigate(`/messages?message=${message.id}`)
+          }}
           className="flex min-h-12 items-center gap-2.5 rounded-2xl bg-input/50 px-3.5 py-2.5 text-left transition-colors outline-none hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <span

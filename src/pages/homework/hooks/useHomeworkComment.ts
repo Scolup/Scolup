@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
+import { triggerHapticMedium } from "@/services/haptics"
 import { accountDisplayName } from "@/services/profile"
 import { appendComment } from "../helpers"
 import type { Assignment } from "../helpers"
@@ -53,6 +54,7 @@ export function useHomeworkComment(
           })
         )
         setDraftState("")
+        triggerHapticMedium()
       } catch (err) {
         setError(errorMessage(err, "Impossible d'envoyer le commentaire."))
       } finally {

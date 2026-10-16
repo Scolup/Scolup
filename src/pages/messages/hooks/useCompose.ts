@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
+import { triggerHapticLight, triggerHapticMedium } from "@/services/haptics"
 import {
   buildReplyBody,
   buildReplySubject,
@@ -45,6 +46,7 @@ export function useCompose(onSent?: () => void) {
 
   const openNew = useCallback(() => {
     reset()
+    triggerHapticLight()
     setOpen(true)
   }, [reset])
 
@@ -64,6 +66,7 @@ export function useCompose(onSent?: () => void) {
       setStep(resolved ? 2 : 1)
       setMode("reply")
       setReplySender(message.sender)
+      triggerHapticLight()
       setOpen(true)
     },
     [reset]
@@ -85,6 +88,7 @@ export function useCompose(onSent?: () => void) {
   }, [reset])
 
   const toggleRecipient = useCallback((contact: Contact) => {
+    triggerHapticLight()
     setRecipients((prev) =>
       prev.some((r) => r.id === contact.id && r.type === contact.type)
         ? prev.filter((r) => !(r.id === contact.id && r.type === contact.type))
@@ -130,6 +134,7 @@ export function useCompose(onSent?: () => void) {
         destinataires: recipients.map((r) => r.raw),
         files,
       })
+      triggerHapticMedium()
       setSent(true)
       onSent?.()
     } catch (err) {

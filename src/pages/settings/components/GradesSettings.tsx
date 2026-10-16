@@ -10,6 +10,7 @@ import {
   setAverageScale,
   useAverageSettings,
 } from "@/services/average-settings"
+import { triggerHapticLight } from "@/services/haptics"
 import {
   Select,
   SelectContent,
@@ -59,7 +60,10 @@ export function GradesSettings() {
               items={METHOD_OPTIONS}
               value={method}
               onValueChange={(value) => {
-                if (isAverageMethod(value)) void setAverageMethod(value)
+                if (isAverageMethod(value) && value !== method) {
+                  triggerHapticLight()
+                  void setAverageMethod(value)
+                }
               }}
             >
               <SelectTrigger id="settings-average-method" className="w-full">
@@ -91,7 +95,10 @@ export function GradesSettings() {
               value={String(scale)}
               onValueChange={(value) => {
                 const parsed = value === null ? NaN : Number(value)
-                if (isAverageScale(parsed)) void setAverageScale(parsed)
+                if (isAverageScale(parsed) && parsed !== scale) {
+                  triggerHapticLight()
+                  void setAverageScale(parsed)
+                }
               }}
             >
               <SelectTrigger id="settings-average-scale" className="w-full">

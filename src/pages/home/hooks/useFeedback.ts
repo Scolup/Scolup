@@ -1,4 +1,6 @@
 import { useCallback, useState } from "react"
+import { triggerHapticMedium } from "@/services/haptics"
+
 export function useFeedback() {
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState("")
@@ -26,6 +28,7 @@ export function useFeedback() {
       if (!res.ok) throw new Error(`http_${res.status}`)
       setMessage("")
       setOpen(false)
+      triggerHapticMedium()
     } catch {
       setError("Envoi impossible, réessaie.")
     } finally {

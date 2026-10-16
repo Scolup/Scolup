@@ -16,12 +16,12 @@ function buzz(pattern: number | number[]): void {
   }
 }
 
-// Coche d'un devoir, changement d'onglet, cran du graphe.
+// Sélection, navigation et coche d'un devoir.
 export function triggerHapticLight(): void {
   buzz(10)
 }
 
-// Succès marqué (100 % d'un anneau, envoi réussi).
+// Confirmation d'une action réussie (envoi d'un message ou commentaire).
 export function triggerHapticMedium(): void {
   buzz([15, 40, 15])
 }

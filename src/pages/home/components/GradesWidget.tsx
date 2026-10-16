@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { useSplashTask } from "@/services/splash"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAverageSettings } from "@/services/average-settings"
+import { triggerHapticLight } from "@/services/haptics"
 import {
   computeOverallAverage,
   cumulativeGeneralAverageByDay,
@@ -180,7 +181,10 @@ export function GradesWidget() {
         <div className="flex items-center justify-between gap-3 px-3.5">
           <button
             type="button"
-            onClick={() => navigate("/grades")}
+            onClick={() => {
+              triggerHapticLight()
+              navigate("/grades")
+            }}
             className="flex min-h-11 items-center gap-1 text-sm font-semibold text-card-foreground transition-colors outline-none hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             Moyenne générale
@@ -223,7 +227,10 @@ export function GradesWidget() {
             <button
               key={grade.key}
               type="button"
-              onClick={() => navigate("/grades")}
+              onClick={() => {
+                triggerHapticLight()
+                navigate("/grades")
+              }}
               className="flex min-h-11 items-center gap-2.5 rounded-2xl px-3.5 py-2 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               <span

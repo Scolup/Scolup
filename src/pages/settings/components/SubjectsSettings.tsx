@@ -12,6 +12,7 @@ import {
 import { ld } from "@/services/litedirecte"
 import { cn } from "@/lib/utils"
 import { errorMessage } from "@/services/errors"
+import { triggerHapticLight } from "@/services/haptics"
 import { useAsync } from "@/hooks/use-async"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
 import {
@@ -120,6 +121,7 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
       setSaving(true)
       try {
         await resetColorOnly()
+        if (color.toLowerCase() !== picked.toLowerCase()) triggerHapticLight()
       } finally {
         setSaving(false)
       }
@@ -128,6 +130,7 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
     setSaving(true)
     try {
       await updateSubject(subject.id, { customColor: picked })
+      if (color.toLowerCase() !== picked.toLowerCase()) triggerHapticLight()
     } finally {
       setSaving(false)
     }
@@ -138,6 +141,7 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
     setSaving(true)
     try {
       await resetSubject(subject.id)
+      triggerHapticLight()
     } finally {
       setSaving(false)
     }

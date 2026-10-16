@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { getSetting } from "@/services/storage"
 import { addDays, parseDateKey, toDayKey, weekOf } from "@/services/dates"
+import { triggerHapticLight } from "@/services/haptics"
 import { coursesForDay, type AgendaView, type Course } from "../helpers"
 import { useAgenda } from "./useAgenda"
 
@@ -88,6 +89,7 @@ export function useAgendaPage() {
     (next: Date, dir?: number) => {
       const current = toDayKey(date)
       const target = toDayKey(next)
+      if (target !== current) triggerHapticLight()
       setNavDir(dir ?? (target > current ? 1 : target < current ? -1 : 0))
       // Changing day drops the drawer state, including its history entry.
       pushedDrawer.current = false
@@ -101,17 +103,21 @@ export function useAgendaPage() {
   )
 
   const setView = useCallback(
-    (next: AgendaView) =>
+    (next: AgendaView) => {
+      if (next === view) return
+      triggerHapticLight()
       commit((params) => {
         if (next === "week") params.set("vue", "semaine")
         else params.delete("vue")
-      }),
-    [commit]
+      })
+    },
+    [commit, view]
   )
 
   const select = useCallback(
     (course: Course | null) => {
       if (course) {
+        if (course.stableId !== courseParam) triggerHapticLight()
         pushedDrawer.current = true
         const params = new URLSearchParams(searchParams.toString())
         params.set("cours", course.stableId)
@@ -127,7 +133,7 @@ export function useAgendaPage() {
         params.delete("cours")
       })
     },
-    [commit, navigate, searchParams, setSearchParams]
+    [commit, courseParam, navigate, searchParams, setSearchParams]
   )
 
   useStoredWeekView(

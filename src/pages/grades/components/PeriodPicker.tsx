@@ -1,6 +1,7 @@
 import type { Period } from "../helpers"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Calendar02Icon } from "@hugeicons/core-free-icons"
+import { triggerHapticLight } from "@/services/haptics"
 import {
   Select,
   SelectContent,
@@ -28,7 +29,8 @@ export function PeriodPicker({
     <Select
       value={selected}
       onValueChange={(value) => {
-        if (value === null) return
+        if (value === null || value === selected) return
+        triggerHapticLight()
         onSelect(value)
       }}
     >

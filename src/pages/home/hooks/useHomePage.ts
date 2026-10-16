@@ -9,6 +9,7 @@ import {
 } from "@/services/profile"
 import { resetOnboarding } from "@/services/onboarding"
 import { errorMessage } from "@/services/errors"
+import { triggerHapticLight } from "@/services/haptics"
 import { initialsFromName } from "@/lib/utils"
 
 function studentName(): string {
@@ -39,6 +40,7 @@ export function useHomePage() {
 
   const openPage = useCallback(
     (path: string) => {
+      triggerHapticLight()
       navigate(path)
     },
     [navigate]

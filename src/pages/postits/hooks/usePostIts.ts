@@ -2,6 +2,7 @@ import { useCallback, useState } from "react"
 import { useNavigate } from "react-router"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
+import { triggerHapticLight } from "@/services/haptics"
 import { useAsync } from "@/hooks/use-async"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
 import { NO_NOTES, toPostIt } from "../helpers"
@@ -42,6 +43,7 @@ export function usePostIts() {
     ) as HTMLImageElement | null
     const src = image?.currentSrc || image?.getAttribute("src")
     if (!image || !src) return
+    triggerHapticLight()
     setViewer({ src, alt: image.getAttribute("alt") ?? "" })
   }, [])
 

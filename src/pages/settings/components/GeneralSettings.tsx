@@ -5,6 +5,7 @@ import { Switch as SwitchPrimitive } from "@base-ui/react/switch"
 import { AccentColorPicker } from "@/ui/accent-color-picker"
 import { useTheme } from "@/ui/theme-provider"
 import { getSetting, setSetting } from "@/services/storage"
+import { triggerHapticLight } from "@/services/haptics"
 import {
   Select,
   SelectContent,
@@ -46,6 +47,7 @@ export function GeneralSettings() {
               value={theme}
               onValueChange={(value) => {
                 if (value === null) return
+                if (value !== theme) triggerHapticLight()
                 setTheme(value)
               }}
             >
@@ -67,6 +69,7 @@ export function GeneralSettings() {
             label="Couleur de l'application"
             value={accentColor}
             onPick={(color) => {
+              if (color !== accentColor) triggerHapticLight()
               setAccentColor(color)
             }}
           />
@@ -84,6 +87,7 @@ export function GeneralSettings() {
               onCheckedChange={(checked) => {
                 setHaptics(checked)
                 void setSetting("haptics", checked)
+                if (checked) triggerHapticLight()
               }}
               aria-label="Vibrations"
               className="flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full bg-muted p-0.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 motion-reduce:transition-none data-checked:bg-primary"

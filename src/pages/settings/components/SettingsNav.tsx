@@ -1,6 +1,7 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { triggerHapticLight } from "@/services/haptics"
 import { SECTIONS, type SectionIcon, type SectionId } from "../sections"
 
 function NavButton({
@@ -21,6 +22,7 @@ function NavButton({
       variant="ghost"
       aria-pressed={active}
       onClick={() => {
+        if (!active) triggerHapticLight()
         onClick()
       }}
       className={cn(

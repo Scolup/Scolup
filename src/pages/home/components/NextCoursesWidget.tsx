@@ -7,6 +7,7 @@ import { ArrowRight01Icon, Calendar03Icon } from "@hugeicons/core-free-icons"
 import { resolveSubjectName } from "@/services/subjects"
 import { courseRelativeLabel, dayLabel } from "@/pages/agenda/helpers"
 import { formatTime, toDayKey, weekOf } from "@/services/dates"
+import { triggerHapticLight } from "@/services/haptics"
 import { nextDayWithCourses } from "@/pages/home/helpers"
 import { useAgenda } from "@/pages/agenda/hooks/useAgenda"
 import { useDelayedLoading } from "@/hooks/use-delayed-loading"
@@ -55,7 +56,10 @@ export function NextCoursesWidget() {
     >
       <button
         type="button"
-        onClick={() => navigate(`/agenda?date=${day.key}`)}
+        onClick={() => {
+          triggerHapticLight()
+          navigate(`/agenda?date=${day.key}`)
+        }}
         className="flex min-h-11 items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         <span className="truncate text-sm font-semibold text-card-foreground">
@@ -74,7 +78,10 @@ export function NextCoursesWidget() {
         <button
           key={course.key}
           type="button"
-          onClick={() => navigate(`/agenda?date=${day.key}`)}
+          onClick={() => {
+            triggerHapticLight()
+            navigate(`/agenda?date=${day.key}`)
+          }}
           className="flex min-h-12 items-center gap-3 rounded-2xl bg-input/50 px-3.5 py-2.5 text-left transition-colors outline-none hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <span className="flex shrink-0 flex-col items-center tabular-nums">

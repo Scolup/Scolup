@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
+import { triggerHapticLight } from "@/services/haptics"
 import { mergeDayDetails, normalizeCalendar } from "../helpers"
 import type { Assignment, AssignmentsSetter } from "../helpers"
 
@@ -109,8 +110,10 @@ export function useHomeworkDetail(
     detailError,
     retryDetail: () => setDetailRetryKey((key) => key + 1),
     clearDetailCache: () => fetchedDays.clear(),
-    selectAssignment: (assignment: Assignment) =>
-      setSelectedKey(assignment.key),
+    selectAssignment: (assignment: Assignment) => {
+      if (assignment.key !== selectedKey) triggerHapticLight()
+      setSelectedKey(assignment.key)
+    },
     closeDetail: () => setSelectedKey(null),
   }
 }

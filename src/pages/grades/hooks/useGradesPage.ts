@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { markSeen } from "@/services/storage"
+import { triggerHapticLight } from "@/services/haptics"
 import { resolveSubjectName, useSubjects } from "@/services/subjects"
 import { useGrades } from "./useGrades"
 
@@ -28,6 +29,7 @@ export function useGradesPage() {
   )
 
   const scrollToGrade = useCallback((key: string) => {
+    triggerHapticLight()
     rowRefs.current.get(key)?.scrollIntoView({
       behavior: "smooth",
       block: "center",
@@ -46,6 +48,7 @@ export function useGradesPage() {
   }, [])
 
   const openGrade = useCallback((key: string) => {
+    triggerHapticLight()
     setSelectedKey(key)
   }, [])
 
