@@ -6,6 +6,7 @@ export interface SubjectRecord {
   name: string
   customName?: string
   customColor?: string
+  coef?: number
 }
 
 interface ScolupDB extends DBSchema {
@@ -23,7 +24,7 @@ let dbInstance: IDBPDatabase<ScolupDB> | null = null
 
 export async function getDB(): Promise<IDBPDatabase<ScolupDB>> {
   if (!dbInstance) {
-    dbInstance = await openDB<ScolupDB>("scolup", 2, {
+    dbInstance = await openDB<ScolupDB>("scolup", 3, {
       upgrade(db, oldVersion) {
         if (oldVersion < 1) db.createObjectStore("settings")
         else if (!db.objectStoreNames.contains("settings")) {

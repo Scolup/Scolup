@@ -168,6 +168,28 @@ export function resolveSubjectName(code?: string, name?: string): string {
   return code?.trim() || "Sans matière"
 }
 
+// Coefficient par défaut selon le nom officiel de la matière. On compare sur
+// le préfixe pour encaisser les variantes (« Histoire/Géographie »,
+// « Histoire-géographie », « Maths »…).
+export function defaultSubjectCoef(name: string): number {
+  const normalized = normalizeName(name)
+  if (normalized.startsWith("math") || normalized.startsWith("fran")) return 3
+  if (
+    normalized.startsWith("anglais") ||
+    normalized.startsWith("hist") ||
+    normalized.startsWith("géo")
+  )
+    return 2
+  return 1
+}
+
+export function resolveSubjectCoef(code?: string, name?: string): number {
+  const found = findSubject(cache ?? [], code, name)
+  const coef = found?.coef
+  if (typeof coef === "number" && Number.isFinite(coef) && coef > 0) return coef
+  return defaultSubjectCoef(found?.name ?? name ?? "")
+}
+
 export function useSubjectDisplay(
   code?: string,
   name?: string
@@ -217,6 +239,7 @@ export async function ensureSubjects(
 export interface SubjectCustomization {
   customName?: string
   customColor?: string
+  coef?: number
 }
 
 export async function updateSubject(
@@ -239,11 +262,22 @@ export async function updateSubject(
         ? patch.customColor
         : current.customColor
       : current.customColor
+  const coef =
+    patch.coef !== undefined
+      ? Number.isFinite(patch.coef) && patch.coef > 0
+        ? patch.coef
+        : current.coef
+      : current.coef
   const next: SubjectRecord = { ...current }
   if (customName) next.customName = customName
   else delete next.customName
   if (customColor) next.customColor = customColor
   else delete next.customColor
+  // On ne stocke que ce qui diffère de la valeur par défaut : « 1 » est un
+  // vrai choix (ex. Maths ramenées à 1) et ne doit pas être écrasé.
+  const fallback = defaultSubjectCoef(current.name)
+  if (coef !== undefined && coef !== fallback) next.coef = coef
+  else delete next.coef
   list[index] = next
   await persist(list)
   return list
@@ -255,7 +289,7 @@ export async function resetSubject(id: string): Promise<SubjectRecord[]> {
   const list = [...(cache ?? [])]
   const index = list.findIndex((entry) => entry.id === id)
   if (index === -1) return list
-  const { customName: _n, customColor: _c, ...rest } = list[index]
+  const { customName: _n, customColor: _c, coef: _k, ...rest } = list[index]
   list[index] = rest
   await persist(list)
   return list

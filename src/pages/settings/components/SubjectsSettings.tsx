@@ -15,9 +15,11 @@ import { errorMessage } from "@/services/errors"
 import { useAsync } from "@/hooks/use-async"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
 import {
+  defaultSubjectCoef,
   disciplineSubjects,
   ensureSubjects,
   resetSubject,
+  resolveSubjectCoef,
   resolveSubjectColor,
   resolveSubjectName,
   SUBJECT_PICKER_COLORS,
@@ -65,12 +67,18 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
   const records = useSubjects()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<string | null>(null)
+  const [coefDraft, setCoefDraft] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   const record = records?.find((entry) => entry.id === subject.id)
   const display = resolveSubjectName(subject.code, subject.name)
   const color = resolveSubjectColor(subject.code, subject.name)
-  const customized = !!record?.customName?.trim() || !!record?.customColor
+  const defaultCoef = defaultSubjectCoef(record?.name ?? subject.name)
+  const coef = resolveSubjectCoef(subject.code, subject.name)
+  const customized =
+    !!record?.customName?.trim() ||
+    !!record?.customColor ||
+    coef !== defaultCoef
 
   const inputValue = draft ?? record?.customName ?? ""
   const dirty =
@@ -91,10 +99,19 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
     }
   }
 
+  const applyCoef = (raw: string) => {
+    const parsed = raw.trim().replace(",", ".")
+    const value = parsed === "" ? 1 : Number(parsed)
+    const next = Number.isFinite(value) && value > 0 ? value : coef
+    if (next !== coef) void updateSubject(subject.id, { coef: next })
+  }
+
   const resetColorOnly = async () => {
     const name = record?.customName
     await resetSubject(subject.id)
-    if (name?.trim()) await updateSubject(subject.id, { customName: name })
+    if (name?.trim() || coef !== defaultCoef) {
+      await updateSubject(subject.id, { customName: name, coef })
+    }
   }
 
   const pickColor = async (picked: string) => {
@@ -173,6 +190,28 @@ function SubjectRow({ subject }: { subject: ListedSubject }) {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") (e.target as HTMLInputElement).blur()
                   if (e.key === "Escape") setDraft(null)
+                }}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`subject-coef-${subject.id}`}>Coefficient</Label>
+              <Input
+                id={`subject-coef-${subject.id}`}
+                type="number"
+                inputMode="decimal"
+                step="any"
+                min="0"
+                value={coefDraft ?? String(coef)}
+                placeholder="1"
+                autoComplete="off"
+                onChange={(e) => {
+                  setCoefDraft(e.target.value)
+                  applyCoef(e.target.value)
+                }}
+                onBlur={() => setCoefDraft(null)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") (e.target as HTMLInputElement).blur()
+                  if (e.key === "Escape") setCoefDraft(null)
                 }}
               />
             </div>
@@ -327,7 +366,7 @@ export function SubjectsSettings() {
   return (
     <div className="flex flex-col gap-3">
       <p className="px-1 text-sm text-muted-foreground">
-        Personnalise le nom et la couleur de chaque matière.
+        Personnalise le nom, la couleur et le coefficient de chaque matière.
       </p>
       {content}
     </div>

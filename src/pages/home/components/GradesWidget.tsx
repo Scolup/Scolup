@@ -15,6 +15,7 @@ import { WidgetEmpty, WidgetError } from "./WidgetState"
 import { cn } from "@/lib/utils"
 import { AnimatedNumber } from "@/ui/animated-number"
 import {
+  resolveSubjectCoef,
   resolveSubjectColor,
   resolveSubjectName,
   useSubjects,
@@ -46,7 +47,11 @@ const NO_GRADES: Grade[] = []
 
 export function GradesWidget() {
   const navigate = useNavigate()
-  useSubjects()
+  const subjects = useSubjects()
+  const coefOf = useMemo(
+    () => (code?: string, name?: string) => resolveSubjectCoef(code, name),
+    [subjects]
+  )
   const [reloadKey, setReloadKey] = useState(0)
   // Moyenne à la date survolée, comme sur la page notes : tant qu'un point
   // du mini-graphe a le focus, elle remplace la moyenne actuelle.
@@ -89,7 +94,7 @@ export function GradesWidget() {
         !period || period.annuel
           ? grades
           : grades.filter((grade) => grade.period === period.id)
-      const groups = groupBySubject(visible)
+      const groups = groupBySubject(visible, coefOf)
       const cutoff = Date.now() - RECENT_MS
       const fresh = visible
         .filter(
@@ -102,7 +107,7 @@ export function GradesWidget() {
             (b.enteredOn as Date).getTime() - (a.enteredOn as Date).getTime()
         )
         .slice(0, 3)
-      const points = cumulativeGeneralAverageByDay(visible)
+      const points = cumulativeGeneralAverageByDay(visible, coefOf)
       let min = Number.POSITIVE_INFINITY
       let max = Number.NEGATIVE_INFINITY
       for (const point of points) {
@@ -126,7 +131,7 @@ export function GradesWidget() {
           : [0, 20]) as [number, number],
         hasTrend: points.some((point) => point.average !== null),
       }
-    }, [grades, period])
+    }, [grades, period, coefOf])
 
   if (error)
     return <WidgetError onRetry={() => setReloadKey((key) => key + 1)} />

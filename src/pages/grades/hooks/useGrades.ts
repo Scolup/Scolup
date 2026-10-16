@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from "react"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { getSetting } from "@/services/storage"
-import { ensureSubjects } from "@/services/subjects"
+import {
+  ensureSubjects,
+  resolveSubjectCoef,
+  useSubjects,
+} from "@/services/subjects"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
 import {
   cumulativeGeneralAverageByDay,
@@ -120,6 +124,13 @@ export function useGrades(): GradesModel {
   const grades = payload?.grades ?? NO_GRADES
   const periods = payload?.periods ?? NO_PERIODS
   const evalColors = payload?.evalColors ?? DEFAULT_EVAL_COLORS
+  // Se re-rend quand une matière change : les memos ci-dessous en dépendent
+  // pour recalculer les moyennes pondérées par coefficient.
+  const subjects = useSubjects()
+  const coefOf = useMemo(
+    () => (code?: string, name?: string) => resolveSubjectCoef(code, name),
+    [subjects]
+  )
 
   const visibleGrades = useMemo(() => {
     const selected = periods.find((period) => period.id === selectedPeriod)
@@ -127,11 +138,14 @@ export function useGrades(): GradesModel {
     return grades.filter((grade) => grade.period === selectedPeriod)
   }, [grades, periods, selectedPeriod])
 
-  const groups = useMemo(() => groupBySubject(visibleGrades), [visibleGrades])
+  const groups = useMemo(
+    () => groupBySubject(visibleGrades, coefOf),
+    [visibleGrades, coefOf]
+  )
   const overallAverage = useMemo(() => generalAverage(groups), [groups])
   const trend = useMemo(
-    () => cumulativeGeneralAverageByDay(visibleGrades),
-    [visibleGrades]
+    () => cumulativeGeneralAverageByDay(visibleGrades, coefOf),
+    [visibleGrades, coefOf]
   )
   const hasTrend = useMemo(
     () => trend.some((point) => point.average !== null),

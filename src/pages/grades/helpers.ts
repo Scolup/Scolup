@@ -26,7 +26,15 @@ export interface SubjectGroup {
   subjectCode?: string
   grades: Grade[]
   average: number | null
+  coef: number
 }
+
+// Résolveur de coefficient d'une matière (code, libellé) — injecté depuis
+// l'extérieur pour garder ce fichier sans dépendance.
+export type SubjectCoefOf = (
+  subjectCode: string | undefined,
+  subject: string
+) => number
 
 export interface Period {
   id: string
@@ -239,7 +247,10 @@ export function countUpValue(
   return from + (to - from) * eased
 }
 
-export function groupBySubject(grades: Grade[]): SubjectGroup[] {
+export function groupBySubject(
+  grades: Grade[],
+  coefOf?: SubjectCoefOf
+): SubjectGroup[] {
   const groups = new Map<string, Grade[]>()
   for (const grade of grades) {
     const list = groups.get(grade.subject)
@@ -248,25 +259,33 @@ export function groupBySubject(grades: Grade[]): SubjectGroup[] {
   }
   return [...groups.entries()]
     .sort(([a], [b]) => a.localeCompare(b, "fr"))
-    .map(([subject, list]) => ({
-      subject,
-      subjectCode: list.find((grade) => grade.subjectCode)?.subjectCode,
-      grades: list.sort(
-        (a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0)
-      ),
-      average: subjectAverage(list),
-    }))
+    .map(([subject, list]) => {
+      const subjectCode = list.find((grade) => grade.subjectCode)?.subjectCode
+      const parsed = coefOf?.(subjectCode, subject)
+      return {
+        subject,
+        subjectCode,
+        grades: list.sort(
+          (a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0)
+        ),
+        average: subjectAverage(list),
+        coef:
+          parsed !== undefined && Number.isFinite(parsed) && parsed > 0
+            ? parsed
+            : 1,
+      }
+    })
 }
 
 export function generalAverage(groups: SubjectGroup[]): number | null {
   let sum = 0
-  let count = 0
+  let weights = 0
   for (const group of groups) {
     if (group.average === null) continue
-    sum += group.average
-    count += 1
+    sum += group.average * group.coef
+    weights += group.coef
   }
-  return count > 0 ? sum / count : null
+  return weights > 0 ? sum / weights : null
 }
 
 function startOfDayTime(date: Date): number {
@@ -290,6 +309,7 @@ export function gradeLabel(grade: Grade): string {
 
 export function cumulativeGeneralAverageByDay(
   grades: Grade[],
+  coefOf?: SubjectCoefOf,
   days = 30,
   now: Date = new Date()
 ): TrendPoint[] {
@@ -308,14 +328,14 @@ export function cumulativeGeneralAverageByDay(
     const upto = dated
       .filter((entry) => entry.time <= dayTime)
       .map((entry) => entry.grade)
-    const average = generalAverage(groupBySubject(upto))
+    const average = generalAverage(groupBySubject(upto, coefOf))
     const rounded = average === null ? null : Math.round(average * 100) / 100
     const newcomers: TrendNewcomer[] = []
     if (rounded !== null) {
       for (const entry of dated) {
         if (entry.time !== dayTime) continue
         const rest = upto.filter((grade) => grade !== entry.grade)
-        const without = generalAverage(groupBySubject(rest))
+        const without = generalAverage(groupBySubject(rest, coefOf))
         const impact = Math.round((rounded - (without ?? 0)) * 100) / 100
         if (impact === 0) continue
         newcomers.push({
