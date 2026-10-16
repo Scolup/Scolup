@@ -132,13 +132,20 @@ export function HomeworkEntry({
     : undefined
 
   return (
-    <m.div variants={fadeUp(12, 0.4)} className="px-4 py-1.5">
-      <div
+    <m.div
+      variants={fadeUp(12, 0.4)}
+      layout
+      exit={{ opacity: 0, scale: 0.98 }}
+      className="px-4 py-1.5"
+    >
+      <m.div
         role={open ? "button" : undefined}
         tabIndex={open ? 0 : undefined}
         aria-label={open ? `Voir le devoir de ${display}` : undefined}
         onClick={onActivate}
         onKeyDown={onActivateKey}
+        whileTap={open ? { scale: 0.98 } : undefined}
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
         className={cn(
           "flex min-h-11 items-center gap-3 rounded-2xl border border-transparent bg-input/50 px-3.5 py-3 transition-[background-color,box-shadow,opacity] duration-200",
           "hover:bg-muted/70 hover:shadow-sm has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/30",
@@ -180,7 +187,7 @@ export function HomeworkEntry({
 
           <EntryMeta documents={documents} comments={comments} />
         </div>
-      </div>
+      </m.div>
     </m.div>
   )
 }

@@ -17,6 +17,7 @@ import {
   useParams,
 } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { m } from "motion/react"
 import {
   Home01Icon,
   Comment03Icon,
@@ -113,19 +114,35 @@ function TabBar({
   const hasUnread = unread !== null && unread > 0
   const retapProps = (value: string) =>
     value === active ? { onClick: onRetap } : {}
+  const bounce = (value: string) =>
+    active === value ? { initial: { scale: 0.7 }, animate: { scale: 1 } } : {}
 
   return (
     <BottomNavigationList>
       <BottomNavigationItem value="home" {...retapProps("home")}>
         <BottomNavigationItemIcon>
-          <HugeiconsIcon icon={Home01Icon} strokeWidth={2} />
+          <m.span
+            key={`home-${active === "home"}`}
+            {...bounce("home")}
+            transition={{ type: "spring", stiffness: 500, damping: 18 }}
+            className="flex"
+          >
+            <HugeiconsIcon icon={Home01Icon} strokeWidth={2} />
+          </m.span>
         </BottomNavigationItemIcon>
         <BottomNavigationItemLabel>Accueil</BottomNavigationItemLabel>
       </BottomNavigationItem>
 
       <BottomNavigationItem value="messages" {...retapProps("messages")}>
         <BottomNavigationItemIcon className="relative">
-          <HugeiconsIcon icon={Comment03Icon} strokeWidth={2} />
+          <m.span
+            key={`messages-${active === "messages"}`}
+            {...bounce("messages")}
+            transition={{ type: "spring", stiffness: 500, damping: 18 }}
+            className="flex"
+          >
+            <HugeiconsIcon icon={Comment03Icon} strokeWidth={2} />
+          </m.span>
           {hasUnread && (
             <span
               aria-hidden="true"
@@ -148,21 +165,42 @@ function TabBar({
 
       <BottomNavigationItem value="agenda" {...retapProps("agenda")}>
         <BottomNavigationItemIcon>
-          <HugeiconsIcon icon={Calendar02Icon} strokeWidth={2} />
+          <m.span
+            key={`agenda-${active === "agenda"}`}
+            {...bounce("agenda")}
+            transition={{ type: "spring", stiffness: 500, damping: 18 }}
+            className="flex"
+          >
+            <HugeiconsIcon icon={Calendar02Icon} strokeWidth={2} />
+          </m.span>
         </BottomNavigationItemIcon>
         <BottomNavigationItemLabel>Agenda</BottomNavigationItemLabel>
       </BottomNavigationItem>
 
       <BottomNavigationItem value="homework" {...retapProps("homework")}>
         <BottomNavigationItemIcon>
-          <HugeiconsIcon icon={LibraryIcon} strokeWidth={2} />
+          <m.span
+            key={`homework-${active === "homework"}`}
+            {...bounce("homework")}
+            transition={{ type: "spring", stiffness: 500, damping: 18 }}
+            className="flex"
+          >
+            <HugeiconsIcon icon={LibraryIcon} strokeWidth={2} />
+          </m.span>
         </BottomNavigationItemIcon>
         <BottomNavigationItemLabel>Devoirs</BottomNavigationItemLabel>
       </BottomNavigationItem>
 
       <BottomNavigationItem value="grades" {...retapProps("grades")}>
         <BottomNavigationItemIcon>
-          <HugeiconsIcon icon={Mortarboard01Icon} strokeWidth={2} />
+          <m.span
+            key={`grades-${active === "grades"}`}
+            {...bounce("grades")}
+            transition={{ type: "spring", stiffness: 500, damping: 18 }}
+            className="flex"
+          >
+            <HugeiconsIcon icon={Mortarboard01Icon} strokeWidth={2} />
+          </m.span>
         </BottomNavigationItemIcon>
         <BottomNavigationItemLabel>Notes</BottomNavigationItemLabel>
       </BottomNavigationItem>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { m } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowLeft01Icon,
@@ -65,15 +66,25 @@ function ViewSwitch({
             onViewChange(value)
           }}
           className={cn(
-            "rounded-full px-3 py-1 text-xs font-medium transition-colors duration-200 outline-none",
+            "relative rounded-full px-3 py-1 text-xs font-medium transition-colors duration-200 outline-none",
             "focus-visible:ring-3 focus-visible:ring-ring/30",
             buttonClassName,
             view === value
-              ? "bg-card text-card-foreground shadow-sm"
+              ? "text-card-foreground"
               : "text-muted-foreground hover:text-foreground"
           )}
         >
-          {value === "day" ? "Jour" : "Semaine"}
+          {view === value && (
+            <m.span
+              layoutId="agenda-view-pill"
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              className="absolute inset-0 rounded-full bg-card shadow-sm"
+              aria-hidden="true"
+            />
+          )}
+          <span className="relative">
+            {value === "day" ? "Jour" : "Semaine"}
+          </span>
         </button>
       ))}
     </div>
@@ -202,18 +213,32 @@ export function AgendaHeader({
                 <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
                   {shortDayName(day)}
                 </span>
-                <span
+                <m.span
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
                   className={cn(
-                    "flex size-8 items-center justify-center rounded-full text-sm tabular-nums transition-colors duration-200",
+                    "relative flex size-8 items-center justify-center rounded-full text-sm tabular-nums transition-colors duration-200",
                     isSelected
-                      ? "bg-primary font-bold text-primary-foreground group-hover:bg-primary/80"
+                      ? "font-bold text-primary-foreground"
                       : isDayToday
                         ? "font-bold text-primary-text group-hover:bg-muted"
                         : "text-card-foreground group-hover:bg-muted"
                   )}
                 >
-                  {day.getDate()}
-                </span>
+                  {isSelected && (
+                    <m.span
+                      layoutId="agenda-day-pill"
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 35,
+                      }}
+                      className="absolute inset-0 rounded-full bg-primary"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span className="relative">{day.getDate()}</span>
+                </m.span>
               </button>
             )
           })}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
+import { AnimatePresence, m } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { WifiDisconnected01Icon } from "@hugeicons/core-free-icons"
-import { cn } from "@/lib/utils"
 import { ld } from "@/services/litedirecte"
 
 function readBrowserOffline(): boolean {
@@ -62,23 +62,27 @@ export function OfflineBanner() {
   if (!render) return null
 
   return (
-    <div
-      role="status"
-      aria-hidden={!offline}
-      className={cn(
-        "flex min-h-0 items-center justify-center px-4 py-0.5 transition-opacity duration-300",
-        offline ? "opacity-100" : "pointer-events-none opacity-0"
+    <AnimatePresence initial={false}>
+      {offline && (
+        <m.div
+          role="status"
+          initial={{ height: 0, opacity: 0, y: -8 }}
+          animate={{ height: "auto", opacity: 1, y: 0 }}
+          exit={{ height: 0, opacity: 0, y: -8 }}
+          transition={{ duration: 0.25, ease: [0.25, 0.1, 0.15, 1] }}
+          className="flex min-h-0 items-center justify-center overflow-hidden px-4 py-0.5"
+        >
+          <p className="flex min-w-0 items-center justify-center gap-1 text-center text-[11px] leading-tight text-muted-foreground/60">
+            <HugeiconsIcon
+              icon={WifiDisconnected01Icon}
+              strokeWidth={2}
+              className="size-3 shrink-0"
+              aria-hidden="true"
+            />
+            <span className="truncate">Hors ligne</span>
+          </p>
+        </m.div>
       )}
-    >
-      <p className="flex min-w-0 items-center justify-center gap-1 text-center text-[11px] leading-tight text-muted-foreground/60">
-        <HugeiconsIcon
-          icon={WifiDisconnected01Icon}
-          strokeWidth={2}
-          className="size-3 shrink-0"
-          aria-hidden="true"
-        />
-        <span className="truncate">Hors ligne</span>
-      </p>
-    </div>
+    </AnimatePresence>
   )
 }

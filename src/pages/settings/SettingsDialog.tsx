@@ -1,4 +1,5 @@
 import type { ComponentType } from "react"
+import { AnimatePresence, m } from "motion/react"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import {
   Dialog,
@@ -56,7 +57,17 @@ export function SettingsDialog({
               itemClassName="h-9 w-full justify-start px-2.5"
             />
             <div className="min-w-0 flex-1 overflow-y-auto">
-              <View />
+              <AnimatePresence mode="wait" initial={false}>
+                <m.div
+                  key={section.id}
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.15, 1] }}
+                >
+                  <View />
+                </m.div>
+              </AnimatePresence>
             </div>
           </div>
         </DialogContent>
@@ -83,7 +94,17 @@ export function SettingsDialog({
         />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-6">
-          <View />
+          <AnimatePresence mode="wait" initial={false}>
+            <m.div
+              key={section.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.15, 1] }}
+            >
+              <View />
+            </m.div>
+          </AnimatePresence>
         </div>
       </DialogContent>
     </Dialog>

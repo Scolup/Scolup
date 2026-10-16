@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react"
+import { m } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Location01Icon, User02Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
@@ -93,12 +94,18 @@ function Badges({
       {nowBadge && (
         <span
           className={cn(
-            "rounded-full px-2 py-px text-[11px] font-semibold",
+            "flex items-center gap-1.5 rounded-full px-2 py-px text-[11px] font-semibold",
             ongoing
               ? "bg-primary text-primary-foreground"
               : "bg-primary/15 text-primary-text"
           )}
         >
+          {ongoing && (
+            <span className="relative flex size-1.5">
+              <span className="absolute inline-flex size-full animate-[progress-pulse_1.6s_ease-in-out_infinite] rounded-full bg-current" />
+              <span className="relative inline-flex size-1.5 rounded-full bg-current" />
+            </span>
+          )}
           {nowBadge}
         </span>
       )}
@@ -181,15 +188,17 @@ export function CourseCard({
     !card.compact && Boolean(course.details) && !course.cancelled
 
   return (
-    <button
+    <m.button
       type="button"
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
       onClick={() => {
         onSelect(course)
       }}
       style={card.style}
       className={cn(
         "flex min-w-0 items-stretch gap-3 rounded-2xl border p-3.5 text-left outline-none",
-        "transition duration-200 active:scale-[0.99]",
+        "transition-[box-shadow,background-color] duration-200",
         "hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring/50",
         card.surface
       )}
@@ -225,6 +234,6 @@ export function CourseCard({
           ongoing={card.ongoing}
         />
       </span>
-    </button>
+    </m.button>
   )
 }

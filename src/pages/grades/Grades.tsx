@@ -1,4 +1,4 @@
-import { m } from "motion/react"
+import { AnimatePresence, m } from "motion/react"
 import { useMemo, useState } from "react"
 import { Mortarboard01Icon } from "@hugeicons/core-free-icons"
 import { staggerContainer } from "@/hooks/use-micro-interactions"
@@ -70,40 +70,50 @@ export function Grades() {
             }
           />
         ) : (
-          <FadeIn>
+          <AnimatePresence mode="wait" initial={false}>
             <m.div
-              variants={staggerContainer(0.035, 0.05)}
-              initial="hidden"
-              animate="visible"
-              className="flex flex-col gap-6 px-4 pt-4 pb-6"
+              key={page.selectedPeriod ?? "all"}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.25, 0.1, 0.15, 1] }}
             >
-              {page.overallAverage !== null && (
-                <AverageCard
-                  average={page.overallAverage}
-                  focusedAverage={focusedAverage}
-                  onFocusAverage={setFocusedAverage}
-                  trend={page.trend}
-                  trendDomain={page.trendDomain}
-                  hasTrend={page.hasTrend}
-                />
-              )}
-              <RecentGradesStrip
-                grades={page.recentGrades}
-                impacts={impacts}
-                onPick={page.scrollToGrade}
-              />
-              {page.groups.map((group) => (
-                <SubjectGroupSection
-                  key={group.subject}
-                  group={group}
-                  evalColors={page.evalColors}
-                  highlightedKey={page.highlightedKey}
-                  registerRow={page.registerRow}
-                  onOpen={page.openGrade}
-                />
-              ))}
+              <FadeIn>
+                <m.div
+                  variants={staggerContainer(0.035, 0.05)}
+                  initial="hidden"
+                  animate="visible"
+                  className="flex flex-col gap-6 px-4 pt-4 pb-6"
+                >
+                  {page.overallAverage !== null && (
+                    <AverageCard
+                      average={page.overallAverage}
+                      focusedAverage={focusedAverage}
+                      onFocusAverage={setFocusedAverage}
+                      trend={page.trend}
+                      trendDomain={page.trendDomain}
+                      hasTrend={page.hasTrend}
+                    />
+                  )}
+                  <RecentGradesStrip
+                    grades={page.recentGrades}
+                    impacts={impacts}
+                    onPick={page.scrollToGrade}
+                  />
+                  {page.groups.map((group) => (
+                    <SubjectGroupSection
+                      key={group.subject}
+                      group={group}
+                      evalColors={page.evalColors}
+                      highlightedKey={page.highlightedKey}
+                      registerRow={page.registerRow}
+                      onOpen={page.openGrade}
+                    />
+                  ))}
+                </m.div>
+              </FadeIn>
             </m.div>
-          </FadeIn>
+          </AnimatePresence>
         )}
       </div>
 

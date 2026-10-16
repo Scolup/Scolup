@@ -13,6 +13,7 @@ export function MessageRows({
   messages,
   pageMessages,
   query,
+  page,
   onSelect,
 }: {
   folder: FolderKey
@@ -21,11 +22,12 @@ export function MessageRows({
   messages: Message[]
   pageMessages: Message[]
   query: string
+  page: number
   onSelect: (message: Message) => void
 }) {
   return (
     <m.div
-      key={folder}
+      key={`${folder}-${page}`}
       initial="hidden"
       animate="visible"
       variants={staggerContainer(0.045, 0.05)}

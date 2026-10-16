@@ -119,6 +119,7 @@ export function MessageList({
             messages={messages}
             pageMessages={pageMessages}
             query={query}
+            page={currentPage}
             onSelect={onSelect}
           />
 
