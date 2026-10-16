@@ -1,6 +1,9 @@
 "use client"
 
 import { useMemo } from "react"
+import { useNavigate } from "react-router"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { readLastSeen } from "@/services/storage"
 import { useAsync } from "@/hooks/use-async"
 import { useDelayedLoading } from "@/hooks/use-delayed-loading"
@@ -15,6 +18,7 @@ import { useSplashTask } from "@/services/splash"
 import { ProgressRing } from "@/ui/progress-ring"
 
 export function HomeworkWidget() {
+  const navigate = useNavigate()
   const { assignments, setAssignments, loading, error, setReloadKey } =
     useHomework()
   const { toggle, pending } = useToggleDone(setAssignments)
@@ -31,6 +35,10 @@ export function HomeworkWidget() {
         .filter((assignment) => !assignment.done)
         .sort((a, b) => a.due.getTime() - b.due.getTime())
         .slice(0, 3),
+    [assignments]
+  )
+  const remaining = useMemo(
+    () => assignments.filter((assignment) => !assignment.done).length,
     [assignments]
   )
 
@@ -54,6 +62,27 @@ export function HomeworkWidget() {
         aria-label="Devoirs à faire"
         className="rounded-3xl border border-border/70 bg-card"
       >
+        <div className="px-4 pt-3">
+          <button
+            type="button"
+            onClick={() => navigate("/homework")}
+            className="flex min-h-11 w-full items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <span className="truncate text-sm font-semibold text-card-foreground">
+              Devoirs
+            </span>
+            <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+              {remaining === 0
+                ? "Tout est fait"
+                : `${remaining} restant${remaining > 1 ? "s" : ""}`}
+              <HugeiconsIcon
+                icon={ArrowRight01Icon}
+                className="size-4"
+                aria-hidden="true"
+              />
+            </span>
+          </button>
+        </div>
         {visible.length === 0 ? (
           <div className="flex items-center gap-3 p-4">
             <ProgressRing value={1} size={36} label="Aucun devoir à venir" />

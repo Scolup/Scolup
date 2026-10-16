@@ -1,11 +1,11 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useNavigate } from "react-router"
 import { formatDistanceToNowStrict } from "date-fns"
 import { fr } from "date-fns/locale/fr"
-import { useState } from "react"
-import { MailOpen01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowRight01Icon, MailOpen01Icon } from "@hugeicons/core-free-icons"
 import { ld } from "@/services/litedirecte"
 import { useAsync } from "@/hooks/use-async"
 import { useDelayedLoading } from "@/hooks/use-delayed-loading"
@@ -70,6 +70,23 @@ export function MessagesWidget() {
       aria-label="Messages non lus"
       className="flex flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
     >
+      <button
+        type="button"
+        onClick={() => navigate("/messages")}
+        className="flex min-h-11 items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+      >
+        <span className="truncate text-sm font-semibold text-card-foreground">
+          Messages
+        </span>
+        <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+          {`${unread.length} non lu${unread.length > 1 ? "s" : ""}`}
+          <HugeiconsIcon
+            icon={ArrowRight01Icon}
+            className="size-4"
+            aria-hidden="true"
+          />
+        </span>
+      </button>
       {unread.map((message) => (
         <button
           key={message.id}

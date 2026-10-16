@@ -2,10 +2,12 @@
 
 import { useMemo } from "react"
 import { useNavigate } from "react-router"
-import { Calendar03Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowRight01Icon, Calendar03Icon } from "@hugeicons/core-free-icons"
 import { resolveSubjectName } from "@/services/subjects"
-import { dayLabel } from "@/pages/agenda/helpers"
+import { courseRelativeLabel, dayLabel } from "@/pages/agenda/helpers"
 import { formatTime, toDayKey, weekOf } from "@/services/dates"
+import { nextDayWithCourses } from "@/pages/home/helpers"
 import { useAgenda } from "@/pages/agenda/hooks/useAgenda"
 import { useDelayedLoading } from "@/hooks/use-delayed-loading"
 import { WidgetSkeleton } from "@/pages/home/components/WidgetSkeleton"
@@ -22,24 +24,8 @@ export function NextCoursesWidget() {
   useSplashTask(loading)
   const showSkeleton = useDelayedLoading(loading)
 
-  const day = useMemo(() => {
-    const now = Date.now()
-    const upcoming = courses
-      .filter(
-        (course) =>
-          !course.cancelled &&
-          course.start &&
-          course.end &&
-          course.end.getTime() > now
-      )
-      .sort((a, b) => (a.start?.getTime() ?? 0) - (b.start?.getTime() ?? 0))
-    if (upcoming.length === 0) return null
-    const key = toDayKey(upcoming[0].start as Date)
-    const list = upcoming
-      .filter((course) => course.start && toDayKey(course.start) === key)
-      .slice(0, 3)
-    return { key, date: upcoming[0].start as Date, list }
-  }, [courses])
+  const day = useMemo(() => nextDayWithCourses(courses), [courses])
+  const firstLabel = day ? courseRelativeLabel(day.list[0]) : null
 
   if (error) return <WidgetError onRetry={refresh} />
   if (loading && courses.length === 0) {
@@ -67,6 +53,23 @@ export function NextCoursesWidget() {
       aria-label={dayLabel(day.date)}
       className="flex flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
     >
+      <button
+        type="button"
+        onClick={() => navigate(`/agenda?date=${day.key}`)}
+        className="flex min-h-11 items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+      >
+        <span className="truncate text-sm font-semibold text-card-foreground">
+          {dayLabel(day.date)}
+        </span>
+        <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+          {firstLabel ?? `${day.list.length} cours`}
+          <HugeiconsIcon
+            icon={ArrowRight01Icon}
+            className="size-4"
+            aria-hidden="true"
+          />
+        </span>
+      </button>
       {day.list.map((course) => (
         <button
           key={course.key}

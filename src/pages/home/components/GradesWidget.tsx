@@ -5,7 +5,8 @@ import type { CSSProperties } from "react"
 import { useNavigate } from "react-router"
 import { formatDistanceToNowStrict } from "date-fns"
 import { fr } from "date-fns/locale/fr"
-import { Mortarboard01Icon } from "@hugeicons/core-free-icons"
+import { ArrowRight01Icon, Mortarboard01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { ld } from "@/services/litedirecte"
 import { getSetting, readLastSeen } from "@/services/storage"
 import { useAsync } from "@/hooks/use-async"
@@ -176,7 +177,19 @@ export function GradesWidget() {
       className="flex flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
     >
       <div className="flex flex-col gap-1.5">
-        <div className="flex items-baseline justify-end gap-3 px-3.5">
+        <div className="flex items-center justify-between gap-3 px-3.5">
+          <button
+            type="button"
+            onClick={() => navigate("/grades")}
+            className="flex min-h-11 items-center gap-1 text-sm font-semibold text-card-foreground transition-colors outline-none hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            Moyenne générale
+            <HugeiconsIcon
+              icon={ArrowRight01Icon}
+              className="size-4 text-muted-foreground"
+              aria-hidden="true"
+            />
+          </button>
           <span className="shrink-0 tabular-nums">
             <AnimatedNumber
               value={formatAverageValue(focusedAverage ?? average, scale)}

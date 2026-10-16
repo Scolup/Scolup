@@ -1,14 +1,18 @@
 import { Chair02Icon, StickyNote02Icon } from "@hugeicons/core-free-icons"
-import { Separator } from "@/components/ui/separator"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { useHomePage } from "./hooks/useHomePage"
 import { AccountMenu } from "./components/AccountMenu"
 import { GradesWidget } from "./components/GradesWidget"
 import { HomeworkWidget } from "./components/HomeworkWidget"
 import { MessagesWidget } from "./components/MessagesWidget"
 import { NextCoursesWidget } from "./components/NextCoursesWidget"
-import { QuickButton } from "./components/QuickButton"
 import { AppToast } from "@/ui/app-toast"
 import { useSplashTask } from "@/services/splash"
+
+const SCHOOL_LINKS = [
+  { icon: Chair02Icon, label: "Absences", path: "/absences" },
+  { icon: StickyNote02Icon, label: "Post-its", path: "/post-its" },
+] as const
 
 export function HomePage() {
   const page = useHomePage()
@@ -34,22 +38,28 @@ export function HomePage() {
         onAboutOpenChange={page.setAboutOpen}
       />
 
-      <div className="flex gap-2">
-        <QuickButton
-          icon={Chair02Icon}
-          label="Absences"
-          onClick={() => page.openPage("/absences")}
-        />
-        <QuickButton
-          icon={StickyNote02Icon}
-          label="Post-its"
-          onClick={() => page.openPage("/post-its")}
-        />
-      </div>
-
-      <div className="px-8">
-        <Separator className="my-2" />
-      </div>
+      <nav aria-label="Vie scolaire" className="flex gap-2">
+        {SCHOOL_LINKS.map((link) => (
+          <button
+            key={link.path}
+            type="button"
+            onClick={() => page.openPage(link.path)}
+            className="flex min-h-14 flex-1 items-center gap-3 rounded-full border border-border/70 bg-card px-4 py-3 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-text">
+              <HugeiconsIcon
+                icon={link.icon}
+                strokeWidth={1.5}
+                className="size-5"
+                aria-hidden="true"
+              />
+            </span>
+            <span className="min-w-0 flex-1 truncate text-sm font-medium text-card-foreground">
+              {link.label}
+            </span>
+          </button>
+        ))}
+      </nav>
 
       <div className="columns-1 gap-3 md:columns-2 lg:columns-3 [&>*]:mb-3 [&>*]:min-w-0 [&>*]:break-inside-avoid">
         <HomeworkWidget />
