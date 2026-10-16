@@ -61,7 +61,7 @@ export function HomePage() {
         ))}
       </nav>
 
-      <div className="columns-1 gap-3 md:columns-2 lg:columns-3 [&>*]:mb-3 [&>*]:min-w-0 [&>*]:break-inside-avoid">
+      <div className="columns-1 gap-4 sm:columns-2 xl:columns-3 [&>*]:mb-4 [&>*]:min-w-0 [&>*]:break-inside-avoid">
         <HomeworkWidget />
         <NextCoursesWidget />
         <GradesWidget />

@@ -52,7 +52,7 @@ export function PostIts() {
           />
         ) : (
           <FadeIn
-            className="columns-2 gap-3 px-4 py-4 sm:columns-3"
+            className="mx-auto w-full max-w-7xl columns-2 gap-3 px-4 py-4 sm:columns-3 lg:columns-4 2xl:columns-5"
             onClick={page.openViewer}
           >
             {page.notes.map((note) => (

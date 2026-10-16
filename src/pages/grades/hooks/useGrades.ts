@@ -113,7 +113,7 @@ export function useGrades(): GradesModel {
         if (payload !== null) return
         setError(errorMessage(err, "Impossible de charger les notes."))
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     })()
     return () => {
