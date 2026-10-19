@@ -327,7 +327,6 @@ export function summarizeGroups(groups: DayGroup[]) {
   )
   return {
     ordered: [...overdue, ...upcoming],
-    overdueCount: overdue.length,
     staleOverdue,
     staleLabel:
       staleCount > 1

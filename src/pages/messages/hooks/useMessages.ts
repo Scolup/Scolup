@@ -3,24 +3,16 @@ import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
-import { MESSAGE_YEAR } from "../helpers"
+import { MESSAGE_YEAR, toLists } from "../helpers"
 import {
   extractAttachments,
   messageBody,
   senderOf,
   toMessage,
+  type FolderKey,
+  type Message,
+  type MessageEntry,
 } from "../helpers"
-import type { FolderKey, Message, MessageEntry } from "../helpers"
-
-function toLists(messages: {
-  received?: MessageEntry[]
-  sent?: MessageEntry[]
-}): Record<FolderKey, Message[]> {
-  return {
-    inbox: (messages?.received ?? []).map(toMessage),
-    sent: (messages?.sent ?? []).map((m) => ({ ...toMessage(m), sent: true })),
-  }
-}
 
 export function useMessages() {
   const [folderMessages, setFolderMessages] = useState<
@@ -188,10 +180,7 @@ export function useRestoreSelectedMessage(opts: {
     if (targetId === suppressedIdRef.current) return
     if (selectedIdRef.current === targetId) return
 
-    const allMessages: Message[] = [
-      ...folderMessages.inbox,
-      ...folderMessages.sent,
-    ]
+    const allMessages: Message[] = Object.values(folderMessages).flat()
     const found = allMessages.find((m) => m.id === targetId)
     if (found) {
       void openMessage(found.id, found)

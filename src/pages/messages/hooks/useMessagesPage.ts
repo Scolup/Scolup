@@ -84,7 +84,7 @@ export function useMessagesPage() {
     (updater: (prev: Message[]) => Message[]) => {
       store.setFolderMessages((prev) => ({
         ...prev,
-        [folder]: updater(prev[folder]),
+        [folder]: updater(prev[folder] ?? []),
       }))
     },
     [folder, store.setFolderMessages]
@@ -211,8 +211,6 @@ export function useMessagesPage() {
         .markAsUnread(message.id, { year: MESSAGE_YEAR })
         .then(() => triggerHapticLight())
         .catch((err) => {
-          // État précédent restauré visiblement + toast (pas d'erreur
-          // silencieuse).
           setActiveMessages((prev) =>
             prev.map((m) => (m.id === message.id ? { ...m, unread: false } : m))
           )

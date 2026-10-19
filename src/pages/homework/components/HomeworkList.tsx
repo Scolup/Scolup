@@ -242,7 +242,6 @@ function HomeworkRows({
     <FadeIn>
       <OrderedGroups
         groups={summary.ordered}
-        overdueCount={summary.overdueCount}
         pending={pending}
         onToggle={onToggle}
         onSelect={onSelect}
@@ -253,9 +252,8 @@ function HomeworkRows({
 
 function OrderedGroups({
   groups,
-  overdueCount,
   ...day
-}: { groups: DayGroup[]; overdueCount: number } & DayGroupProps) {
+}: { groups: DayGroup[] } & DayGroupProps) {
   return (
     <m.div
       initial={{ filter: "blur(6px)", opacity: 0 }}
@@ -274,11 +272,6 @@ function OrderedGroups({
               <div className="px-4 py-4">
                 <Separator className="opacity-60" />
               </div>
-            )}
-            {index === 0 && overdueCount > 0 && (
-              <h2 className="px-4 pt-3 pb-1 text-sm font-semibold text-destructive">
-                En retard
-              </h2>
             )}
             <DayGroupSection group={group} {...day} />
           </Fragment>

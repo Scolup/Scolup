@@ -47,6 +47,16 @@ export interface MessageEntry {
 
 export const PAGE_SIZE = 15
 
+export function toLists(messages: {
+  received?: MessageEntry[]
+  sent?: MessageEntry[]
+}): Record<FolderKey, Message[]> {
+  return {
+    inbox: (messages?.received ?? []).map(toMessage),
+    sent: (messages?.sent ?? []).map((m) => ({ ...toMessage(m), sent: true })),
+  }
+}
+
 const now = new Date()
 const year = now.getFullYear()
 export const MESSAGE_YEAR =
@@ -61,18 +71,14 @@ export const skeletonSubjectWidths = [
   "w-3/5",
 ]
 
-const folderIcons: Record<FolderKey, typeof Archive04Icon> = {
-  inbox: Archive04Icon,
-  sent: SentIcon,
-}
-
 const folderLabels: Record<FolderKey, string> = {
   inbox: "Principal",
   sent: "Envoyés",
 }
 
 export function folderIcon(value: FolderKey): typeof Archive04Icon {
-  return folderIcons[value]
+  if (value === "sent") return SentIcon
+  return Archive04Icon
 }
 
 export function folderLabel(value: FolderKey): string {
@@ -80,11 +86,13 @@ export function folderLabel(value: FolderKey): string {
 }
 
 export function parseFolderParam(param: string | null): FolderKey {
-  return param === "sent" ? "sent" : "inbox"
+  if (param === "sent") return "sent"
+  return "inbox"
 }
 
 export function serializeFolderParam(value: FolderKey): string | null {
-  return value === "sent" ? "sent" : null
+  if (value === "sent") return "sent"
+  return null
 }
 
 function decodeBase64Content(value: string): string {

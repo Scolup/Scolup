@@ -14,8 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { folderIcon, folderLabel } from "../helpers"
-import type { FolderKey } from "../helpers"
+import { folderIcon, folderLabel, type FolderKey } from "../helpers"
 
 export function FolderSearchBar({
   folder,
