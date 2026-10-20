@@ -20,7 +20,12 @@ export function HomePage() {
   useSplashTask(page.loading)
 
   return (
-    <div className="flex flex-col gap-4 px-4 pt-4 pb-6">
+    <div className="relative isolate flex flex-col gap-4 px-4 pt-4 pb-6">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-112 bg-gradient-to-b from-primary/30 via-primary/10 to-transparent"
+      />
+
       <AppToast message={page.actionError} onClose={page.dismissActionError} />
 
       <AccountMenu
