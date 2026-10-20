@@ -1,11 +1,12 @@
 import {
   Book02Icon,
+  Database02Icon,
   Mortarboard01Icon,
   Settings01Icon,
   UserCircleIcon,
 } from "@hugeicons/core-free-icons"
 
-export type SectionId = "general" | "subjects" | "grades" | "account"
+export type SectionId = "general" | "subjects" | "grades" | "data" | "account"
 
 export type SectionIcon = typeof Settings01Icon
 
@@ -17,6 +18,7 @@ export const SECTIONS: {
   { id: "general", label: "Général", icon: Settings01Icon },
   { id: "subjects", label: "Matières", icon: Book02Icon },
   { id: "grades", label: "Notes", icon: Mortarboard01Icon },
+  { id: "data", label: "Données", icon: Database02Icon },
   { id: "account", label: "Compte", icon: UserCircleIcon },
 ]
 

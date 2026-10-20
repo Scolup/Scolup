@@ -141,11 +141,14 @@ export function AccountMenu({
       <FeedbackDialog
         open={feedback.open}
         onOpenChange={feedback.setOpen}
+        type={feedback.type}
+        onTypeChange={feedback.setType}
         message={feedback.message}
         onMessageChange={feedback.setMessage}
         onSubmit={() => void feedback.submit()}
         pending={feedback.pending}
         error={feedback.error}
+        sent={feedback.sent}
       />
 
       <Dialog
