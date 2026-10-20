@@ -136,6 +136,7 @@ export function useRestoreSelectedMessage(opts: {
               files: detailEntry.files,
               fromName: detailEntry.fromName,
               from: detailEntry.from,
+              to: detailEntry.to,
             })
         if (selectedIdRef.current === targetId) setSelected(updated)
       })

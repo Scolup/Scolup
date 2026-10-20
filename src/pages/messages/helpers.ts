@@ -11,11 +11,21 @@ export interface Attachment {
   type: string
 }
 
+export interface MessageRecipient {
+  name?: string
+  civilite?: string
+  prenom?: string
+  nom?: string
+  role?: string
+  id?: number | string
+}
+
 export interface Message {
   id: number
   sender?: string
   senderId?: number
   senderType?: string
+  recipients?: string[]
   subject?: string
   body?: string
   time?: Date
@@ -39,6 +49,7 @@ export interface MessageEntry {
     role?: string
     type?: string
   }
+  to?: MessageRecipient[]
   date?: Date
   files?: unknown[]
   read?: boolean
@@ -131,6 +142,23 @@ export function extractAttachments(files: unknown[]): Attachment[] {
     .filter((x): x is Attachment => x !== null)
 }
 
+export function recipientsOf(entry: MessageEntry): string[] {
+  return (entry.to ?? [])
+    .map((r) => {
+      const raw = r.prenom || r.nom ? contactDisplayName(r) : (r.name ?? "")
+      return decodeHtmlEntities(raw)
+    })
+    .filter((name) => name.trim() !== "")
+}
+
+export function recipientsLabel(message: {
+  sent?: boolean
+  recipients?: string[]
+}): string | undefined {
+  if (!message.sent || !message.recipients?.length) return undefined
+  return `À : ${message.recipients.join(", ")}`
+}
+
 export function toMessage(entry: MessageEntry): Message {
   const from = entry.from
   const rawName =
@@ -140,11 +168,13 @@ export function toMessage(entry: MessageEntry): Message {
     ? extractAttachments(entry.files)
     : []
   const sender = senderOf(entry)
+  const recipients = recipientsOf(entry)
   return {
     id: entry.id,
     sender: name,
     ...(sender ? { senderId: sender.id } : {}),
     ...(sender?.type ? { senderType: sender.type } : {}),
+    ...(recipients.length > 0 ? { recipients } : {}),
     subject: entry.subject ? decodeHtmlEntities(entry.subject) : entry.subject,
     body: messageBody(entry),
     time: entry.date,

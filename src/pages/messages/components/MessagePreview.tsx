@@ -7,6 +7,7 @@ import { cn, avatarTint } from "@/lib/utils"
 import { dayName } from "@/services/dates"
 import { fadeUp } from "@/hooks/use-micro-interactions"
 import { highlight } from "@/ui/highlight"
+import { recipientsLabel } from "../helpers"
 
 function formatTime(date: Date): string {
   const now = new Date()
@@ -42,6 +43,8 @@ function formatTime(date: Date): string {
 
 interface MessagePreviewProps {
   sender?: string
+  recipients?: string[]
+  sent?: boolean
   subject?: string
   body?: string
   time?: Date
@@ -65,6 +68,8 @@ const dotVariants = {
 
 export function MessagePreview({
   sender,
+  recipients,
+  sent = false,
   subject,
   time,
   hasAttachment = false,
@@ -75,6 +80,7 @@ export function MessagePreview({
   query,
   onSelect,
 }: MessagePreviewProps) {
+  const who = recipientsLabel({ sent, recipients }) ?? sender
   return (
     <m.div
       variants={fadeUp(12, 0.4)}
@@ -116,14 +122,14 @@ export function MessagePreview({
                   aria-label="Non lu"
                 />
               )}
-              {sender && (
+              {who && (
                 <span
                   className={cn(
                     "truncate text-sm text-card-foreground",
                     unread ? "font-bold" : "font-normal"
                   )}
                 >
-                  {highlight(sender, query ?? "")}
+                  {highlight(who, query ?? "")}
                 </span>
               )}
             </div>

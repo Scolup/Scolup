@@ -26,9 +26,12 @@ const SEARCH_DEBOUNCE_MS = 300
 function matchesSearch(message: Message, query: string): boolean {
   const normalized = query.trim().toLowerCase()
   if (!normalized) return true
-  return [message.sender, message.subject, message.body].some((field) =>
-    field?.toLowerCase().includes(normalized)
-  )
+  return [
+    message.sender,
+    message.recipients?.join(" "),
+    message.subject,
+    message.body,
+  ].some((field) => field?.toLowerCase().includes(normalized))
 }
 
 export function useMessagesPage() {

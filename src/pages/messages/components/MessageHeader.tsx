@@ -9,7 +9,7 @@ import {
 import { avatarTint, cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatFullDate, type Message } from "../helpers"
+import { formatFullDate, recipientsLabel, type Message } from "../helpers"
 
 export function MessageHeader({
   message,
@@ -28,6 +28,7 @@ export function MessageHeader({
   onMarkUnread?: () => void
   onReply?: () => void
 }) {
+  const recipientsLine = recipientsLabel(message)
   return (
     <div className="flex shrink-0 items-center gap-2 border-b border-border p-4">
       {onClose && (
@@ -73,6 +74,14 @@ export function MessageHeader({
             <span className="truncate text-sm font-semibold text-card-foreground">
               {message.sender}
             </span>
+            {recipientsLine && (
+              <span
+                className="truncate text-xs text-muted-foreground"
+                title={recipientsLine}
+              >
+                {recipientsLine}
+              </span>
+            )}
             {message.time && (
               <span className="text-xs text-muted-foreground">
                 {formatFullDate(message.time)}
