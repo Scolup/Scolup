@@ -158,8 +158,9 @@ export function AccountMenu({
           <DialogHeader>
             <DialogTitle>Se déconnecter ?</DialogTitle>
             <DialogDescription>
-              Tu seras déconnecté de ton compte ÉcoleDirecte et tu devras
-              ressaisir tes identifiants pour utiliser Scolup.
+              Tu seras déconnecté de ton compte ÉcoleDirecte et tes réglages
+              enregistrés sur cet appareil seront effacés. Tu devras ressaisir
+              tes identifiants pour utiliser Scolup.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -87,3 +87,15 @@ export async function readLastSeen(key: string): Promise<number> {
 export async function markSeen(key: string): Promise<void> {
   await setSetting(`seen:${key}`, String(Date.now()))
 }
+
+// Wipes every trace of Scolup preferences from the device. The user stays
+// logged in (the session is Litedirecte's), so only a reload is needed.
+export async function clearAllData(): Promise<void> {
+  const db = await getDB()
+  await Promise.all([db.clear("settings"), db.clear("subjects")])
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith("scolup:")) localStorage.removeItem(key)
+    }
+  } catch {}
+}

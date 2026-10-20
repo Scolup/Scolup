@@ -8,6 +8,7 @@ import {
   profilePhotoSync,
 } from "@/services/profile"
 import { resetOnboarding } from "@/services/onboarding"
+import { clearAllData } from "@/services/storage"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticLight } from "@/services/haptics"
 import { initialsFromName } from "@/lib/utils"
@@ -62,6 +63,7 @@ export function useHomePage() {
     setActionError(null)
     try {
       await ld.auth.logout()
+      await clearAllData()
       await resetOnboarding()
       setConfirmOpen(false)
       window.location.href = "/"

@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { SECTIONS, type SectionId } from "./sections"
+import { AccountSettings } from "./components/AccountSettings"
 import { GeneralSettings } from "./components/GeneralSettings"
 import { GradesSettings } from "./components/GradesSettings"
 import { SettingsNav } from "./components/SettingsNav"
@@ -19,6 +20,7 @@ const VIEWS: Record<SectionId, ComponentType> = {
   general: GeneralSettings,
   subjects: SubjectsSettings,
   grades: GradesSettings,
+  account: AccountSettings,
 }
 
 export function SettingsDialog({
