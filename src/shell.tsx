@@ -35,6 +35,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { OfflineBanner } from "@/ui/offline-banner"
 import { ReauthSheet } from "@/ui/reauth-sheet"
+import { UpdateNotifier } from "@/ui/update-notifier"
 import {
   refreshVisibleResources,
   useForegroundRefresh,
@@ -311,6 +312,7 @@ export function MainFlow({ className, ...props }: React.ComponentProps<"div">) {
       >
         <OfflineBanner />
         <ReauthSheet />
+        <UpdateNotifier />
 
         <div
           ref={scrollRef}
