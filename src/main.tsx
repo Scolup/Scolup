@@ -5,8 +5,11 @@ import { LazyMotion, MotionConfig, domAnimation } from "motion/react"
 
 import "./index.css"
 import App from "@/App"
+import { registerServiceWorker } from "@/services/service-worker"
 import { ErrorBoundary } from "@/ui/error-boundary"
 import { ThemeProvider } from "@/ui/theme-provider"
+
+registerServiceWorker()
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

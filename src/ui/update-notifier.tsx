@@ -19,6 +19,8 @@ import {
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { EmptyState } from "@/ui/empty-state"
 import { triggerHapticLight } from "@/services/haptics"
+import { applyUpdate, prepareUpdate } from "@/services/service-worker"
+import { Spinner } from "@/components/ui/spinner"
 import {
   checkForUpdate,
   parseReleaseNotes,
@@ -119,8 +121,32 @@ function ReleaseNotes({ body }: { body: string }) {
   )
 }
 
+function UpdateButton({
+  updating,
+  onClick,
+  className,
+}: {
+  updating: boolean
+  onClick: () => void
+  className?: string
+}) {
+  return (
+    <Button onClick={onClick} disabled={updating} className={className}>
+      {updating ? (
+        <>
+          <Spinner className="size-4 border-current border-t-transparent" />
+          Mise à jour…
+        </>
+      ) : (
+        "Mettre à jour"
+      )}
+    </Button>
+  )
+}
+
 export function UpdateNotifier() {
   const [release, setRelease] = useState<LatestRelease | null>(null)
+  const [updating, setUpdating] = useState(false)
   const isDesktop = useMediaQuery("(min-width: 640px)")
 
   const runCheck = useCallback(async () => {
@@ -128,6 +154,9 @@ export function UpdateNotifier() {
       const latest = await checkForUpdate()
       if (!latest) return
       setRelease(latest)
+      // Le nouveau worker est téléchargé en arrière-plan : le bouton
+      // « Mettre à jour » n'aura plus qu'à lui donner le relais.
+      void prepareUpdate()
     } catch {
       // The notifier is best-effort: a failed check simply shows nothing.
     }
@@ -148,9 +177,15 @@ export function UpdateNotifier() {
 
   if (!release) return null
 
-  function update() {
+  async function update() {
+    if (updating) return
     triggerHapticLight()
-    window.location.reload()
+    setUpdating(true)
+    try {
+      await applyUpdate()
+    } catch {
+      window.location.reload()
+    }
   }
 
   const description = `La version ${release.tag} est disponible. Recharge l'application pour en profiter.`
@@ -174,7 +209,7 @@ export function UpdateNotifier() {
           <ReleaseNotes body={release.body} />
 
           <DialogFooter>
-            <Button onClick={update}>Mettre à jour</Button>
+            <UpdateButton updating={updating} onClick={update} />
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -195,9 +230,11 @@ export function UpdateNotifier() {
 
           <ReleaseNotes body={release.body} />
 
-          <Button onClick={update} className="min-h-11 w-full">
-            Mettre à jour
-          </Button>
+          <UpdateButton
+            updating={updating}
+            onClick={update}
+            className="min-h-11 w-full"
+          />
         </div>
       </DrawerContent>
     </Drawer>
