@@ -7,6 +7,7 @@ import {
   Attachment01Icon,
   Comment01Icon,
   Tick02Icon,
+  Upload04Icon,
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 import { useSubjectDisplay } from "@/services/subjects"
@@ -181,6 +182,12 @@ export function HomeworkEntry({
             {isNew && (
               <Badge variant="info" size="sm" pill className="shrink-0">
                 Nouveau
+              </Badge>
+            )}
+            {assignment.onlineSubmission && (
+              <Badge variant="outline" size="sm" pill className="shrink-0 gap-1">
+                <HugeiconsIcon icon={Upload04Icon} className="size-3" aria-hidden="true" />
+                À rendre en ligne
               </Badge>
             )}
           </span>
