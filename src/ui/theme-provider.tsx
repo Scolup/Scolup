@@ -1,6 +1,7 @@
 import * as React from "react"
 import { use } from "react"
 import { getSetting, getSettingSync, setSetting } from "@/services/storage"
+import { SHOP_ITEMS } from "@/services/shop-rules"
 
 type Theme = "dark" | "light" | "system"
 type ResolvedTheme = "dark" | "light"
@@ -27,6 +28,13 @@ const ACCENT_COLORS: Record<string, { primary: string; foreground: string }> = {
   red: { primary: "#dd0046", foreground: "#ffffff" },
   green: { primary: "#25b256", foreground: "#ffffff" },
   blue: { primary: "#48B7E8", foreground: "#1a1a1a" },
+  // Colors sold in the shop come from the shop catalog.
+  ...Object.fromEntries(
+    SHOP_ITEMS.filter((item) => item.kind === "accent").map((item) => [
+      item.value,
+      { primary: item.color, foreground: item.foreground },
+    ])
+  ),
 }
 
 const ThemeProviderContext = React.createContext<

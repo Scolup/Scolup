@@ -50,6 +50,9 @@ import {
   type SectionId,
 } from "@/pages/settings/sections"
 import { cn } from "@/lib/utils"
+import { AppToast } from "@/ui/app-toast"
+import { subscribeQuestToast } from "@/services/quests"
+import { toastText } from "@/services/quest-rules"
 
 const loaders = {
   messages: () => import("@/pages/messages/Messages"),
@@ -79,7 +82,9 @@ const PostIts = lazy(() =>
 const SettingsDialog = lazy(() =>
   loaders.settings().then((m) => ({ default: m.SettingsDialog }))
 )
-const ShopPage = lazy(() => loaders.shop().then((m) => ({ default: m.ShopPage })))
+const ShopPage = lazy(() =>
+  loaders.shop().then((m) => ({ default: m.ShopPage }))
+)
 
 const TAB_ROUTES: Record<string, string> = {
   home: "/",
@@ -246,9 +251,14 @@ export function MainFlow({ className, ...props }: React.ComponentProps<"div">) {
   const { pathname } = useLocation()
   const unreadMessages = useMessagesBadge()
   const [navHidden, setNavHidden] = useState(false)
+  const [questToast, setQuestToast] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const scrollPositions = useRef(new Map<string, number>())
   const prevPath = useRef(pathname)
+
+  useEffect(() => {
+    return subscribeQuestToast((toast) => setQuestToast(toastText(toast)))
+  }, [])
 
   // One scroll container is shared by all tabs: remember its position per
   // route, restore it when coming back, start at the top on first visit.
@@ -315,6 +325,11 @@ export function MainFlow({ className, ...props }: React.ComponentProps<"div">) {
         <OfflineBanner />
         <ReauthSheet />
         <UpdateNotifier />
+        <AppToast
+          message={questToast}
+          tone="success"
+          onClose={() => setQuestToast(null)}
+        />
 
         <div
           ref={scrollRef}

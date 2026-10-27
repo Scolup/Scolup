@@ -11,6 +11,9 @@ import { useSplashTask } from "@/services/splash"
 import { useRubies } from "@/hooks/use-rubies"
 import { useNavigate } from "react-router"
 import { triggerHapticLight } from "@/services/haptics"
+import { useEffect } from "react"
+import { track } from "@/services/quests"
+import { AnimatedNumber } from "@/ui/animated-number"
 
 const SCHOOL_LINKS = [
   { icon: Chair02Icon, label: "Absences", path: "/absences" },
@@ -21,6 +24,10 @@ export function HomePage() {
   const page = useHomePage()
   const rubies = useRubies()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    void track("app-open")
+  }, [])
 
   useSplashTask(page.loading)
 
@@ -57,14 +64,9 @@ export function HomePage() {
           className="flex items-center gap-1.5 rounded-full border border-border/70 bg-card/80 px-2.5 py-1 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
           aria-label={`Ouvrir la boutique - Rubis : ${rubies}`}
         >
-          <img
-            src="/ruby.svg"
-            alt=""
-            aria-hidden="true"
-            className="size-5"
-          />
-          <span className="text-sm font-medium tabular-nums text-card-foreground">
-            {rubies}
+          <img src="/ruby.svg" alt="" aria-hidden="true" className="size-5" />
+          <span className="text-sm font-medium text-card-foreground">
+            <AnimatedNumber value={String(rubies)} />
           </span>
         </button>
       </div>

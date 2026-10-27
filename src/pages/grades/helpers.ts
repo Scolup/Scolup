@@ -389,6 +389,15 @@ function averageForTrend(
   return generalAverage(groupBySubject(grades, coefOf))
 }
 
+// True when today's general average beats the one from 7 days ago (the trend
+// has one point per day). Feeds the "average-up" quest: it rewards progress,
+// not a high grade, so every student can earn it.
+export function averageImprovedThisWeek(trend: TrendPoint[]): boolean {
+  const now = trend.at(-1)?.average ?? null
+  const weekAgo = trend.at(-8)?.average ?? null
+  return now !== null && weekAgo !== null && now > weekAgo
+}
+
 export function cumulativeGeneralAverageByDay(
   grades: Grade[],
   coefOf?: SubjectCoefOf,

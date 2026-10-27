@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from "react-router"
 import { getSetting } from "@/services/storage"
 import { addDays, parseDateKey, toDayKey, weekOf } from "@/services/dates"
 import { triggerHapticLight } from "@/services/haptics"
+import { track } from "@/services/quests"
 import { coursesForDay, type AgendaView, type Course } from "../helpers"
 import { useAgenda } from "./useAgenda"
 
@@ -49,6 +50,10 @@ export function useAgendaPage() {
   const endKey = toDayKey(week[6])
 
   const { courses, loading, error, refresh } = useAgenda(startKey, endKey)
+
+  useEffect(() => {
+    void track("agenda-viewed")
+  }, [])
 
   const sorted = useMemo(
     () =>

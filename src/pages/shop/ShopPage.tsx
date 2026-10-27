@@ -1,20 +1,17 @@
 "use client"
 
-import { useCallback } from "react"
 import { m } from "motion/react"
-import { useNavigate } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowLeftIcon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
-import { useRubies } from "@/hooks/use-rubies"
+import { AppToast } from "@/ui/app-toast"
+import { QuestCard } from "./components/QuestCard"
+import { ShopHeader } from "./components/ShopHeader"
+import { ShopItemCard } from "./components/ShopItemCard"
+import { useShopPage } from "./hooks/useShopPage"
 
 export function ShopPage() {
-  const navigate = useNavigate()
-  const rubies = useRubies()
-
-  const goBack = useCallback(() => {
-    navigate(-1)
-  }, [navigate])
+  const page = useShopPage()
 
   return (
     <m.div
@@ -29,7 +26,7 @@ export function ShopPage() {
           size="icon"
           aria-label="Retour"
           className="size-11 shrink-0"
-          onClick={goBack}
+          onClick={page.goBack}
         >
           <HugeiconsIcon icon={ArrowLeftIcon} className="size-5" />
         </Button>
@@ -39,12 +36,42 @@ export function ShopPage() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="flex flex-col items-center gap-3 px-4 pt-12 pb-6">
-          <img src="/ruby.svg" alt="" aria-hidden="true" className="size-16" />
-          <div className="text-4xl font-semibold tabular-nums">{rubies}</div>
-          <div className="text-sm text-muted-foreground">Rubis</div>
+        <ShopHeader rubies={page.rubies} weekText={page.weekText} />
+
+        {page.quests.length > 0 && (
+          <div className="flex flex-col gap-2 px-4 pb-6">
+            <h2 className="text-base font-semibold">Quêtes</h2>
+            <div className="flex flex-col gap-2">
+              {page.quests.map((quest) => (
+                <QuestCard key={quest.id} quest={quest} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2 px-4 pb-10">
+          <h2 className="text-base font-semibold">Thèmes</h2>
+          <div className="flex flex-col gap-2">
+            {page.items.map(({ item, owned, active, missing }) => (
+              <ShopItemCard
+                key={item.id}
+                item={item}
+                owned={owned}
+                active={active}
+                missing={missing}
+                onBuy={() => void page.buy(item)}
+                onUse={() => page.use(item)}
+              />
+            ))}
+          </div>
         </div>
       </div>
+
+      <AppToast
+        message={page.notice?.text ?? null}
+        tone={page.notice?.tone}
+        onClose={page.dismissNotice}
+      />
     </m.div>
   )
 }

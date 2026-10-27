@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticLight } from "@/services/haptics"
+import { toDayKey } from "@/services/dates"
+import { track } from "@/services/quests"
 
 import { normalizeCalendar, preserveEnrichedDetails } from "../helpers"
 import { ensureSubjects, resolveSubjectColor } from "@/services/subjects"
@@ -107,6 +109,13 @@ export function useToggleDone(
       try {
         if (next) await ld.homework.markAsDone([assignment.id])
         else await ld.homework.markAsUndone([assignment.id])
+        if (next) {
+          // The id makes each homework count once, however often it is ticked.
+          void track("homework-done", String(assignment.id))
+          if (toDayKey(assignment.due) > toDayKey(new Date())) {
+            void track("homework-early", String(assignment.id))
+          }
+        }
       } catch (err) {
         setDone(assignment.key, !next)
         setToggleError(

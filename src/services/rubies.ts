@@ -1,6 +1,6 @@
 import { getDB } from "./storage"
 
-const RUBIES_KEY = "rubies"
+export const RUBIES_KEY = "rubies"
 const LEGACY_KEY = "scolup.rubies"
 
 let cache = 0
@@ -37,6 +37,13 @@ export async function loadRubies(): Promise<number> {
   return cache
 }
 
+// Re-read the balance from IndexedDB (after a transaction wrote it directly).
+export async function reloadRubies(): Promise<void> {
+  loaded = false
+  await loadRubies()
+  notify()
+}
+
 export function getRubies(): number {
   return cache
 }
@@ -54,6 +61,15 @@ export async function setRubies(count: number): Promise<void> {
 export async function addRubies(amount: number): Promise<number> {
   await loadRubies()
   const next = cache + Math.trunc(amount)
+  if (next < 0) {
+    cache = 0
+    try {
+      const db = await getDB()
+      await db.put("shop", 0, RUBIES_KEY)
+    } catch {}
+    notify()
+    return 0
+  }
   await setRubies(next)
   return next
 }

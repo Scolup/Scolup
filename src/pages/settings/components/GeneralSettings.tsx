@@ -5,6 +5,8 @@ import { Switch as SwitchPrimitive } from "@base-ui/react/switch"
 import { AccentColorPicker } from "@/ui/accent-color-picker"
 import { useTheme } from "@/ui/theme-provider"
 import { getSetting, setSetting } from "@/services/storage"
+import { track } from "@/services/quests"
+import { useShop } from "@/hooks/use-shop"
 import { triggerHapticLight } from "@/services/haptics"
 import {
   Select,
@@ -23,6 +25,7 @@ const THEME_OPTIONS = [
 export function GeneralSettings() {
   const { theme, setTheme, accentColor, setAccentColor } = useTheme()
   const [haptics, setHaptics] = useState(true)
+  const { owned } = useShop()
 
   useEffect(() => {
     void getSetting("haptics").then((stored) => {
@@ -47,7 +50,10 @@ export function GeneralSettings() {
               value={theme}
               onValueChange={(value) => {
                 if (value === null) return
-                if (value !== theme) triggerHapticLight()
+                if (value !== theme) {
+                  triggerHapticLight()
+                  void track("setting-changed")
+                }
                 setTheme(value)
               }}
             >
@@ -68,8 +74,12 @@ export function GeneralSettings() {
           <AccentColorPicker
             label="Couleur de l'application"
             value={accentColor}
+            owned={owned}
             onPick={(color) => {
-              if (color !== accentColor) triggerHapticLight()
+              if (color !== accentColor) {
+                triggerHapticLight()
+                void track("setting-changed")
+              }
               setAccentColor(color)
             }}
           />
@@ -87,6 +97,7 @@ export function GeneralSettings() {
               onCheckedChange={(checked) => {
                 setHaptics(checked)
                 void setSetting("haptics", checked)
+                void track("setting-changed")
                 if (checked) triggerHapticLight()
               }}
               aria-label="Vibrations"

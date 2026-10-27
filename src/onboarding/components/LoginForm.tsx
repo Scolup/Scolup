@@ -145,31 +145,38 @@ function TwoFactorForm({
   onBack,
   ...error
 }: TwoFactorFormProps) {
+  const sortedChoices = [...challenge.choices].sort((a, b) =>
+    a.localeCompare(b, "fr", { sensitivity: "base" })
+  )
+
   return (
     <m.div key="2fa" variants={fadeUp()} className="flex flex-col gap-3">
       <p className="text-center text-sm font-medium">{challenge.question}</p>
 
       <div className="flex flex-col gap-2">
-        {challenge.choices.map((choice, index) => (
-          <m.div
-            key={choice}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Button
-              variant={selectedChoice === index ? "default" : "outline"}
-              disabled={submitting}
-              onClick={() => onAnswer(index)}
-              className={cn(
-                "w-full justify-start text-left text-sm",
-                selectedChoice === index && "pointer-events-none"
-              )}
+        {sortedChoices.map((choice) => {
+          const index = challenge.choices.indexOf(choice)
+          return (
+            <m.div
+              key={choice}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              {choice}
-            </Button>
-          </m.div>
-        ))}
+              <Button
+                variant={selectedChoice === index ? "default" : "outline"}
+                disabled={submitting}
+                onClick={() => onAnswer(index)}
+                className={cn(
+                  "w-full justify-start text-left text-sm",
+                  selectedChoice === index && "pointer-events-none"
+                )}
+              >
+                {choice}
+              </Button>
+            </m.div>
+          )
+        })}
       </div>
 
       <ErrorBanner {...error} />

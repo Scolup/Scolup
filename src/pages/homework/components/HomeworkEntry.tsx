@@ -143,7 +143,11 @@ export function HomeworkEntry({
         role={open ? "button" : undefined}
         tabIndex={open ? 0 : undefined}
         aria-label={open ? `Voir le devoir de ${display}` : undefined}
-        onClick={onActivate}
+        onClick={(e) => {
+          const target = e.target as HTMLElement | null
+          if (target?.closest("button")) return
+          onActivate?.()
+        }}
         onKeyDown={onActivateKey}
         whileTap={open ? { scale: 0.98 } : undefined}
         transition={{ type: "spring", stiffness: 500, damping: 30 }}

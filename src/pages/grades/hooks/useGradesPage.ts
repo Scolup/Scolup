@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { markSeen } from "@/services/storage"
 import { triggerHapticLight } from "@/services/haptics"
 import { resolveSubjectName, useSubjects } from "@/services/subjects"
+import { averageImprovedThisWeek } from "../helpers"
+import { track } from "@/services/quests"
 import { useGrades } from "./useGrades"
 
 const HIGHLIGHT_MS = 2000
@@ -20,6 +22,13 @@ export function useGradesPage() {
   useEffect(() => {
     void markSeen("grades")
   }, [])
+
+  // ponytail: judged on the trend of the selected period. Ceiling: an old
+  // period can still show a rise. Upgrade path: only use the current period.
+  const improved = !model.loading && averageImprovedThisWeek(model.trend)
+  useEffect(() => {
+    if (improved) void track("average-up")
+  }, [improved])
 
   useEffect(
     () => () => {

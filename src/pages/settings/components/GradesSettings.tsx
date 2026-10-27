@@ -10,6 +10,7 @@ import {
   setAverageScale,
   useAverageSettings,
 } from "@/services/average-settings"
+import { track } from "@/services/quests"
 import { triggerHapticLight } from "@/services/haptics"
 import {
   Select,
@@ -63,6 +64,7 @@ export function GradesSettings() {
                 if (isAverageMethod(value) && value !== method) {
                   triggerHapticLight()
                   void setAverageMethod(value)
+                  void track("setting-changed")
                 }
               }}
             >
@@ -98,6 +100,7 @@ export function GradesSettings() {
                 if (isAverageScale(parsed) && parsed !== scale) {
                   triggerHapticLight()
                   void setAverageScale(parsed)
+                  void track("setting-changed")
                 }
               }}
             >
