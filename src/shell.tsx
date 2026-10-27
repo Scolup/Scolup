@@ -59,6 +59,7 @@ const loaders = {
   absences: () => import("@/pages/absences/Absences"),
   postits: () => import("@/pages/postits/PostIts"),
   settings: () => import("@/pages/settings/SettingsDialog"),
+  shop: () => import("@/pages/shop/ShopPage"),
 }
 
 const Messages = lazy(() =>
@@ -78,6 +79,7 @@ const PostIts = lazy(() =>
 const SettingsDialog = lazy(() =>
   loaders.settings().then((m) => ({ default: m.SettingsDialog }))
 )
+const ShopPage = lazy(() => loaders.shop().then((m) => ({ default: m.ShopPage })))
 
 const TAB_ROUTES: Record<string, string> = {
   home: "/",
@@ -321,6 +323,7 @@ export function MainFlow({ className, ...props }: React.ComponentProps<"div">) {
           <Suspense fallback={<TabFallback />}>
             <Routes>
               <Route index element={<HomeRoute />} />
+              <Route path="shop" element={<ShopPage />} />
               <Route path="messages" element={<Messages />} />
               <Route path="agenda" element={<Agenda />} />
               <Route path="homework" element={<Homework />} />

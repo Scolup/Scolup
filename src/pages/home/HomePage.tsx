@@ -8,6 +8,9 @@ import { MessagesWidget } from "./components/MessagesWidget"
 import { NextCoursesWidget } from "./components/NextCoursesWidget"
 import { AppToast } from "@/ui/app-toast"
 import { useSplashTask } from "@/services/splash"
+import { useRubies } from "@/hooks/use-rubies"
+import { useNavigate } from "react-router"
+import { triggerHapticLight } from "@/services/haptics"
 
 const SCHOOL_LINKS = [
   { icon: Chair02Icon, label: "Absences", path: "/absences" },
@@ -16,6 +19,8 @@ const SCHOOL_LINKS = [
 
 export function HomePage() {
   const page = useHomePage()
+  const rubies = useRubies()
+  const navigate = useNavigate()
 
   useSplashTask(page.loading)
 
@@ -28,20 +33,41 @@ export function HomePage() {
 
       <AppToast message={page.actionError} onClose={page.dismissActionError} />
 
-      <AccountMenu
-        photo={page.photo}
-        displayName={page.displayName}
-        initials={page.initials}
-        loggingOut={page.loggingOut}
-        confirmOpen={page.confirmOpen}
-        aboutOpen={page.aboutOpen}
-        onSettings={page.openSettings}
-        onAskLogout={page.askLogout}
-        onAskAbout={page.askAbout}
-        onLogout={page.logout}
-        onConfirmOpenChange={page.setConfirmOpen}
-        onAboutOpenChange={page.setAboutOpen}
-      />
+      <div className="flex items-center justify-between">
+        <AccountMenu
+          photo={page.photo}
+          displayName={page.displayName}
+          initials={page.initials}
+          loggingOut={page.loggingOut}
+          confirmOpen={page.confirmOpen}
+          aboutOpen={page.aboutOpen}
+          onSettings={page.openSettings}
+          onAskLogout={page.askLogout}
+          onAskAbout={page.askAbout}
+          onLogout={page.logout}
+          onConfirmOpenChange={page.setConfirmOpen}
+          onAboutOpenChange={page.setAboutOpen}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            triggerHapticLight()
+            navigate("/shop")
+          }}
+          className="flex items-center gap-1.5 rounded-full border border-border/70 bg-card/80 px-2.5 py-1 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+          aria-label={`Ouvrir la boutique - Rubis : ${rubies}`}
+        >
+          <img
+            src="/ruby.svg"
+            alt=""
+            aria-hidden="true"
+            className="size-5"
+          />
+          <span className="text-sm font-medium tabular-nums text-card-foreground">
+            {rubies}
+          </span>
+        </button>
+      </div>
 
       <nav aria-label="Vie scolaire" className="flex gap-2">
         {SCHOOL_LINKS.map((link) => (

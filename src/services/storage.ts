@@ -18,13 +18,17 @@ interface ScolupDB extends DBSchema {
     key: string
     value: SubjectRecord
   }
+  shop: {
+    key: string
+    value: number
+  }
 }
 
 let dbInstance: IDBPDatabase<ScolupDB> | null = null
 
 export async function getDB(): Promise<IDBPDatabase<ScolupDB>> {
   if (!dbInstance) {
-    dbInstance = await openDB<ScolupDB>("scolup", 3, {
+    dbInstance = await openDB<ScolupDB>("scolup", 4, {
       upgrade(db, oldVersion) {
         if (oldVersion < 1) db.createObjectStore("settings")
         else if (!db.objectStoreNames.contains("settings")) {
@@ -32,6 +36,9 @@ export async function getDB(): Promise<IDBPDatabase<ScolupDB>> {
         }
         if (oldVersion < 2 && !db.objectStoreNames.contains("subjects")) {
           db.createObjectStore("subjects")
+        }
+        if (oldVersion < 4 && !db.objectStoreNames.contains("shop")) {
+          db.createObjectStore("shop")
         }
       },
     })
