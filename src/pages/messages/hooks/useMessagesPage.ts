@@ -5,7 +5,6 @@ import { useNavigate, useSearchParams } from "react-router"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticLight } from "@/services/haptics"
-import { track } from "@/services/quests"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import {
   buildPagination,
@@ -139,7 +138,6 @@ export function useMessagesPage() {
   const selectMessage = useCallback(
     (message: Message) => {
       triggerHapticLight()
-      void track("message-read")
       pushedDrawer.current = true
       const params = new URLSearchParams(searchParams.toString())
       params.set("message", String(message.id))

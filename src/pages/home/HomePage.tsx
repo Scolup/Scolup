@@ -2,6 +2,7 @@ import { Chair02Icon, StickyNote02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useHomePage } from "./hooks/useHomePage"
 import { AccountMenu } from "./components/AccountMenu"
+import { ContractCard } from "./components/ContractCard"
 import { GradesWidget } from "./components/GradesWidget"
 import { HomeworkWidget } from "./components/HomeworkWidget"
 import { MessagesWidget } from "./components/MessagesWidget"
@@ -70,6 +71,8 @@ export function HomePage() {
           </span>
         </button>
       </div>
+
+      <ContractCard />
 
       <nav aria-label="Vie scolaire" className="flex gap-2">
         {SCHOOL_LINKS.map((link) => (

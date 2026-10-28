@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { getSetting } from "@/services/storage"
+import { syncGrades } from "@/services/quests"
 import {
   ensureSubjects,
   resolveSubjectCoef,
@@ -75,6 +76,7 @@ export function useGrades(): GradesModel {
         if (cancelled) return
         const raw = Array.isArray(result.notes) ? result.notes : []
         const grades = (raw as Record<string, unknown>[]).map(toGrade)
+        void syncGrades(grades)
         void ensureSubjects(
           grades.map((grade) => ({
             code: grade.subjectCode,

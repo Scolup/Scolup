@@ -131,6 +131,7 @@ src/
     use-quests.ts
     use-reauth.ts
     use-rubies.ts
+    use-shop.ts
   lib/
     utils.ts
   onboarding/
@@ -198,6 +199,7 @@ src/
       components/
         AboutDialog.tsx
         AccountMenu.tsx
+        ContractCard.tsx
         FeedbackDialog.tsx
         GradesWidget.tsx
         HomeworkWidget.tsx
@@ -270,14 +272,38 @@ src/
         DataSettings.tsx
         GeneralSettings.tsx
         GradesSettings.tsx
+        HideGradeQuestsSwitch.tsx
         SettingsNav.tsx
         SubjectsSettings.tsx
       sections.ts
       SettingsDialog.tsx
     shop/
-      quests.ts
+      components/
+        IncomeRules.tsx
+        QuestCard.tsx
+        ShopHeader.tsx
+        ShopItemCard.tsx
+      hooks/
+        useShopPage.ts
       ShopPage.tsx
   services/
+    quests/
+      catalog/
+        quests.ts
+      logic/
+        apply.ts
+        filters.ts
+        match.ts
+        migration.ts
+        toast.ts
+        view.ts
+      utils/
+        date.ts
+      constants.ts
+      index.ts
+      service.ts
+      types.ts
+      utils.ts
     app-badge.ts
     attachments.ts
     average-settings.ts
@@ -288,9 +314,13 @@ src/
     litedirecte.ts
     onboarding.ts
     profile.ts
+    quest-rules.ts
     quests.ts
     rubies.ts
+    school-rules.ts
     service-worker.ts
+    shop-rules.ts
+    shop.ts
     splash.ts
     storage.ts
     subjects.ts
@@ -336,6 +366,1239 @@ vite.config.ts
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="src/pages/home/components/ContractCard.tsx">
+"use client"
+
+import { useNavigate } from "react-router"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
+import { useQuests } from "@/hooks/use-quests"
+import { triggerHapticLight } from "@/services/haptics"
+import { ProgressRing } from "@/ui/progress-ring"
+
+// Home-screen advert for the quests: this week's personal contract (made from
+// the student's real homework and grades), or the weekly quests until it exists.
+export function ContractCard() {
+  const navigate = useNavigate()
+  const { quests } = useQuests()
+
+  const contract = quests.filter((quest) => quest.generated)
+  const shown = (
+    contract.length > 0
+      ? contract
+      : quests.filter((quest) => quest.period === "weekly")
+  ).slice(0, 3)
+  if (shown.length === 0) return null
+
+  const done = shown.filter((quest) => quest.state === "achieved").length
+
+  return (
+    <section
+      aria-label="Contrat de la semaine"
+      className="rounded-3xl border border-border/70 bg-card"
+    >
+      <div className="px-4 pt-3">
+        <button
+          type="button"
+          onClick={() => {
+            triggerHapticLight()
+            navigate("/shop")
+          }}
+          className="flex min-h-11 w-full items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+        >
+          <span className="truncate text-sm font-semibold text-card-foreground">
+            {contract.length > 0 ? "Contrat de la semaine" : "Quêtes"}
+          </span>
+          <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground tabular-nums">
+            {done}/{shown.length}
+            <HugeiconsIcon
+              icon={ArrowRight01Icon}
+              className="size-4"
+              aria-hidden="true"
+            />
+          </span>
+        </button>
+      </div>
+      <ul className="flex flex-col gap-1 px-4 py-2">
+        {shown.map((quest) => (
+          <li key={quest.id} className="flex items-center gap-3 px-3.5 py-2">
+            <ProgressRing
+              size={32}
+              value={quest.state === "achieved" ? 1 : quest.count / quest.goal}
+              label={
+                quest.state === "achieved"
+                  ? "Quête accomplie"
+                  : `${quest.count} sur ${quest.goal}`
+              }
+            />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-card-foreground">
+                {quest.title}
+              </div>
+              <div className="truncate text-xs text-muted-foreground">
+                {quest.description}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <img
+                src="/ruby.svg"
+                alt=""
+                aria-hidden="true"
+                className="size-4"
+              />
+              <span className="text-sm font-medium text-card-foreground tabular-nums">
+                +{quest.reward}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+</file>
+
+<file path="src/pages/settings/components/HideGradeQuestsSwitch.tsx">
+"use client"
+
+import { useEffect, useState } from "react"
+import { Switch as SwitchPrimitive } from "@base-ui/react/switch"
+import { HIDE_GRADE_QUESTS, refreshQuests } from "@/services/quests"
+import { triggerHapticLight } from "@/services/haptics"
+import { getSetting, setSetting } from "@/services/storage"
+
+// Some students find grades stressful: this hides every quest about grades
+// (and their rewards). School-life quests about homework stay.
+export function HideGradeQuestsSwitch() {
+  const [hidden, setHidden] = useState(false)
+
+  useEffect(() => {
+    void getSetting(HIDE_GRADE_QUESTS).then((stored) => {
+      if (stored === true) setHidden(true)
+    })
+  }, [])
+
+  return (
+    <div className="flex min-h-11 items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-col">
+        <span className="text-sm font-medium text-card-foreground">
+          Masquer les quêtes liées aux notes
+        </span>
+        <span className="text-xs text-muted-foreground">
+          Les quêtes sur les devoirs restent actives
+        </span>
+      </div>
+      <SwitchPrimitive.Root
+        checked={hidden}
+        onCheckedChange={(checked) => {
+          setHidden(checked)
+          triggerHapticLight()
+          void setSetting(HIDE_GRADE_QUESTS, checked).then(refreshQuests)
+        }}
+        aria-label="Masquer les quêtes liées aux notes"
+        className="flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full bg-muted p-0.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 motion-reduce:transition-none data-checked:bg-primary"
+      >
+        <SwitchPrimitive.Thumb className="size-6 rounded-full bg-card shadow-sm transition-transform motion-reduce:transition-none data-checked:translate-x-5" />
+      </SwitchPrimitive.Root>
+    </div>
+  )
+}
+</file>
+
+<file path="src/pages/shop/components/IncomeRules.tsx">
+import { QUESTS } from "@/services/quest-rules"
+
+// "How to earn rubies": the automatic rewards, so students know that real
+// school life pays without any quest to start.
+export function IncomeRules({ hideGrades }: { hideGrades: boolean }) {
+  const rules = QUESTS.filter(
+    (quest) => quest.income && !(hideGrades && quest.grades)
+  )
+
+  return (
+    <div className="flex flex-col gap-2 px-4 pb-6">
+      <h2 className="text-base font-semibold">Comment gagner des rubis</h2>
+      <p className="text-xs text-muted-foreground">
+        Ces récompenses tombent toutes seules, sans quête à lancer.
+      </p>
+      <div className="flex flex-col gap-2">
+        {rules.map((rule) => (
+          <div
+            key={rule.id}
+            className="flex items-center gap-3 rounded-lg border border-border/70 bg-card p-3"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium">{rule.title}</div>
+              <div className="truncate text-xs text-muted-foreground">
+                {rule.description}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <img
+                src="/ruby.svg"
+                alt=""
+                aria-hidden="true"
+                className="size-4"
+              />
+              <span className="text-sm font-medium tabular-nums">
+                +{rule.reward}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+</file>
+
+<file path="src/services/quests/catalog/quests.ts">
+// Quest catalog - add quests here
+import type { QuestDef } from "../types"
+
+export const QUESTS: QuestDef[] = [
+  // ---- Income: every real school event pays a little --------------------
+  {
+    id: "a-lheure",
+    title: "Devoir rendu à l'heure",
+    description: "Cocher un devoir au plus tard le jour du rendu",
+    reward: 2,
+    event: "homework-ontime",
+    income: true,
+    unique: true,
+  },
+  {
+    id: "evaluation",
+    title: "Évaluation passée",
+    description: "Chaque nouvelle note, quelle qu'elle soit",
+    reward: 3,
+    event: "grade-received",
+    income: true,
+    unique: true,
+    grades: true,
+  },
+  {
+    id: "semaine-complete",
+    title: "Semaine complète",
+    description: "Tous les devoirs de la semaine passée sont faits",
+    reward: 30,
+    event: "week-complete",
+    income: true,
+    unique: true,
+  },
+  // ---- Weekly quests (reset every Monday) -------------------------------
+  {
+    id: "rebond",
+    title: "Rebond",
+    description: "Faire mieux que ta note précédente dans une matière",
+    reward: 15,
+    event: "grade-received",
+    period: "weekly",
+    match: { improved: true },
+    grades: true,
+  },
+  {
+    id: "bon-coup",
+    title: "Bon coup",
+    description: "Obtenir une note >= 18/20",
+    reward: 12,
+    event: "grade-received",
+    period: "weekly",
+    match: { minRatio: 0.9 },
+    grades: true,
+  },
+  {
+    id: "tres-bien",
+    title: "Très bien",
+    description: "Obtenir une note = 20/20",
+    reward: 18,
+    event: "grade-received",
+    period: "weekly",
+    match: { minRatio: 1 },
+    grades: true,
+  },
+  {
+    id: "regulier",
+    title: "Régulier",
+    description: "Recevoir 3 notes cette semaine",
+    reward: 15,
+    event: "grade-received",
+    goal: 3,
+    unique: true,
+    period: "weekly",
+    grades: true,
+  },
+  {
+    id: "prevoyant",
+    title: "Prévoyant",
+    description: "Cocher 2 devoirs avant le jour de rendu",
+    reward: 20,
+    event: "homework-early",
+    goal: 2,
+    unique: true,
+    period: "weekly",
+  },
+  {
+    id: "en-progres",
+    title: "En progrès",
+    description: "Ta moyenne générale a progressé cette semaine",
+    reward: 25,
+    event: "average-up",
+    period: "weekly",
+    grades: true,
+  },
+  // ---- Long-term goals ----------------------------------------------------
+  {
+    id: "rigueur",
+    title: "Rigueur",
+    description: "Rendre 100 devoirs à l'heure",
+    reward: 100,
+    event: "homework-ontime",
+    goal: 100,
+    unique: true,
+  },
+  {
+    id: "rendez-vous",
+    title: "Au rendez-vous",
+    description: "Passer 60 évaluations",
+    reward: 100,
+    event: "grade-received",
+    goal: 60,
+    unique: true,
+    grades: true,
+  },
+  // ---- Tutorial (one-shot) ----------------------------------------------
+  {
+    id: "bienvenue",
+    title: "Bienvenue",
+    description: "Ouvrir Scolup",
+    reward: 50,
+    event: "app-open",
+    silent: true,
+  },
+  {
+    id: "un-bon-debut",
+    title: "Un bon début",
+    description: "Cocher un devoir",
+    reward: 15,
+    event: "homework-done",
+  },
+  {
+    id: "tatillon",
+    title: "Tâtillon",
+    description: "Changer un paramètre",
+    reward: 20,
+    event: "setting-changed",
+  },
+]
+</file>
+
+<file path="src/services/quests/logic/apply.ts">
+import type {
+  QuestDef,
+  QuestEvent,
+  QuestPayload,
+  QuestProgress,
+  ProgressMap,
+} from "../types"
+import { questPeriod } from "../utils"
+import { periodKey } from "../utils/date"
+import { matches } from "./match"
+
+const MAX_SEEN = 300
+
+// Registers one event. Returns the new progress and what it paid.
+// Never mutates its input. `key` identifies the thing (a homework id) for
+// `unique` and `income` quests, so ticking the same homework twice pays once.
+export function applyEvent(
+  quests: QuestDef[],
+  progress: ProgressMap,
+  event: QuestEvent,
+  now: Date,
+  key?: string,
+  payload?: QuestPayload
+): { progress: ProgressMap; completed: QuestDef[] } {
+  const next: ProgressMap = { ...progress }
+  const completed: QuestDef[] = []
+
+  for (const quest of quests) {
+    if (quest.event !== event || !matches(quest.match, payload)) continue
+    if (quest.income && key === undefined) continue
+
+    const period = periodKey(questPeriod(quest), now)
+    const saved = next[quest.id]
+    // New period (new week)? Start from zero.
+    const current: QuestProgress =
+      saved && saved.period === period
+        ? saved
+        : { count: 0, period, done: false }
+
+    if (current.done) continue
+    const byKey = (quest.unique || quest.income) && key !== undefined
+    if (byKey && current.seen?.includes(key)) continue
+
+    const count = current.count + 1
+    const updated: QuestProgress = { count, period, done: false }
+    if (byKey) updated.seen = [...(current.seen ?? []), key].slice(-MAX_SEEN)
+    else if (current.seen) updated.seen = current.seen
+
+    if (quest.income) {
+      completed.push(quest)
+    } else if (count >= (quest.goal ?? 1)) {
+      updated.done = true
+      completed.push(quest)
+    }
+    next[quest.id] = updated
+  }
+
+  return { progress: next, completed }
+}
+</file>
+
+<file path="src/services/quests/logic/filters.ts">
+import type { QuestDef } from "../types"
+import { dayKey } from "../utils/date"
+
+// Quests that can progress right now (generated ones included).
+export function activeQuests(
+  quests: QuestDef[],
+  now: Date,
+  hideGrades = false
+): QuestDef[] {
+  const today = dayKey(now)
+  return quests.filter(
+    (quest) =>
+      !(hideGrades && quest.grades) && !(quest.expires && today > quest.expires)
+  )
+}
+</file>
+
+<file path="src/services/quests/logic/match.ts">
+import type { QuestMatch, QuestPayload } from "../types"
+
+export function matches(match: QuestMatch | undefined, payload?: QuestPayload) {
+  if (!match) return true
+  if (match.subject !== undefined && payload?.subject !== match.subject) {
+    return false
+  }
+  if (
+    match.minRatio !== undefined &&
+    (payload?.ratio === undefined || payload.ratio < match.minRatio)
+  ) {
+    return false
+  }
+  if (match.improved && !payload?.improved) return false
+  return true
+}
+</file>
+
+<file path="src/services/quests/logic/migration.ts">
+import type { ProgressMap } from "../types"
+import { QUESTS } from "../catalog/quests"
+import { periodKey } from "../utils/date"
+import { questPeriod } from "../utils"
+
+// Old storage: a JSON array of rewarded quest ids. Those users must keep
+// their quests and must NOT be paid twice.
+export function migrateLegacy(ids: unknown[]): ProgressMap {
+  const result: ProgressMap = {}
+  for (const quest of QUESTS) {
+    if (!quest.income && ids.includes(quest.id)) {
+      result[quest.id] = {
+        count: quest.goal ?? 1,
+        period: periodKey(questPeriod(quest), new Date()),
+        done: true,
+      }
+    }
+  }
+  return result
+}
+
+export function parseProgress(
+  progressRaw: unknown,
+  legacyRewardedRaw: unknown
+): ProgressMap {
+  try {
+    if (typeof progressRaw === "string") {
+      const parsed: unknown = JSON.parse(progressRaw)
+      if (parsed && typeof parsed === "object") return parsed as ProgressMap
+    }
+    if (typeof legacyRewardedRaw === "string") {
+      const ids: unknown = JSON.parse(legacyRewardedRaw)
+      if (Array.isArray(ids)) return migrateLegacy(ids)
+    }
+  } catch {}
+  return {}
+}
+</file>
+
+<file path="src/services/quests/logic/toast.ts">
+import type { QuestToast } from "../types"
+
+export function toastText({ quests, text }: QuestToast): string {
+  if (text) return text
+  const total = quests.reduce((sum, quest) => sum + quest.reward, 0)
+  const income = quests.every((quest) => quest.income)
+  if (quests.length === 1) {
+    return income
+      ? `${quests[0].title} : +${total} rubis`
+      : `Quête accomplie : ${quests[0].title} (+${total} rubis)`
+  }
+  return income
+    ? `${quests.length} récompenses : +${total} rubis`
+    : `${quests.length} quêtes accomplies (+${total} rubis)`
+}
+</file>
+
+<file path="src/services/quests/logic/view.ts">
+import type { ProgressMap, QuestDef, QuestState } from "../types"
+import { periodKey } from "../utils/date"
+import { questPeriod } from "../utils"
+
+// What the UI shows for a quest (progress of a past period counts as 0).
+export function questView(
+  quest: QuestDef,
+  progress: ProgressMap,
+  now: Date
+): { goal: number; count: number; state: QuestState } {
+  const saved = progress[quest.id]
+  const current =
+    saved && saved.period === periodKey(questPeriod(quest), now) ? saved : null
+  const goal = quest.goal ?? 1
+  const state: QuestState = current?.done
+    ? "achieved"
+    : quest.secret
+      ? "secret"
+      : "unachieved"
+  return { goal, count: Math.min(current?.count ?? 0, goal), state }
+}
+</file>
+
+<file path="src/services/quests/utils/date.ts">
+import type { QuestPeriod } from "../types"
+
+export function dayKey(d: Date): string {
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${d.getFullYear()}-${month}-${day}`
+}
+
+// A week is identified by its Monday, so Friday -> Monday is the same
+// "school week" boundary for everyone, whatever the locale.
+export function weekKey(d: Date): string {
+  const monday = new Date(d)
+  monday.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+  return dayKey(monday)
+}
+
+export function periodKey(period: QuestPeriod, now: Date): string {
+  if (period === "daily") return dayKey(now)
+  if (period === "weekly") return weekKey(now)
+  return "once"
+}
+</file>
+
+<file path="src/services/quests/constants.ts">
+// Keys of the "quests" IndexedDB store (all values are JSON strings).
+export const PROGRESS_KEY = "progress"
+export const LEGACY_REWARDED_KEY = "rewarded" // old format, only read for migration
+export const CONTRACT_KEY = "contract" // this week's personalised quests
+export const LEDGER_KEY = "ledger" // homework the student has been given
+export const SEEN_GRADES_KEY = "seen-grades" // grades already known
+export const WEAKEST_KEY = "weakest" // most fragile subject, for the weekly challenge
+
+export const HIDE_GRADE_QUESTS = "hideGradeQuests" // setting
+</file>
+
+<file path="src/services/quests/index.ts">
+// Re-export everything from the organized quest modules for backward compatibility
+export * from "./types"
+export * from "./utils"
+export * from "./utils/date"
+export * from "./catalog/quests"
+export * from "./logic/apply"
+export * from "./logic/filters"
+export * from "./logic/match"
+export * from "./logic/view"
+export * from "./logic/toast"
+export * from "./logic/migration"
+</file>
+
+<file path="src/services/quests/service.ts">
+import { reloadRubies, RUBIES_KEY } from "../rubies"
+import { getDB, getSetting } from "../storage"
+import { triggerHapticLight } from "../haptics"
+import {
+  activeQuests,
+  applyEvent,
+  parseProgress,
+  periodKey,
+  QUESTS,
+} from "./index"
+import type {
+  QuestDef,
+  QuestEvent,
+  QuestPayload,
+  QuestToast,
+  ProgressMap,
+} from "./types"
+import {
+  contractContext,
+  contractHash,
+  generateContract,
+  gradePayload,
+  mergeLedger,
+  newGrades,
+  previousWeekKey,
+  toGradeLite,
+  weakestSubject,
+  weekComplete,
+} from "../school-rules"
+import { addToWeek, parseWeeks, WEEKS_KEY } from "../shop-rules"
+import {
+  PROGRESS_KEY,
+  LEGACY_REWARDED_KEY,
+  CONTRACT_KEY,
+  LEDGER_KEY,
+  SEEN_GRADES_KEY,
+  WEAKEST_KEY,
+  HIDE_GRADE_QUESTS,
+} from "./constants"
+
+export interface Contract {
+  week: string
+  hash: string
+  announced: boolean
+  quests: QuestDef[]
+}
+
+const toastListeners = new Set<(toast: QuestToast) => void>()
+const changeListeners = new Set<() => void>()
+
+export function subscribeQuestToast(
+  fn: (toast: QuestToast) => void
+): () => void {
+  toastListeners.add(fn)
+  return () => toastListeners.delete(fn)
+}
+
+export function subscribeQuests(fn: () => void): () => void {
+  changeListeners.add(fn)
+  return () => changeListeners.delete(fn)
+}
+
+// Call after a setting that changes which quests are shown.
+export function refreshQuests(): void {
+  for (const l of changeListeners) l()
+}
+
+function readJson<T>(raw: unknown, fallback: T): T {
+  try {
+    if (typeof raw !== "string") return fallback
+    const parsed: unknown = JSON.parse(raw)
+    return parsed && typeof parsed === "object" ? (parsed as T) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function readContract(raw: unknown): Contract {
+  const contract = readJson<Partial<Contract>>(raw, {})
+  return {
+    week: contract.week ?? "",
+    hash: contract.hash ?? "",
+    announced: contract.announced === true,
+    quests: Array.isArray(contract.quests) ? contract.quests : [],
+  }
+}
+
+function toNumber(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0
+}
+
+async function hideGrades(): Promise<boolean> {
+  return (await getSetting(HIDE_GRADE_QUESTS)) === true
+}
+
+// Everything the quest screens need.
+export async function loadQuestState(): Promise<{
+  progress: ProgressMap
+  generated: QuestDef[]
+  hideGrades: boolean
+}> {
+  try {
+    const db = await getDB()
+    const [progressRaw, legacyRaw, contractRaw] = await Promise.all([
+      db.get("quests", PROGRESS_KEY),
+      db.get("quests", LEGACY_REWARDED_KEY),
+      db.get("quests", CONTRACT_KEY),
+    ])
+    return {
+      progress: parseProgress(progressRaw, legacyRaw),
+      generated: readContract(contractRaw).quests,
+      hideGrades: await hideGrades(),
+    }
+  } catch {
+    return { progress: {}, generated: [], hideGrades: false }
+  }
+}
+
+// The function the rest of the app uses: tell Scolup something happened.
+export async function track(
+  event: QuestEvent,
+  key?: string,
+  payload?: QuestPayload
+): Promise<void> {
+  try {
+    const now = new Date()
+    const hide = await hideGrades()
+    const db = await getDB()
+    const tx = db.transaction(["quests", "shop"], "readwrite")
+    const quests = tx.objectStore("quests")
+    const shop = tx.objectStore("shop")
+
+    const [progressRaw, legacyRaw, contractRaw] = await Promise.all([
+      quests.get(PROGRESS_KEY),
+      quests.get(LEGACY_REWARDED_KEY),
+      quests.get(CONTRACT_KEY),
+    ])
+    const { progress, completed } = applyEvent(
+      activeQuests([...QUESTS, ...readContract(contractRaw).quests], now, hide),
+      parseProgress(progressRaw, legacyRaw),
+      event,
+      now,
+      key,
+      payload
+    )
+    await quests.put(JSON.stringify(progress), PROGRESS_KEY)
+
+    const reward = completed.reduce((sum, quest) => sum + quest.reward, 0)
+    if (reward > 0) {
+      const [balanceRaw, weeksRaw] = await Promise.all([
+        shop.get(RUBIES_KEY),
+        shop.get(WEEKS_KEY),
+      ])
+      const weeks = addToWeek(
+        parseWeeks(weeksRaw),
+        periodKey("weekly", now),
+        reward
+      )
+      await shop.put(toNumber(balanceRaw) + reward, RUBIES_KEY)
+      await shop.put(JSON.stringify(weeks), WEEKS_KEY)
+    }
+    await tx.done
+
+    if (reward > 0) {
+      await reloadRubies()
+      triggerHapticLight()
+      for (const l of toastListeners) l({ quests: completed })
+    }
+    refreshQuests()
+  } catch {
+    // ponytail: a failed quest must never break the app.
+  }
+}
+
+// Builds (or rebuilds) this week's personalised contract.
+async function refreshContract(): Promise<void> {
+  try {
+    const now = new Date()
+    const hide = await hideGrades()
+    const db = await getDB()
+    const tx = db.transaction("quests", "readwrite")
+    const store = tx.objectStore("quests")
+    const [contractRaw, ledgerRaw, weakestRaw, progressRaw, legacyRaw] =
+      await Promise.all([
+        store.get(CONTRACT_KEY),
+        store.get(LEDGER_KEY),
+        store.get(WEAKEST_KEY),
+        store.get(PROGRESS_KEY),
+        store.get(LEGACY_REWARDED_KEY),
+      ])
+    const contract = readContract(contractRaw)
+    const ctx = contractContext(
+      readJson<any>(ledgerRaw, {}),
+      readJson<any>(weakestRaw, null),
+      hide,
+      now
+    )
+    const hash = contractHash(ctx)
+    const progress = parseProgress(progressRaw, legacyRaw)
+    const sameWeek = contract.week === ctx.week
+    const started = contract.quests.some(
+      (quest) => (progress[quest.id]?.count ?? 0) > 0
+    )
+
+    let announce = false
+    if (!sameWeek || (contract.hash !== hash && !started)) {
+      const generated = generateContract(ctx)
+      announce = !(sameWeek && contract.announced) && generated.length > 0
+      const next: Contract = {
+        week: ctx.week,
+        hash,
+        announced: announce || (sameWeek && contract.announced),
+        quests: generated,
+      }
+      await store.put(JSON.stringify(next), CONTRACT_KEY)
+      const ids = new Set(generated.map((quest) => quest.id))
+      const kept = Object.fromEntries(
+        Object.entries(progress).filter(
+          ([id]) => !id.startsWith("contract:") || ids.has(id)
+        )
+      )
+      await store.put(JSON.stringify(kept), PROGRESS_KEY)
+    }
+    await tx.done
+
+    if (announce) {
+      for (const l of toastListeners) {
+        l({
+          quests: [],
+          text: "Nouveau contrat de la semaine : découvre tes quêtes !",
+        })
+      }
+    }
+    refreshQuests()
+  } catch {
+    // ponytail: same as track().
+  }
+}
+
+export async function syncHomework(items: any[]): Promise<void> {
+  try {
+    const now = new Date()
+    const db = await getDB()
+    const tx = db.transaction("quests", "readwrite")
+    const store = tx.objectStore("quests")
+    const ledger = mergeLedger(
+      readJson<any>(await store.get(LEDGER_KEY), {}),
+      items,
+      now
+    )
+    await store.put(JSON.stringify(ledger), LEDGER_KEY)
+    await tx.done
+
+    const last = previousWeekKey(now)
+    if (weekComplete(ledger, last)) await track("week-complete", last)
+    await refreshContract()
+  } catch {
+    // ponytail: same as track().
+  }
+}
+
+export async function syncGrades(grades: any[]): Promise<void> {
+  try {
+    const lites = grades.map(toGradeLite)
+    const db = await getDB()
+    const tx = db.transaction("quests", "readwrite")
+    const store = tx.objectStore("quests")
+    const seenParsed = readJson<unknown>(await store.get(SEEN_GRADES_KEY), null)
+    const seen = Array.isArray(seenParsed) ? (seenParsed as string[]) : null
+    const result = newGrades(lites, seen)
+    await store.put(JSON.stringify(result.seen), SEEN_GRADES_KEY)
+    await store.put(JSON.stringify(weakestSubject(lites)), WEAKEST_KEY)
+    await tx.done
+
+    for (const grade of result.fresh) {
+      const payload = gradePayload(grade, lites)
+      if (payload) await track("grade-received", grade.key, payload)
+    }
+    await refreshContract()
+  } catch {
+    // ponytail: same as track().
+  }
+}
+</file>
+
+<file path="src/services/quests/types.ts">
+// Quest system types
+export type QuestPeriod = "once" | "daily" | "weekly"
+
+export type QuestEvent =
+  | "app-open"
+  | "setting-changed"
+  | "homework-done"
+  | "homework-early"
+  | "homework-ontime"
+  | "grade-received"
+  | "average-up"
+  | "week-complete"
+
+// Details of an event, so a quest can look only at what matters to it.
+export interface QuestPayload {
+  subject?: string // subject id (see subjectId)
+  ratio?: number // grade / scale, 0..1
+  improved?: boolean // better than the previous grade in that subject
+  due?: string // due day key of a homework
+}
+
+// A quest only counts events matching ALL of these (plain data: it is saved).
+export interface QuestMatch {
+  subject?: string
+  minRatio?: number
+  improved?: boolean
+}
+
+export interface QuestDef {
+  id: string // never change an id once shipped: progress is stored by id
+  title: string
+  description: string
+  reward: number
+  event: QuestEvent // the event that makes this quest progress
+  goal?: number // how many times (default 1)
+  period?: QuestPeriod // when progress resets (default "once" = never)
+  income?: boolean // pays `reward` for every distinct key, never completes
+  match?: QuestMatch
+  unique?: boolean // count each track(event, key) key once (e.g. a homework id)
+  grades?: boolean // about grades: hidden when the student turns them off
+  expires?: string // last day (day key) the quest is shown
+  generated?: boolean // created for this student (see contract rules)
+  secret?: boolean // shown as "???" until achieved
+  silent?: boolean // no toast when achieved
+}
+
+export type QuestState = "secret" | "unachieved" | "achieved"
+
+export interface QuestProgress {
+  count: number
+  period: string // key of the period this count belongs to
+  seen?: string[] // keys already counted (unique / income quests)
+  done: boolean
+}
+
+export type ProgressMap = Record<string, QuestProgress>
+
+export interface QuestToast {
+  quests: QuestDef[]
+  text?: string
+}
+</file>
+
+<file path="src/services/quests/utils.ts">
+import type { QuestDef, QuestPeriod } from "./types"
+
+export function questPeriod(quest: QuestDef): QuestPeriod {
+  return quest.period ?? "once"
+}
+
+export function subjectId(code?: string, name?: string): string {
+  return code?.trim() || name?.trim() || "?"
+}
+</file>
+
+<file path="src/services/school-rules.ts">
+// Pure "school life" logic: turns what Scolup knows about the student's school
+// (homework, grades) into quest events and into the personalised weekly
+// contract. No React, no IndexedDB, so it can be unit-tested.
+//
+// Principles:
+//   - Reward effort and progress, never an absolute grade: every grade quest
+//     is relative to the student's OWN level.
+//   - Prefer events that school data can confirm over self-reported ones.
+
+import {
+  dayKey,
+  subjectId,
+  weekKey,
+  type QuestDef,
+  type QuestPayload,
+} from "./quest-rules"
+
+// ---- Homework ledger ---------------------------------------------------------
+// The school only lists upcoming homework, so Scolup remembers what it saw
+// (needed to know if a whole week was completed).
+
+export interface LedgerEntry {
+  d: string // due day key
+  done: boolean
+  test: boolean
+  s: string // subject id
+  n: string // subject name
+}
+
+export type Ledger = Record<string, LedgerEntry>
+
+export interface HomeworkInput {
+  id: number
+  due: Date
+  subject: string
+  subjectCode?: string
+  done: boolean
+  isTest: boolean
+}
+
+const LEDGER_DAYS = 60
+
+export function mergeLedger(
+  ledger: Ledger,
+  items: HomeworkInput[],
+  now: Date
+): Ledger {
+  const next: Ledger = { ...ledger }
+  for (const item of items) {
+    next[String(item.id)] = {
+      d: dayKey(item.due),
+      done: item.done,
+      test: item.isTest,
+      s: subjectId(item.subjectCode, item.subject),
+      n: item.subject,
+    }
+  }
+  const cutoff = new Date(now)
+  cutoff.setDate(cutoff.getDate() - LEDGER_DAYS)
+  const oldest = dayKey(cutoff)
+  return Object.fromEntries(
+    Object.entries(next).filter(([, entry]) => entry.d >= oldest)
+  )
+}
+
+function weekBounds(monday: string): { from: string; to: string } {
+  const end = new Date(`${monday}T12:00:00`)
+  end.setDate(end.getDate() + 6)
+  return { from: monday, to: dayKey(end) }
+}
+
+// A week is "complete" when it had at least 2 homeworks and all are done.
+export function weekComplete(ledger: Ledger, monday: string): boolean {
+  const { from, to } = weekBounds(monday)
+  const entries = Object.values(ledger).filter(
+    (entry) => entry.d >= from && entry.d <= to
+  )
+  return entries.length >= 2 && entries.every((entry) => entry.done)
+}
+
+export function previousWeekKey(now: Date): string {
+  const date = new Date(now)
+  date.setDate(date.getDate() - 7)
+  return weekKey(date)
+}
+
+// ---- Grades ---------------------------------------------------------------------
+
+export interface GradeInput {
+  key: string
+  subject: string
+  subjectCode?: string
+  value: string
+  outOf: string
+  coef: string
+  period: string
+  date?: Date
+  enteredOn?: Date
+  nonSignificant: boolean
+}
+
+export interface GradeLite {
+  key: string
+  subject: string // subject id
+  name: string
+  ratio: number | null // grade / scale (0..1); null = absent, not graded
+  coef: number
+  period: string
+  time: number
+}
+
+function parseNumber(text: string): number | null {
+  const value = Number(text.replace(",", ".").trim())
+  return text.trim() !== "" && Number.isFinite(value) ? value : null
+}
+
+export function toGradeLite(grade: GradeInput): GradeLite {
+  const value = parseNumber(grade.value)
+  const scale = parseNumber(grade.outOf)
+  const coef = parseNumber(grade.coef)
+  const when = grade.date ?? grade.enteredOn
+  return {
+    key: grade.key,
+    subject: subjectId(grade.subjectCode, grade.subject),
+    name: grade.subject,
+    ratio:
+      grade.nonSignificant || value === null || scale === null || scale <= 0
+        ? null
+        : value / scale,
+    coef: coef !== null && coef > 0 ? coef : 1,
+    period: grade.period,
+    time: when ? when.getTime() : 0,
+  }
+}
+
+const MAX_SEEN_GRADES = 400
+
+// Which grades are new? The very first time (seen === null) everything that
+// already exists is just remembered: nobody gets paid for old grades.
+export function newGrades(
+  grades: GradeLite[],
+  seen: string[] | null
+): { fresh: GradeLite[]; seen: string[] } {
+  const keys = grades.map((grade) => grade.key)
+  if (seen === null) return { fresh: [], seen: keys.slice(-MAX_SEEN_GRADES) }
+  const known = new Set(seen)
+  const fresh = grades
+    .filter((grade) => !known.has(grade.key))
+    .sort((a, b) => a.time - b.time)
+  return {
+    fresh,
+    seen: [...seen, ...fresh.map((grade) => grade.key)].slice(-MAX_SEEN_GRADES),
+  }
+}
+
+// Event details of a new grade. `improved` = at least as good as the previous
+// graded evaluation of the same subject.
+export function gradePayload(
+  grade: GradeLite,
+  all: GradeLite[]
+): QuestPayload | null {
+  if (grade.ratio === null) return null // absent / not graded: no event
+  const previous = all
+    .filter(
+      (other) =>
+        other.subject === grade.subject &&
+        other.ratio !== null &&
+        other.key !== grade.key &&
+        other.time < grade.time
+    )
+    .sort((a, b) => b.time - a.time)[0]
+  return {
+    subject: grade.subject,
+    ratio: grade.ratio,
+    improved:
+      previous !== undefined &&
+      previous.ratio !== null &&
+      grade.ratio >= previous.ratio,
+  }
+}
+
+export interface Weakest {
+  id: string
+  name: string
+  average: number // 0..20
+  ratio: number // 0..1
+}
+
+// The student's most fragile subject (current period, at least 2 grades).
+export function weakestSubject(grades: GradeLite[]): Weakest | null {
+  const graded = grades.filter((grade) => grade.ratio !== null)
+  if (graded.length === 0) return null
+  const latest = [...graded].sort((a, b) => b.time - a.time)[0]
+  const groups = new Map<string, GradeLite[]>()
+  for (const grade of graded) {
+    if (grade.period !== latest.period) continue
+    groups.set(grade.subject, [...(groups.get(grade.subject) ?? []), grade])
+  }
+  let weakest: Weakest | null = null
+  for (const [id, list] of groups) {
+    if (list.length < 2) continue
+    const total = list.reduce((sum, grade) => sum + grade.coef, 0)
+    const ratio =
+      list.reduce((sum, grade) => sum + (grade.ratio ?? 0) * grade.coef, 0) /
+      total
+    if (weakest === null || ratio < weakest.ratio) {
+      weakest = {
+        id,
+        name: list[0].name,
+        average: Math.round(ratio * 200) / 10,
+        ratio,
+      }
+    }
+  }
+  return weakest
+}
+
+// ---- Weekly contract ----------------------------------------------------------
+
+export interface ContractContext {
+  week: string // Monday key
+  homeworkThisWeek: number
+  tests: { id: string; name: string; day: string }[] // this week, not past
+  weakest: Weakest | null // null when grade quests are turned off
+  hideGrades: boolean
+}
+
+export function contractContext(
+  ledger: Ledger,
+  weakest: Weakest | null,
+  hideGrades: boolean,
+  now: Date
+): ContractContext {
+  const week = weekKey(now)
+  const { from, to } = weekBounds(week)
+  const today = dayKey(now)
+  const entries = Object.values(ledger).filter(
+    (entry) => entry.d >= from && entry.d <= to
+  )
+  return {
+    week,
+    homeworkThisWeek: entries.length,
+    tests: entries
+      .filter((entry) => entry.test && entry.d >= today)
+      .sort((a, b) => a.d.localeCompare(b.d))
+      .map((entry) => ({ id: entry.s, name: entry.n, day: entry.d })),
+    weakest: hideGrades ? null : weakest,
+    hideGrades,
+  }
+}
+
+// Regenerate the contract only if what it is built from changed.
+export function contractHash(ctx: ContractContext): string {
+  return [
+    ctx.week,
+    ctx.homeworkThisWeek,
+    ctx.tests.map((test) => `${test.id}@${test.day}`).join(","),
+    ctx.weakest?.id ?? "",
+    ctx.hideGrades ? "h" : "",
+  ].join("|")
+}
+
+function addDays(key: string, days: number): string {
+  const date = new Date(`${key}T12:00:00`)
+  date.setDate(date.getDate() + days)
+  return dayKey(date)
+}
+
+// Up to personalised quests for the week. Ids contain the week, so each
+// week starts fresh and last week's can be dropped.
+export function generateContract(ctx: ContractContext): QuestDef[] {
+  const { week } = ctx
+  const sunday = addDays(week, 6)
+  const quests: QuestDef[] = []
+
+  // 1. Homework on time (all homework this week).
+  const goal = ctx.homeworkThisWeek
+  if (goal > 0) {
+    quests.push({
+      id: `contract:${week}:ontime`,
+      title: "Tout rendre à l'heure",
+      description: `Rendre tous les devoirs (${goal}) à l'heure cette semaine`,
+      reward: 25,
+      event: "homework-ontime",
+      goal,
+      unique: true,
+      period: "weekly",
+      expires: sunday,
+      generated: true,
+    })
+  }
+
+  // Devoirs en avance
+  if (goal >= 2) {
+    quests.push({
+      id: `contract:${week}:early`,
+      title: "Devoirs en avance",
+      description: "Cocher 2 devoirs avant le jour de rendu cette semaine",
+      reward: 20,
+      event: "homework-early",
+      goal: 2,
+      unique: true,
+      period: "weekly",
+      expires: sunday,
+      generated: true,
+    })
+  }
+
+  return quests
+}
+</file>
 
 <file path=".agents/skills/frontend-design/LICENSE.txt">
 Apache License
@@ -7980,39 +9243,63 @@ export function useOnboardingStatus() {
 </file>
 
 <file path="src/hooks/use-quests.ts">
-import { useCallback, useEffect, useState } from "react"
-import { completeQuest, ensureQuestProgress, getQuestStatesAsync, QUESTS, type QuestDef, type QuestState } from "@/services/quests"
+import { useEffect, useMemo, useState } from "react"
+import { loadQuestState, subscribeQuests } from "@/services/quests"
+import {
+  activeQuests,
+  QUESTS,
+  questPeriod,
+  questView,
+  type ProgressMap,
+  type QuestDef,
+  type QuestPeriod,
+  type QuestState,
+} from "@/services/quest-rules"
 
 export interface QuestItem extends QuestDef {
+  period: QuestPeriod
   state: QuestState
+  count: number
+  goal: number
+  tier?: number
 }
 
-export function useQuests() {
-  const [items, setItems] = useState<QuestItem[]>(() =>
-    QUESTS.map((q) => ({ ...q, state: "unachieved" }))
-  )
+interface QuestSnapshot {
+  progress: ProgressMap
+  generated: QuestDef[]
+  hideGrades: boolean
+}
 
-  const refresh = useCallback(async () => {
-    const states = await getQuestStatesAsync()
-    setItems(QUESTS.map((q) => ({ ...q, state: states[q.id] })))
-  }, [])
+const EMPTY: QuestSnapshot = { progress: {}, generated: [], hideGrades: false }
 
-  const progress = useCallback(async (p: Record<string, number>) => {
-    await ensureQuestProgress(p)
-    await refresh()
-  }, [refresh])
-
-  const complete = useCallback(async (id: string) => {
-    const ok = await completeQuest(id)
-    if (ok) await refresh()
-    return ok
-  }, [refresh])
+// Read-only: pages that want to *trigger* a quest call track() directly.
+// Returns the quests that are active today, without the income rules (those
+// pay automatically: see INCOME in the shop) and without grade quests when
+// the student turned them off.
+export function useQuests(): { quests: QuestItem[]; hideGrades: boolean } {
+  const [snapshot, setSnapshot] = useState<QuestSnapshot>(EMPTY)
 
   useEffect(() => {
-    void refresh()
-  }, [refresh])
+    const load = () => void loadQuestState().then(setSnapshot)
+    load()
+    return subscribeQuests(load)
+  }, [])
 
-  return { quests: items, progress, complete, refresh }
+  return useMemo(() => {
+    const now = new Date()
+    const quests = activeQuests(
+      [...QUESTS, ...snapshot.generated],
+      now,
+      snapshot.hideGrades
+    )
+      .filter((quest) => !quest.income)
+      .map((quest) => ({
+        ...quest,
+        period: questPeriod(quest),
+        ...questView(quest, snapshot.progress, now),
+      }))
+    return { quests, hideGrades: snapshot.hideGrades }
+  }, [snapshot])
 }
 </file>
 
@@ -8029,6 +9316,26 @@ export function useRubies() {
   }, [])
 
   return rubies
+}
+</file>
+
+<file path="src/hooks/use-shop.ts">
+import { useEffect, useState } from "react"
+import { subscribeRubies } from "@/services/rubies"
+import { EMPTY_SHOP, loadShop, type ShopState } from "@/services/shop"
+
+// Inventory and weekly recap. Reloads whenever rubies change (earning or
+// spending both go through reloadRubies, which notifies).
+export function useShop(): ShopState {
+  const [state, setState] = useState<ShopState>(EMPTY_SHOP)
+
+  useEffect(() => {
+    const load = () => void loadShop().then(setState)
+    load()
+    return subscribeRubies(load)
+  }, [])
+
+  return state
 }
 </file>
 
@@ -11605,40 +12912,264 @@ export function DataSettings() {
 }
 </file>
 
-<file path="src/pages/shop/quests.ts">
-export type QuestState = "secret" | "unachieved" | "achieved"
+<file path="src/pages/shop/components/QuestCard.tsx">
+import { cn } from "@/lib/utils"
+import { ProgressRing } from "@/ui/progress-ring"
+import type { QuestItem } from "@/hooks/use-quests"
 
-export interface Quest {
-  id: string
-  title: string
-  description: string
-  reward: number
-  state: QuestState
+export function QuestCard({ quest }: { quest: QuestItem }) {
+  const secret = quest.state === "secret"
+  const achieved = quest.state === "achieved"
+  const endless = quest.tier !== undefined
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-lg border p-3",
+        secret
+          ? "border-dashed border-border/60 bg-muted/30 opacity-60"
+          : "border-border/70 bg-card",
+        achieved && "opacity-80"
+      )}
+      aria-label={secret ? "Quête secrète" : quest.title}
+    >
+      <ProgressRing
+        size={40}
+        value={achieved ? 1 : quest.count / quest.goal}
+        label={
+          achieved ? "Quête accomplie" : `${quest.count} sur ${quest.goal}`
+        }
+      />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-medium">
+          {secret ? "???" : quest.title}
+          {endless && !secret && (
+            <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+              Palier {quest.tier! + 1}
+            </span>
+          )}
+        </div>
+        <div className="truncate text-xs text-muted-foreground">
+          {secret ? "À découvrir" : quest.description}
+          {!secret && !achieved && quest.goal > 1 && (
+            <span className="tabular-nums">
+              {" "}
+              · {quest.count}/{quest.goal}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <img
+          src="/ruby.svg"
+          alt=""
+          aria-hidden="true"
+          className={cn("size-4", !achieved && "grayscale")}
+        />
+        <span className="text-sm font-medium tabular-nums">
+          +{quest.reward * (endless ? quest.tier! + 1 : 1)}
+        </span>
+      </div>
+    </div>
+  )
+}
+</file>
+
+<file path="src/pages/shop/components/ShopHeader.tsx">
+import { AnimatedNumber } from "@/ui/animated-number"
+
+export function ShopHeader({
+  rubies,
+  weekText,
+}: {
+  rubies: number
+  weekText: string | null
+}) {
+  return (
+    <div className="flex flex-col items-center gap-3 px-4 pt-10 pb-6">
+      <img src="/ruby.svg" alt="" aria-hidden="true" className="size-16" />
+      <div className="text-4xl font-semibold">
+        <AnimatedNumber value={String(rubies)} />
+      </div>
+      <div className="text-sm text-muted-foreground">Rubis</div>
+
+      {weekText && (
+        <p className="text-center text-xs text-muted-foreground">{weekText}</p>
+      )}
+    </div>
+  )
+}
+</file>
+
+<file path="src/pages/shop/components/ShopItemCard.tsx">
+import { Button } from "@/components/ui/button"
+import type { ShopItem } from "@/services/shop-rules"
+
+export function ShopItemCard({
+  item,
+  owned,
+  active,
+  missing,
+  onBuy,
+  onUse,
+}: {
+  item: ShopItem
+  owned: boolean
+  active: boolean
+  missing: number // rubies still missing (0 = affordable)
+  onBuy: () => void
+  onUse: () => void
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-border/70 bg-card p-3">
+      <span
+        aria-hidden="true"
+        style={{ backgroundColor: item.color }}
+        className="size-10 shrink-0 rounded-full"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-medium">Thème {item.label}</div>
+        <div className="truncate text-xs text-muted-foreground">
+          {owned
+            ? active
+              ? "Thème utilisé"
+              : "Débloqué"
+            : missing > 0
+              ? `Encore ${missing} rubis`
+              : "Prêt à débloquer"}
+        </div>
+      </div>
+      {owned ? (
+        <Button
+          variant="outline"
+          size="lg"
+          disabled={active}
+          onClick={onUse}
+          className="shrink-0"
+        >
+          {active ? "Utilisée" : "Utiliser"}
+        </Button>
+      ) : (
+        <Button
+          size="lg"
+          disabled={missing > 0}
+          onClick={onBuy}
+          className="shrink-0"
+        >
+          <img src="/ruby.svg" alt="" aria-hidden="true" className="size-4" />
+          {item.price}
+        </Button>
+      )}
+    </div>
+  )
+}
+</file>
+
+<file path="src/pages/shop/hooks/useShopPage.ts">
+import { useCallback, useMemo, useState } from "react"
+import { useNavigate } from "react-router"
+import { useQuests } from "@/hooks/use-quests"
+import { useRubies } from "@/hooks/use-rubies"
+import { useShop } from "@/hooks/use-shop"
+import { triggerHapticLight } from "@/services/haptics"
+import { periodKey, type QuestPeriod } from "@/services/quest-rules"
+import { buyItem } from "@/services/shop"
+import {
+  SHOP_ITEMS,
+  weekMessage,
+  weekSummary,
+  type ShopItem,
+} from "@/services/shop-rules"
+import { useTheme } from "@/ui/theme-provider"
+
+const PERIOD_ORDER: Record<QuestPeriod, number> = {
+  daily: 0,
+  weekly: 1,
+  once: 2,
 }
 
-export const QUESTS: Quest[] = [
-  {
-    id: "first-login",
-    title: "Premier pas",
-    description: "Ouvre Scolup pour la première fois",
-    reward: 10,
-    state: "achieved",
-  },
-  {
-    id: "check-homework",
-    title: "À jour",
-    description: "Consulte tes devoirs",
-    reward: 15,
-    state: "unachieved",
-  },
-  {
-    id: "mystery",
-    title: "???",
-    description: "Un mystère à découvrir",
-    reward: 25,
-    state: "secret",
-  },
-]
+interface Notice {
+  text: string
+  tone: "success" | "error"
+}
+
+function lastWeekKey(): string {
+  const date = new Date()
+  date.setDate(date.getDate() - 7)
+  return periodKey("weekly", date)
+}
+
+export function useShopPage() {
+  const navigate = useNavigate()
+  const rubies = useRubies()
+  const { quests, hideGrades } = useQuests()
+  const shop = useShop()
+  const { accentColor, setAccentColor } = useTheme()
+  const [notice, setNotice] = useState<Notice | null>(null)
+
+  const goBack = useCallback(() => navigate(-1), [navigate])
+  const dismissNotice = useCallback(() => setNotice(null), [])
+
+  // One list: what is left to do first (your personal contract, then weekly,
+  // then the long tracks), what is done last.
+  const sortedQuests = useMemo(
+    () =>
+      [...quests].sort(
+        (a, b) =>
+          Number(a.state === "achieved") - Number(b.state === "achieved") ||
+          Number(b.generated === true) - Number(a.generated === true) ||
+          PERIOD_ORDER[a.period] - PERIOD_ORDER[b.period]
+      ),
+    [quests]
+  )
+  const weekText = useMemo(
+    () =>
+      weekMessage(
+        weekSummary(shop.weeks, periodKey("weekly", new Date()), lastWeekKey())
+      ),
+    [shop.weeks]
+  )
+
+  const items = SHOP_ITEMS.map((item) => ({
+    item,
+    owned: shop.owned.includes(item.id),
+    active: accentColor === item.value,
+    missing: Math.max(0, item.price - rubies),
+  }))
+
+  const buy = useCallback(async (item: ShopItem) => {
+    const status = await buyItem(item.id)
+    triggerHapticLight()
+    if (status === "ok") {
+      setNotice({ text: `Thème ${item.label} débloqué !`, tone: "success" })
+    } else if (status === "poor") {
+      setNotice({ text: "Pas encore assez de rubis.", tone: "error" })
+    } else if (status !== "owned") {
+      setNotice({ text: "Achat impossible pour le moment.", tone: "error" })
+    }
+  }, [])
+
+  const use = useCallback(
+    (item: ShopItem) => {
+      triggerHapticLight()
+      setAccentColor(item.value)
+    },
+    [setAccentColor]
+  )
+
+  return {
+    rubies,
+    quests: sortedQuests,
+    hideGrades,
+    weekText,
+    items,
+    notice,
+    dismissNotice,
+    goBack,
+    buy,
+    use,
+  }
+}
 </file>
 
 <file path="src/services/app-badge.ts">
@@ -12240,241 +13771,15 @@ export function useOnboardingCompleted(): boolean | null {
 }
 </file>
 
+<file path="src/services/quest-rules.ts">
+// Re-export from organized quest modules for backward compatibility
+export * from "./quests/index"
+</file>
+
 <file path="src/services/quests.ts">
-import { addRubies, loadRubies } from "./rubies"
-import { getDB } from "./storage"
-import { triggerHapticLight } from "./haptics"
-
-export type QuestState = "secret" | "unachieved" | "achieved"
-
-export interface QuestDef {
-  id: string
-  title: string
-  description: string
-  reward: number
-  state?: QuestState
-}
-
-const QUEST_STATE_KEY = "state"
-const QUEST_REWARDED_KEY = "rewarded"
-const LEGACY_STATE_KEY = "scolup:quests:state"
-const LEGACY_REWARDED_KEY = "scolup:quests:rewarded"
-
-export const QUESTS: QuestDef[] = [
-  { id: "bienvenue", title: "Bienvenue", description: "Ouvrir Scolup", reward: 50 },
-  { id: "un-bon-debut", title: "Un bon début", description: "Cocher un devoir", reward: 15 },
-  { id: "tatillon", title: "Tâtillon", description: "Changer les paramètres", reward: 20 },
-  { id: "habitue", title: "Habitué", description: "Utiliser Scolup chaque jour ouvré (lun - ven) pour 2 semaines à la suite", reward: 30 },
-]
-
-let cacheState: Record<string, QuestState> = {}
-let cacheRewarded = new Set<string>()
-let loaded = false
-const listeners = new Set<(msg: string) => void>()
-
-export function subscribeQuestToast(fn: (msg: string) => void): () => void {
-  listeners.add(fn)
-  return () => listeners.delete(fn)
-}
-
-function notify(msg: string) {
-  for (const l of listeners) l(msg)
-}
-
-async function loadFromDB() {
-  if (loaded) return
-  try {
-    const db = await getDB()
-    const [s, r] = await Promise.all([
-      db.get("quests", QUEST_STATE_KEY),
-      db.get("quests", QUEST_REWARDED_KEY),
-    ])
-    if (typeof s === "string") {
-      try {
-        cacheState = JSON.parse(s) as Record<string, QuestState>
-      } catch {}
-    } else {
-      try {
-        const raw = localStorage.getItem(LEGACY_STATE_KEY)
-        if (raw) {
-          cacheState = JSON.parse(raw) as Record<string, QuestState>
-          await db.put("quests", raw, QUEST_STATE_KEY)
-          localStorage.removeItem(LEGACY_STATE_KEY)
-        }
-      } catch {}
-    }
-    if (typeof r === "string") {
-      try {
-        const arr = JSON.parse(r) as string[]
-        cacheRewarded = new Set(Array.isArray(arr) ? arr : [])
-      } catch {}
-    } else {
-      try {
-        const raw = localStorage.getItem(LEGACY_REWARDED_KEY)
-        if (raw) {
-          const arr = JSON.parse(raw) as string[]
-          cacheRewarded = new Set(Array.isArray(arr) ? arr : [])
-          await db.put("quests", raw, QUEST_REWARDED_KEY)
-          localStorage.removeItem(LEGACY_REWARDED_KEY)
-        }
-      } catch {}
-    }
-  } catch {}
-  loaded = true
-}
-
-async function saveState() {
-  try {
-    const db = await getDB()
-    await db.put("quests", JSON.stringify(cacheState), QUEST_STATE_KEY)
-  } catch {}
-}
-
-async function saveRewarded() {
-  try {
-    const db = await getDB()
-    await db.put("quests", JSON.stringify(Array.from(cacheRewarded)), QUEST_REWARDED_KEY)
-  } catch {}
-}
-
-function getStateMapSync(): Record<string, QuestState> {
-  return cacheState
-}
-
-function getRewardedSync(): Set<string> {
-  return cacheRewarded
-}
-
-export async function getQuestStatesAsync(): Promise<Record<string, QuestState>> {
-  await loadFromDB()
-  const map = getStateMapSync()
-  const result: Record<string, QuestState> = {}
-  for (const q of QUESTS) {
-    if (q.state === "secret") {
-      result[q.id] = map[q.id] === "achieved" ? "achieved" : "secret"
-      continue
-    }
-    result[q.id] = map[q.id] === "achieved" ? "achieved" : "unachieved"
-  }
-  return result
-}
-
-export function getQuestStates(): Record<string, QuestState> {
-  const map = getStateMapSync()
-  const result: Record<string, QuestState> = {}
-  for (const q of QUESTS) {
-    if (q.state === "secret") {
-      result[q.id] = map[q.id] === "achieved" ? "achieved" : "secret"
-      continue
-    }
-    result[q.id] = map[q.id] === "achieved" ? "achieved" : "unachieved"
-  }
-  return result
-}
-
-export async function completeQuest(id: string): Promise<boolean> {
-  await loadFromDB()
-  const q = QUESTS.find((x) => x.id === id)
-  if (!q) return false
-
-  const states = getQuestStates()
-  if (states[id] === "achieved") return false
-
-  const rewarded = getRewardedSync()
-  if (rewarded.has(id)) return false
-
-  cacheState[id] = "achieved"
-  await saveState()
-
-  cacheRewarded.add(id)
-  await saveRewarded()
-
-  await loadRubies()
-  await addRubies(q.reward)
-  try {
-    triggerHapticLight()
-  } catch {}
-  if (q.id !== "bienvenue") {
-    notify(`Quête accomplie : ${q.title} (+${q.reward} rubis)`)
-  }
-
-  return true
-}
-
-function getWeekdayKey(d: Date) {
-  const day = d.getDay()
-  if (day === 0 || day === 6) return null
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const da = String(d.getDate()).padStart(2, "0")
-  return `${y}-${m}-${da}`
-}
-
-function updateStreak() {
-  try {
-    const key = "scolup:quests:streak"
-    const histKey = "scolup:quests:streak:history"
-    const today = getWeekdayKey(new Date())
-    if (!today) return
-    const hist = JSON.parse(localStorage.getItem(histKey) || "[]") as string[]
-    if (hist.includes(today)) return
-    hist.push(today)
-    localStorage.setItem(histKey, JSON.stringify(hist))
-    const sorted = [...hist].sort()
-    let streak = 1
-    for (let i = sorted.length - 2; i >= 0; i--) {
-      const prev = new Date(sorted[i + 1])
-      const cur = new Date(sorted[i])
-      const diff = Math.floor((prev.getTime() - cur.getTime()) / (1000 * 60 * 60 * 24))
-      if (diff === 1) streak++
-      else break
-    }
-    localStorage.setItem(key, String(streak))
-  } catch {}
-}
-
-export async function ensureQuestProgress(progress: Record<string, number>): Promise<void> {
-  await loadFromDB()
-  updateStreak()
-
-  const states = getQuestStates()
-  const rewarded = getRewardedSync()
-  let changed = false
-
-  for (const q of QUESTS) {
-    if (states[q.id] === "achieved" || rewarded.has(q.id)) continue
-
-    let done = false
-    if (q.id === "bienvenue") done = (progress.bienvenue ?? 0) >= 1
-    if (q.id === "un-bon-debut") done = (progress.homeworkChecked ?? 0) >= 1
-    if (q.id === "tatillon") done = (progress.settingsChanged ?? 0) >= 1
-    if (q.id === "habitue") {
-      try {
-        const s = Number(localStorage.getItem("scolup:quests:streak") || "0")
-        done = s >= 10
-      } catch {}
-    }
-
-    if (done) {
-      cacheState[q.id] = "achieved"
-      changed = true
-      rewarded.add(q.id)
-      await loadRubies()
-      await addRubies(q.reward)
-      try {
-        triggerHapticLight()
-      } catch {}
-      if (q.id !== "bienvenue") {
-        notify(`Quête accomplie : ${q.title} (+${q.reward} rubis)`)
-      }
-    }
-  }
-
-  if (changed) {
-    await saveState()
-    await saveRewarded()
-  }
-}
+// Re-export from organized quest service for backward compatibility
+export * from "./quests/service"
+export * from "./quests/constants"
 </file>
 
 <file path="src/services/service-worker.ts">
@@ -12607,6 +13912,244 @@ export async function applyUpdate(): Promise<void> {
   ])
 
   window.location.reload()
+}
+</file>
+
+<file path="src/services/shop-rules.ts">
+// Pure shop logic: catalog, purchases, weekly recap. No React, no IndexedDB.
+//
+// ADD AN ITEM -> add one object to SHOP_ITEMS. (A new `kind` also needs a
+//                place that applies it, like the accent picker does.)
+
+// Keys of the "shop" IndexedDB store (the ruby balance key lives in rubies.ts).
+export const OWNED_KEY = "owned"
+export const WEEKS_KEY = "weekly"
+
+export interface ShopItem {
+  id: string // never change an id once shipped: purchases are stored by id
+  kind: "accent"
+  label: string
+  price: number
+  value: string // accent key stored in the "accent-color" setting
+  color: string // hex shown in the shop and in the picker
+  foreground: string // text color readable on top of `color`
+}
+
+export const SHOP_ITEMS: ShopItem[] = [
+  {
+    id: "accent-violet",
+    kind: "accent",
+    label: "Violet",
+    price: 150,
+    value: "violet",
+    color: "#8b5cf6",
+    foreground: "#ffffff",
+  },
+  {
+    id: "accent-pink",
+    kind: "accent",
+    label: "Rose",
+    price: 150,
+    value: "pink",
+    color: "#ec4899",
+    foreground: "#ffffff",
+  },
+  {
+    id: "accent-orange",
+    kind: "accent",
+    label: "Orange",
+    price: 150,
+    value: "orange",
+    color: "#f97316",
+    foreground: "#1a1a1a",
+  },
+  {
+    id: "accent-teal",
+    kind: "accent",
+    label: "Turquoise",
+    price: 150,
+    value: "teal",
+    color: "#14b8a6",
+    foreground: "#1a1a1a",
+  },
+]
+
+// ---- Purchase ------------------------------------------------------------
+
+export type PurchaseStatus = "ok" | "owned" | "poor"
+
+export function purchase(
+  item: ShopItem,
+  balance: number,
+  owned: string[]
+): { status: PurchaseStatus; balance: number; owned: string[] } {
+  if (owned.includes(item.id)) return { status: "owned", balance, owned }
+  if (balance < item.price) return { status: "poor", balance, owned }
+  return {
+    status: "ok",
+    balance: balance - item.price,
+    owned: [...owned, item.id],
+  }
+}
+
+export function parseOwned(raw: unknown): string[] {
+  try {
+    if (typeof raw !== "string") return []
+    const parsed: unknown = JSON.parse(raw)
+    return Array.isArray(parsed)
+      ? parsed.filter((id): id is string => typeof id === "string")
+      : []
+  } catch {
+    return []
+  }
+}
+
+// ---- Weekly recap ("beat your last week", never "beat the others") -------
+
+export type WeekStats = Record<string, number> // week key -> rubies earned
+
+const KEPT_WEEKS = 12
+
+export function addToWeek(
+  stats: WeekStats,
+  week: string,
+  amount: number
+): WeekStats {
+  const next: WeekStats = { ...stats, [week]: (stats[week] ?? 0) + amount }
+  const keep = Object.keys(next).sort().slice(-KEPT_WEEKS)
+  return Object.fromEntries(keep.map((key) => [key, next[key]]))
+}
+
+export function parseWeeks(raw: unknown): WeekStats {
+  try {
+    if (typeof raw !== "string") return {}
+    const parsed: unknown = JSON.parse(raw)
+    if (!parsed || typeof parsed !== "object") return {}
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        (entry): entry is [string, number] => typeof entry[1] === "number"
+      )
+    )
+  } catch {
+    return {}
+  }
+}
+
+export interface WeekSummary {
+  thisWeek: number
+  lastWeek: number
+  best: number // best of the *previous* weeks
+}
+
+export function weekSummary(
+  stats: WeekStats,
+  thisKey: string,
+  lastKey: string
+): WeekSummary {
+  const best = Math.max(
+    0,
+    ...Object.entries(stats)
+      .filter(([key]) => key !== thisKey)
+      .map(([, value]) => value)
+  )
+  return {
+    thisWeek: stats[thisKey] ?? 0,
+    lastWeek: stats[lastKey] ?? 0,
+    best,
+  }
+}
+
+// One encouraging sentence, or null when there is nothing nice to say yet.
+// Never mentions a loss: a bad week simply shows nothing.
+export function weekMessage({
+  thisWeek,
+  lastWeek,
+  best,
+}: WeekSummary): string | null {
+  if (thisWeek <= 0) return null
+  if (best > 0 && thisWeek > best) {
+    return `Record personnel : +${thisWeek} cette semaine`
+  }
+  if (lastWeek > 0 && thisWeek >= lastWeek) {
+    return `+${thisWeek} cette semaine : tu fais mieux que la semaine dernière`
+  }
+  return `+${thisWeek} rubis cette semaine`
+}
+</file>
+
+<file path="src/services/shop.ts">
+import { reloadRubies, RUBIES_KEY } from "./rubies"
+import { getDB } from "./storage"
+import {
+  OWNED_KEY,
+  parseOwned,
+  parseWeeks,
+  purchase,
+  SHOP_ITEMS,
+  WEEKS_KEY,
+  type PurchaseStatus,
+  type WeekStats,
+} from "./shop-rules"
+
+export interface ShopState {
+  owned: string[]
+  weeks: WeekStats
+}
+
+export const EMPTY_SHOP: ShopState = { owned: [], weeks: {} }
+
+// ponytail: "xp" used to hold lifetime rubies for the removed level system.
+// Real XP is coming: delete the stale value once so nobody mistakes it for the
+// new one. Remove this after a few releases.
+let staleXpDropped = false
+
+export async function loadShop(): Promise<ShopState> {
+  try {
+    const db = await getDB()
+    if (!staleXpDropped) {
+      staleXpDropped = true
+      await db.delete("shop", "xp")
+    }
+    const [ownedRaw, weeksRaw] = await Promise.all([
+      db.get("shop", OWNED_KEY),
+      db.get("shop", WEEKS_KEY),
+    ])
+    return {
+      owned: parseOwned(ownedRaw),
+      weeks: parseWeeks(weeksRaw),
+    }
+  } catch {
+    return EMPTY_SHOP
+  }
+}
+
+// Balance and inventory change in ONE transaction: no ruby is ever spent
+// without the item being saved, and the other way around.
+export async function buyItem(
+  id: string
+): Promise<PurchaseStatus | "unknown" | "error"> {
+  const item = SHOP_ITEMS.find((candidate) => candidate.id === id)
+  if (!item) return "unknown"
+  try {
+    const db = await getDB()
+    const tx = db.transaction("shop", "readwrite")
+    const store = tx.objectStore("shop")
+    const [balanceRaw, ownedRaw] = await Promise.all([
+      store.get(RUBIES_KEY),
+      store.get(OWNED_KEY),
+    ])
+    const balance = typeof balanceRaw === "number" ? balanceRaw : 0
+    const result = purchase(item, balance, parseOwned(ownedRaw))
+    if (result.status === "ok") {
+      await store.put(result.balance, RUBIES_KEY)
+      await store.put(JSON.stringify(result.owned), OWNED_KEY)
+    }
+    await tx.done
+    if (result.status === "ok") await reloadRubies()
+    return result.status
+  } catch {
+    return "error"
+  }
 }
 </file>
 
@@ -12894,135 +14437,6 @@ export async function checkForUpdate(): Promise<LatestRelease | null> {
 }
 </file>
 
-<file path="src/ui/accent-color-picker.tsx">
-import { m } from "motion/react"
-import { cn } from "@/lib/utils"
-
-export type ThemeColor = "yellow" | "red" | "green" | "blue"
-
-interface ThemeOption {
-  value: ThemeColor
-  label: string
-  className: string
-}
-
-const THEMES: ThemeOption[] = [
-  { value: "yellow", label: "Jaune", className: "bg-[#e5af4b]" },
-  { value: "red", label: "Rouge", className: "bg-[#dd0046]" },
-  { value: "green", label: "Vert", className: "bg-[#25b256]" },
-  { value: "blue", label: "Bleu", className: "bg-[#48B7E8]" },
-]
-
-function getCheckmarkColor(theme: ThemeColor): string {
-  return theme === "yellow" || theme === "blue" ? "#1a1a1a" : "#ffffff"
-}
-
-function handleThemeKeydown(
-  event: React.KeyboardEvent,
-  currentIndex: number,
-  onSelect: (color: ThemeColor) => void
-) {
-  const isLeftOrUp = event.key === "ArrowLeft" || event.key === "ArrowUp"
-  const isRightOrDown = event.key === "ArrowRight" || event.key === "ArrowDown"
-  const isConfirm = event.key === "Enter" || event.key === " "
-
-  if (!isLeftOrUp && !isRightOrDown && !isConfirm) return
-
-  event.preventDefault()
-
-  if (isLeftOrUp) {
-    const prevIndex = currentIndex > 0 ? currentIndex - 1 : THEMES.length - 1
-    onSelect(THEMES[prevIndex].value)
-  } else if (isRightOrDown) {
-    const nextIndex = currentIndex < THEMES.length - 1 ? currentIndex + 1 : 0
-    onSelect(THEMES[nextIndex].value)
-  } else if (isConfirm) {
-    onSelect(THEMES[currentIndex].value)
-  }
-}
-
-interface AccentColorPickerProps {
-  value: string
-  label: string
-  onPick: (color: ThemeColor) => void
-  className?: string
-}
-
-export function AccentColorPicker({
-  value,
-  label,
-  onPick,
-  className,
-}: AccentColorPickerProps) {
-  return (
-    <div
-      role="group"
-      aria-label={label}
-      className={cn("grid grid-cols-4 gap-2", className)}
-    >
-      {THEMES.map((theme, index) => (
-        <m.button
-          key={theme.value}
-          type="button"
-          onClick={() => onPick(theme.value)}
-          onKeyDown={(e) => handleThemeKeydown(e, index, onPick)}
-          aria-pressed={value === theme.value}
-          aria-label={`Couleur ${theme.label}`}
-          className="flex cursor-pointer flex-col items-center gap-2"
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        >
-          <m.div
-            className={cn(
-              "size-12 rounded-full",
-              theme.className,
-              value === theme.value && "ring-2 ring-foreground ring-offset-2"
-            )}
-            animate={{
-              scale: value === theme.value ? [1, 1.18, 1] : 1,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 400,
-              damping: 14,
-            }}
-          >
-            {value === theme.value && (
-              <m.span
-                className="flex h-full items-center justify-center"
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 500, damping: 15 }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="size-5"
-                  style={{ color: getCheckmarkColor(theme.value) }}
-                >
-                  <m.path
-                    d="M5 13l4 4L19 7"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  />
-                </svg>
-              </m.span>
-            )}
-          </m.div>
-          <span className="text-xs text-muted-foreground">{theme.label}</span>
-        </m.button>
-      ))}
-    </div>
-  )
-}
-</file>
-
 <file path="src/ui/animated-number.tsx">
 "use client"
 
@@ -13059,73 +14473,6 @@ export function AnimatedNumber({
         </span>
       ))}
     </span>
-  )
-}
-</file>
-
-<file path="src/ui/app-toast.tsx">
-"use client"
-
-import { useEffect } from "react"
-import { AnimatePresence, m } from "motion/react"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { AlertCircleIcon, Cancel01Icon } from "@hugeicons/core-free-icons"
-
-// Mini-toast ancré au-dessus de la tab bar. Un seul composant réutilisable
-// pour les erreurs d'action (coche d'un devoir, etc.) : visible même quand
-// l'action a eu lieu en bas de page.
-export function AppToast({
-  message,
-  onClose,
-}: {
-  message: string | null
-  onClose: () => void
-}) {
-  useEffect(() => {
-    if (!message) return
-    const timer = setTimeout(onClose, 6000)
-    return () => clearTimeout(timer)
-  }, [message, onClose])
-
-  return (
-    <AnimatePresence>
-      {message && (
-        <m.div
-          key="app-toast"
-          initial={{ opacity: 0, y: 12, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 8, scale: 0.98 }}
-          transition={{ duration: 0.22, ease: [0.25, 0.1, 0.15, 1] }}
-          role="alert"
-          style={{
-            bottom:
-              "calc(var(--tabbar-height, 3.5rem) + env(safe-area-inset-bottom) + 16px)",
-          }}
-          className="fixed inset-x-4 z-[60] mx-auto flex w-auto max-w-sm items-center gap-2.5 rounded-2xl border border-destructive/30 bg-card px-3.5 py-3 shadow-lg"
-        >
-          <HugeiconsIcon
-            icon={AlertCircleIcon}
-            className="size-5 shrink-0 text-destructive"
-            aria-hidden="true"
-          />
-          <p className="min-w-0 flex-1 text-sm font-medium text-card-foreground">
-            {message}
-          </p>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fermer"
-            className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            <HugeiconsIcon
-              icon={Cancel01Icon}
-              className="size-4"
-              aria-hidden="true"
-            />
-          </button>
-        </m.div>
-      )}
-    </AnimatePresence>
   )
 }
 </file>
@@ -13444,283 +14791,6 @@ export function ProgressRing({
 <file path="src/ui/prose.ts">
 export const proseClassName =
   "text-sm leading-relaxed break-words text-card-foreground [&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_h1]:mb-2 [&_h1]:text-lg [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_img]:my-3 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-xl [&_li]:mb-1 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_iframe]:max-w-full"
-</file>
-
-<file path="src/ui/theme-provider.tsx">
-import * as React from "react"
-import { use } from "react"
-import { getSetting, getSettingSync, setSetting } from "@/services/storage"
-
-type Theme = "dark" | "light" | "system"
-type ResolvedTheme = "dark" | "light"
-
-type ThemeProviderProps = {
-  children: React.ReactNode
-  defaultTheme?: Theme
-  storageKey?: string
-  disableTransitionOnChange?: boolean
-}
-
-type ThemeProviderState = {
-  theme: Theme
-  setTheme: (theme: Theme) => void
-  accentColor: string
-  setAccentColor: (color: string) => void
-}
-
-const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
-const THEME_VALUES: Theme[] = ["dark", "light", "system"]
-
-const ACCENT_COLORS: Record<string, { primary: string; foreground: string }> = {
-  yellow: { primary: "#e5af4b", foreground: "#1a1a1a" },
-  red: { primary: "#dd0046", foreground: "#ffffff" },
-  green: { primary: "#25b256", foreground: "#ffffff" },
-  blue: { primary: "#48B7E8", foreground: "#1a1a1a" },
-}
-
-const ThemeProviderContext = React.createContext<
-  ThemeProviderState | undefined
->(undefined)
-
-function isTheme(value: string | null): value is Theme {
-  if (value === null) {
-    return false
-  }
-
-  return THEME_VALUES.includes(value as Theme)
-}
-
-function getSystemTheme(): ResolvedTheme {
-  if (window.matchMedia(COLOR_SCHEME_QUERY).matches) {
-    return "dark"
-  }
-
-  return "light"
-}
-
-// --background in src/index.css: white in light, oklch(0.148 0.004 228.8) in
-// dark. Kept as hex for the meta tag (computed from the token).
-const THEME_COLORS: Record<ResolvedTheme, string> = {
-  light: "#ffffff",
-  dark: "#090b0c",
-}
-
-function syncThemeColor(resolved: ResolvedTheme) {
-  // The static media-based metas in index.html only follow the OS. Once the
-  // app runs, the effective theme (light/dark/system) wins instead.
-  document
-    .querySelectorAll('meta[name="theme-color"]')
-    .forEach((meta) => meta.remove())
-  const meta = document.createElement("meta")
-  meta.name = "theme-color"
-  meta.content = THEME_COLORS[resolved]
-  document.head.appendChild(meta)
-}
-
-function disableTransitionsTemporarily() {
-  const style = document.createElement("style")
-  style.appendChild(
-    document.createTextNode(
-      "*,*::before,*::after{-webkit-transition:none!important;transition:none!important}"
-    )
-  )
-  document.head.appendChild(style)
-
-  return () => {
-    window.getComputedStyle(document.body)
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        style.remove()
-      })
-    })
-  }
-}
-
-function isEditableTarget(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    (target.isContentEditable ||
-      !!target.closest("input, textarea, select, [contenteditable='true']"))
-  )
-}
-
-export function ThemeProvider({
-  children,
-  defaultTheme = "system",
-  storageKey = "theme",
-  disableTransitionOnChange = true,
-  ...props
-}: ThemeProviderProps) {
-  const [theme, setThemeState] = React.useState<Theme>(() => {
-    const cached = getSettingSync(storageKey)
-    return typeof cached === "string" && isTheme(cached) ? cached : defaultTheme
-  })
-
-  React.useEffect(() => {
-    getSetting(storageKey).then((stored) => {
-      if (typeof stored === "string" && isTheme(stored)) {
-        setThemeState(stored)
-      }
-    })
-  }, [storageKey])
-
-  const setTheme = React.useCallback(
-    (nextTheme: Theme) => {
-      setSetting(storageKey, nextTheme)
-      setThemeState(nextTheme)
-    },
-    [storageKey]
-  )
-
-  const [accentColor, setAccentColorState] = React.useState<string>(() => {
-    const cached = getSettingSync("accent-color")
-    return typeof cached === "string" ? cached : ""
-  })
-
-  React.useEffect(() => {
-    getSetting("accent-color").then((stored) => {
-      if (typeof stored === "string") {
-        setAccentColorState(stored)
-      }
-    })
-  }, [])
-
-  const setAccentColor = React.useCallback((color: string) => {
-    setSetting("accent-color", color)
-    setAccentColorState(color)
-  }, [])
-
-  React.useLayoutEffect(() => {
-    const root = document.documentElement
-    const resolvedTheme = theme === "system" ? getSystemTheme() : theme
-    const restoreTransitions = disableTransitionOnChange
-      ? disableTransitionsTemporarily()
-      : null
-
-    root.classList.remove("light", "dark")
-    root.classList.add(resolvedTheme)
-    syncThemeColor(resolvedTheme)
-
-    if (restoreTransitions) {
-      restoreTransitions()
-    }
-
-    if (theme !== "system") {
-      return undefined
-    }
-
-    const mediaQuery = window.matchMedia(COLOR_SCHEME_QUERY)
-    const handleChange = () => {
-      const systemTheme = getSystemTheme()
-      root.classList.remove("light", "dark")
-      root.classList.add(systemTheme)
-      syncThemeColor(systemTheme)
-    }
-
-    mediaQuery.addEventListener("change", handleChange)
-
-    return () => {
-      mediaQuery.removeEventListener("change", handleChange)
-    }
-  }, [theme, disableTransitionOnChange])
-
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.repeat) {
-        return
-      }
-
-      if (event.metaKey || event.ctrlKey || event.altKey) {
-        return
-      }
-
-      if (isEditableTarget(event.target)) {
-        return
-      }
-
-      if (event.key.toLowerCase() !== "d") {
-        return
-      }
-
-      setThemeState((currentTheme) => {
-        const nextTheme =
-          currentTheme === "dark"
-            ? "light"
-            : currentTheme === "light"
-              ? "dark"
-              : getSystemTheme() === "dark"
-                ? "light"
-                : "dark"
-
-        setSetting(storageKey, nextTheme)
-        return nextTheme
-      })
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [storageKey])
-
-  React.useLayoutEffect(() => {
-    const root = document.documentElement
-
-    function applyAccent() {
-      if (!accentColor || !ACCENT_COLORS[accentColor]) {
-        root.style.removeProperty("--primary")
-        root.style.removeProperty("--primary-foreground")
-        root.style.removeProperty("--accent-bg-overlay")
-        return
-      }
-
-      const { primary, foreground } = ACCENT_COLORS[accentColor]
-      const isDark = root.classList.contains("dark")
-      const alpha = isDark ? 0.08 : 0.04
-
-      root.style.setProperty("--primary", primary)
-      root.style.setProperty("--primary-foreground", foreground)
-      root.style.setProperty(
-        "--accent-bg-overlay",
-        `color-mix(in srgb, ${primary} ${alpha * 100}%, transparent)`
-      )
-    }
-
-    applyAccent()
-
-    const observer = new MutationObserver(applyAccent)
-    observer.observe(root, { attributes: true, attributeFilter: ["class"] })
-
-    return () => observer.disconnect()
-  }, [accentColor])
-
-  const value = React.useMemo(
-    () => ({
-      theme,
-      setTheme,
-      accentColor,
-      setAccentColor,
-    }),
-    [theme, setTheme, accentColor, setAccentColor]
-  )
-
-  return (
-    <ThemeProviderContext.Provider {...props} value={value}>
-      {children}
-    </ThemeProviderContext.Provider>
-  )
-}
-
-export const useTheme = () => {
-  const context = use(ThemeProviderContext)
-
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider")
-  }
-
-  return context
-}
 </file>
 
 <file path="src/App.tsx">
@@ -15041,216 +16111,6 @@ export function DaySchedule({
 }
 </file>
 
-<file path="src/pages/agenda/hooks/useAgendaPage.ts">
-"use client"
-
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate, useSearchParams } from "react-router"
-import { getSetting } from "@/services/storage"
-import { addDays, parseDateKey, toDayKey, weekOf } from "@/services/dates"
-import { triggerHapticLight } from "@/services/haptics"
-import { coursesForDay, type AgendaView, type Course } from "../helpers"
-import { useAgenda } from "./useAgenda"
-
-const SWIPE_PX = 60
-
-function useStoredWeekView(
-  params: URLSearchParams,
-  setParams: (p: URLSearchParams) => void
-) {
-  const hasVue = params.has("vue")
-
-  useEffect(() => {
-    if (hasVue) return
-    void getSetting("agendaView").then((stored) => {
-      if (stored !== "week") return
-      const next = new URLSearchParams(params.toString())
-      next.set("vue", "semaine")
-      setParams(next)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- restore the stored default once
-  }, [hasVue])
-}
-
-export function useAgendaPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const [navDir, setNavDir] = useState(0)
-  const touchStart = useRef<{ x: number; y: number } | null>(null)
-  // True when the drawer was opened in-session (push): closing it then goes
-  // back instead of replacing, so Android's back button closes the drawer
-  // first. Deep links (?cours= opened directly) still close via replace.
-  const pushedDrawer = useRef(false)
-
-  const dateParam = searchParams.get("date")
-  const date = useMemo(() => parseDateKey(dateParam) ?? new Date(), [dateParam])
-  const view: AgendaView =
-    searchParams.get("vue") === "semaine" ? "week" : "day"
-  const courseParam = searchParams.get("cours")
-
-  const week = weekOf(date)
-  const startKey = toDayKey(week[0])
-  const endKey = toDayKey(week[6])
-
-  const { courses, loading, error, refresh } = useAgenda(startKey, endKey)
-
-  const sorted = useMemo(
-    () =>
-      [...courses].sort(
-        (a, b) => (a.start?.getTime() ?? 0) - (b.start?.getTime() ?? 0)
-      ),
-    [courses]
-  )
-  const dayCourses = coursesForDay(sorted, toDayKey(date))
-  const weekCourses = useMemo(
-    () =>
-      sorted.filter((c) => {
-        if (!c.start) return false
-        const key = toDayKey(c.start)
-        return key >= startKey && key <= endKey
-      }),
-    [sorted, startKey, endKey]
-  )
-
-  const selected = useMemo(
-    () =>
-      courseParam
-        ? (sorted.find((c) => c.stableId === courseParam) ?? null)
-        : null,
-    [sorted, courseParam]
-  )
-
-  const commit = useCallback(
-    (mutate: (params: URLSearchParams) => void) => {
-      const params = new URLSearchParams(searchParams.toString())
-      mutate(params)
-      setSearchParams(params, { replace: true })
-    },
-    [searchParams, setSearchParams]
-  )
-
-  const setDate = useCallback(
-    (next: Date, dir?: number) => {
-      const current = toDayKey(date)
-      const target = toDayKey(next)
-      if (target !== current) triggerHapticLight()
-      setNavDir(dir ?? (target > current ? 1 : target < current ? -1 : 0))
-      // Changing day drops the drawer state, including its history entry.
-      pushedDrawer.current = false
-      commit((params) => {
-        if (target === toDayKey(new Date())) params.delete("date")
-        else params.set("date", target)
-        params.delete("cours")
-      })
-    },
-    [date, commit]
-  )
-
-  const setView = useCallback(
-    (next: AgendaView) => {
-      if (next === view) return
-      triggerHapticLight()
-      commit((params) => {
-        if (next === "week") params.set("vue", "semaine")
-        else params.delete("vue")
-      })
-    },
-    [commit, view]
-  )
-
-  const select = useCallback(
-    (course: Course | null) => {
-      if (course) {
-        if (course.stableId !== courseParam) triggerHapticLight()
-        pushedDrawer.current = true
-        const params = new URLSearchParams(searchParams.toString())
-        params.set("cours", course.stableId)
-        setSearchParams(params)
-        return
-      }
-      if (pushedDrawer.current) {
-        pushedDrawer.current = false
-        navigate(-1)
-        return
-      }
-      commit((params) => {
-        params.delete("cours")
-      })
-    },
-    [commit, courseParam, navigate, searchParams, setSearchParams]
-  )
-
-  useStoredWeekView(
-    searchParams,
-    useCallback(
-      (params) => setSearchParams(params, { replace: true }),
-      [setSearchParams]
-    )
-  )
-
-  const step = useCallback(
-    (delta: number) =>
-      setDate(addDays(date, view === "week" ? delta * 7 : delta), delta),
-    [date, view, setDate]
-  )
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName
-      if (tag && /^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return
-      if (e.key === "ArrowLeft") {
-        e.preventDefault()
-        step(-1)
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault()
-        step(1)
-      }
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [step])
-
-  const swipe = useMemo(
-    () => ({
-      onTouchStart: (e: React.TouchEvent) => {
-        touchStart.current =
-          e.touches.length === 1
-            ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
-            : null
-      },
-      onTouchEnd: (e: React.TouchEvent) => {
-        const origin = touchStart.current
-        touchStart.current = null
-        if (!origin) return
-        const touch = e.changedTouches[0]
-        const dx = touch.clientX - origin.x
-        const dy = touch.clientY - origin.y
-        if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) < Math.abs(dy) * 1.4) return
-        step(dx < 0 ? 1 : -1)
-      },
-    }),
-    [step]
-  )
-
-  return {
-    date,
-    view,
-    navDir,
-    dayCourses,
-    weekCourses,
-    visible: view === "week" ? weekCourses : dayCourses,
-    selected,
-    loading,
-    error,
-    refresh,
-    setDate,
-    setView,
-    select,
-    swipe,
-  }
-}
-</file>
-
 <file path="src/pages/grades/components/AverageCard.tsx">
 import { lazy, Suspense, useEffect, useRef, useState } from "react"
 import {
@@ -15803,84 +16663,6 @@ export function SubjectGroupSection({
       </div>
     </section>
   )
-}
-</file>
-
-<file path="src/pages/grades/hooks/useGradesPage.ts">
-"use client"
-
-import { useCallback, useEffect, useRef, useState } from "react"
-import { markSeen } from "@/services/storage"
-import { triggerHapticLight } from "@/services/haptics"
-import { resolveSubjectName, useSubjects } from "@/services/subjects"
-import { useGrades } from "./useGrades"
-
-const HIGHLIGHT_MS = 2000
-
-export function useGradesPage() {
-  const model = useGrades()
-  const [highlightedKey, setHighlightedKey] = useState<string | null>(null)
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
-  const rowRefs = useRef(new Map<string, HTMLElement>())
-  const highlightTimer = useRef<number | null>(null)
-
-  useSubjects()
-
-  useEffect(() => {
-    void markSeen("grades")
-  }, [])
-
-  useEffect(
-    () => () => {
-      if (highlightTimer.current !== null) clearTimeout(highlightTimer.current)
-    },
-    []
-  )
-
-  const scrollToGrade = useCallback((key: string) => {
-    triggerHapticLight()
-    rowRefs.current.get(key)?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    })
-    if (highlightTimer.current !== null) clearTimeout(highlightTimer.current)
-    setHighlightedKey(key)
-    highlightTimer.current = window.setTimeout(
-      () => setHighlightedKey(null),
-      HIGHLIGHT_MS
-    )
-  }, [])
-
-  const registerRow = useCallback((key: string, el: HTMLElement | null) => {
-    if (el) rowRefs.current.set(key, el)
-    else rowRefs.current.delete(key)
-  }, [])
-
-  const openGrade = useCallback((key: string) => {
-    triggerHapticLight()
-    setSelectedKey(key)
-  }, [])
-
-  const selected =
-    selectedKey !== null
-      ? (model.grades.find((grade) => grade.key === selectedKey) ?? null)
-      : null
-
-  return {
-    ...model,
-    highlightedKey,
-    registerRow,
-    scrollToGrade,
-    openGrade,
-    closeGrade: () => setSelectedKey(null),
-    selected,
-    selectedSubject: selected
-      ? resolveSubjectName(selected.subjectCode, selected.subject)
-      : "",
-    selectedPeriodLabel: selected
-      ? model.periods.find((period) => period.id === selected.period)?.label
-      : undefined,
-  }
 }
 </file>
 
@@ -17588,85 +18370,19 @@ export function SettingsNav({
 <file path="src/pages/shop/ShopPage.tsx">
 "use client"
 
-import { useCallback, useEffect } from "react"
 import { m } from "motion/react"
-import { useNavigate } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowLeftIcon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
-import { useRubies } from "@/hooks/use-rubies"
-import { cn } from "@/lib/utils"
-import { useQuests } from "@/hooks/use-quests"
-import type { QuestState } from "@/services/quests"
-
-function questCardClass(state: QuestState) {
-  if (state === "secret") {
-    return "border-dashed border-border/60 bg-muted/30 opacity-60"
-  }
-  if (state === "unachieved") {
-    return "border-border/70 bg-card"
-  }
-  return "border-border/70 bg-card"
-}
-
-function QuestCard({ title, description, reward, state }: {
-  title: string
-  description: string
-  reward: number
-  state: QuestState
-}) {
-  const isSecret = state === "secret"
-  const monochrome = state === "unachieved" || state === "secret"
-
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-3 rounded-lg border p-3",
-        questCardClass(state)
-      )}
-      aria-label={isSecret ? "Quête secrète" : title}
-    >
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-        <img
-          src="/ruby.svg"
-          alt=""
-          aria-hidden="true"
-          className={cn("size-5", monochrome && "grayscale")}
-        />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium">
-          {isSecret ? "???" : title}
-        </div>
-        <div className="truncate text-xs text-muted-foreground">
-          {isSecret ? "À découvrir" : description}
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-1">
-        <img
-          src="/ruby.svg"
-          alt=""
-          aria-hidden="true"
-          className={cn("size-4", monochrome && "grayscale")}
-        />
-        <span className="text-sm font-medium tabular-nums">+{reward}</span>
-      </div>
-    </div>
-  )
-}
+import { AppToast } from "@/ui/app-toast"
+import { QuestCard } from "./components/QuestCard"
+import { IncomeRules } from "./components/IncomeRules"
+import { ShopHeader } from "./components/ShopHeader"
+import { ShopItemCard } from "./components/ShopItemCard"
+import { useShopPage } from "./hooks/useShopPage"
 
 export function ShopPage() {
-  const navigate = useNavigate()
-  const rubies = useRubies()
-  const { quests, progress } = useQuests()
-
-  useEffect(() => {
-    void progress({})
-  }, [progress])
-
-  const goBack = useCallback(() => {
-    navigate(-1)
-  }, [navigate])
+  const page = useShopPage()
 
   return (
     <m.div
@@ -17681,7 +18397,7 @@ export function ShopPage() {
           size="icon"
           aria-label="Retour"
           className="size-11 shrink-0"
-          onClick={goBack}
+          onClick={page.goBack}
         >
           <HugeiconsIcon icon={ArrowLeftIcon} className="size-5" />
         </Button>
@@ -17691,27 +18407,44 @@ export function ShopPage() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="flex flex-col items-center gap-3 px-4 pt-12 pb-6">
-          <img src="/ruby.svg" alt="" aria-hidden="true" className="size-16" />
-          <div className="text-4xl font-semibold tabular-nums">{rubies}</div>
-          <div className="text-sm text-muted-foreground">Rubis</div>
-        </div>
+        <ShopHeader rubies={page.rubies} weekText={page.weekText} />
 
-        <div className="flex flex-col gap-2 px-4 pb-6">
-          <h2 className="text-base font-semibold">Quêtes</h2>
+        {page.quests.length > 0 && (
+          <div className="flex flex-col gap-2 px-4 pb-6">
+            <h2 className="text-base font-semibold">Quêtes</h2>
+            <div className="flex flex-col gap-2">
+              {page.quests.map((quest) => (
+                <QuestCard key={quest.id} quest={quest} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <IncomeRules hideGrades={page.hideGrades} />
+
+        <div className="flex flex-col gap-2 px-4 pb-10">
+          <h2 className="text-base font-semibold">Thèmes</h2>
           <div className="flex flex-col gap-2">
-            {quests.map((q) => (
-              <QuestCard
-                key={q.id}
-                title={q.title}
-                description={q.description}
-                reward={q.reward}
-                state={q.state}
+            {page.items.map(({ item, owned, active, missing }) => (
+              <ShopItemCard
+                key={item.id}
+                item={item}
+                owned={owned}
+                active={active}
+                missing={missing}
+                onBuy={() => void page.buy(item)}
+                onUse={() => page.use(item)}
               />
             ))}
           </div>
         </div>
       </div>
+
+      <AppToast
+        message={page.notice?.text ?? null}
+        tone={page.notice?.tone}
+        onClose={page.dismissNotice}
+      />
     </m.div>
   )
 }
@@ -17750,7 +18483,7 @@ export function triggerHapticMedium(): void {
 <file path="src/services/rubies.ts">
 import { getDB } from "./storage"
 
-const RUBIES_KEY = "rubies"
+export const RUBIES_KEY = "rubies"
 const LEGACY_KEY = "scolup.rubies"
 
 let cache = 0
@@ -17787,6 +18520,13 @@ export async function loadRubies(): Promise<number> {
   return cache
 }
 
+// Re-read the balance from IndexedDB (after a transaction wrote it directly).
+export async function reloadRubies(): Promise<void> {
+  loaded = false
+  await loadRubies()
+  notify()
+}
+
 export function getRubies(): number {
   return cache
 }
@@ -17820,6 +18560,247 @@ export async function addRubies(amount: number): Promise<number> {
 export function subscribeRubies(fn: () => void): () => void {
   listeners.add(fn)
   return () => listeners.delete(fn)
+}
+</file>
+
+<file path="src/ui/accent-color-picker.tsx">
+import { m } from "motion/react"
+import { cn } from "@/lib/utils"
+import { SHOP_ITEMS } from "@/services/shop-rules"
+
+export type ThemeColor =
+  | "yellow"
+  | "red"
+  | "green"
+  | "blue"
+  | "violet"
+  | "pink"
+  | "orange"
+  | "teal"
+
+interface ThemeOption {
+  value: ThemeColor
+  label: string
+  color: string
+  foreground: string
+  itemId?: string // set for colors bought in the shop
+}
+
+const FREE_THEMES: ThemeOption[] = [
+  { value: "yellow", label: "Jaune", color: "#e5af4b", foreground: "#1a1a1a" },
+  { value: "red", label: "Rouge", color: "#dd0046", foreground: "#ffffff" },
+  { value: "green", label: "Vert", color: "#25b256", foreground: "#ffffff" },
+  { value: "blue", label: "Bleu", color: "#48B7E8", foreground: "#1a1a1a" },
+]
+
+// Colors sold in the shop come from the shop catalog: one source of truth.
+const SHOP_THEMES: ThemeOption[] = SHOP_ITEMS.filter(
+  (item) => item.kind === "accent"
+).map((item) => ({
+  value: item.value as ThemeColor,
+  label: item.label,
+  color: item.color,
+  foreground: item.foreground,
+  itemId: item.id,
+}))
+
+function handleThemeKeydown(
+  event: React.KeyboardEvent,
+  themes: ThemeOption[],
+  currentIndex: number,
+  onSelect: (color: ThemeColor) => void
+) {
+  const isLeftOrUp = event.key === "ArrowLeft" || event.key === "ArrowUp"
+  const isRightOrDown = event.key === "ArrowRight" || event.key === "ArrowDown"
+  const isConfirm = event.key === "Enter" || event.key === " "
+
+  if (!isLeftOrUp && !isRightOrDown && !isConfirm) return
+
+  event.preventDefault()
+
+  if (isLeftOrUp) {
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : themes.length - 1
+    onSelect(themes[prevIndex].value)
+  } else if (isRightOrDown) {
+    const nextIndex = currentIndex < themes.length - 1 ? currentIndex + 1 : 0
+    onSelect(themes[nextIndex].value)
+  } else if (isConfirm) {
+    onSelect(themes[currentIndex].value)
+  }
+}
+
+interface AccentColorPickerProps {
+  value: string
+  label: string
+  onPick: (color: ThemeColor) => void
+  // Ids of the shop items the player owns. Bought colors only show up here.
+  owned?: string[]
+  className?: string
+}
+
+export function AccentColorPicker({
+  value,
+  label,
+  onPick,
+  owned = [],
+  className,
+}: AccentColorPickerProps) {
+  const themes = [
+    ...FREE_THEMES,
+    ...SHOP_THEMES.filter(
+      (theme) => theme.itemId && owned.includes(theme.itemId)
+    ),
+  ]
+
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className={cn("grid grid-cols-4 gap-2", className)}
+    >
+      {themes.map((theme, index) => (
+        <m.button
+          key={theme.value}
+          type="button"
+          onClick={() => onPick(theme.value)}
+          onKeyDown={(e) => handleThemeKeydown(e, themes, index, onPick)}
+          aria-pressed={value === theme.value}
+          aria-label={`Couleur ${theme.label}`}
+          className="flex cursor-pointer flex-col items-center gap-2"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        >
+          <m.div
+            style={{ backgroundColor: theme.color }}
+            className={cn(
+              "size-12 rounded-full",
+              value === theme.value && "ring-2 ring-foreground ring-offset-2"
+            )}
+            animate={{
+              scale: value === theme.value ? [1, 1.18, 1] : 1,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 14,
+            }}
+          >
+            {value === theme.value && (
+              <m.span
+                className="flex h-full items-center justify-center"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-5"
+                  style={{ color: theme.foreground }}
+                >
+                  <m.path
+                    d="M5 13l4 4L19 7"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  />
+                </svg>
+              </m.span>
+            )}
+          </m.div>
+          <span className="text-xs text-muted-foreground">{theme.label}</span>
+        </m.button>
+      ))}
+    </div>
+  )
+}
+</file>
+
+<file path="src/ui/app-toast.tsx">
+"use client"
+
+import { useEffect } from "react"
+import { AnimatePresence, m } from "motion/react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import {
+  AlertCircleIcon,
+  Cancel01Icon,
+  Tick02Icon,
+} from "@hugeicons/core-free-icons"
+import { cn } from "@/lib/utils"
+
+// Mini-toast ancré au-dessus de la tab bar. Un seul composant réutilisable
+// pour les erreurs d'action (coche d'un devoir, etc.) : visible même quand
+// l'action a eu lieu en bas de page. `tone="success"` pour les bonnes
+// nouvelles (quêtes, achats) : jamais l'icône d'alerte rouge.
+export function AppToast({
+  message,
+  onClose,
+  tone = "error",
+}: {
+  message: string | null
+  onClose: () => void
+  tone?: "error" | "success"
+}) {
+  useEffect(() => {
+    if (!message) return
+    const timer = setTimeout(onClose, 6000)
+    return () => clearTimeout(timer)
+  }, [message, onClose])
+
+  const success = tone === "success"
+
+  return (
+    <AnimatePresence>
+      {message && (
+        <m.div
+          key="app-toast"
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.98 }}
+          transition={{ duration: 0.22, ease: [0.25, 0.1, 0.15, 1] }}
+          role={success ? "status" : "alert"}
+          style={{
+            bottom:
+              "calc(var(--tabbar-height, 3.5rem) + env(safe-area-inset-bottom) + 16px)",
+          }}
+          className={cn(
+            "fixed inset-x-4 z-[60] mx-auto flex w-auto max-w-sm items-center gap-2.5 rounded-2xl border bg-card px-3.5 py-3 shadow-lg",
+            success ? "border-primary/40" : "border-destructive/30"
+          )}
+        >
+          <HugeiconsIcon
+            icon={success ? Tick02Icon : AlertCircleIcon}
+            className={cn(
+              "size-5 shrink-0",
+              success ? "text-primary-text" : "text-destructive"
+            )}
+            aria-hidden="true"
+          />
+          <p className="min-w-0 flex-1 text-sm font-medium text-card-foreground">
+            {message}
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fermer"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <HugeiconsIcon
+              icon={Cancel01Icon}
+              className="size-4"
+              aria-hidden="true"
+            />
+          </button>
+        </m.div>
+      )}
+    </AnimatePresence>
+  )
 }
 </file>
 
@@ -17875,6 +18856,291 @@ export function EmptyState({
       </Empty>
     </FadeIn>
   )
+}
+</file>
+
+<file path="src/ui/theme-provider.tsx">
+import * as React from "react"
+import { use } from "react"
+import { getSetting, getSettingSync, setSetting } from "@/services/storage"
+import { SHOP_ITEMS } from "@/services/shop-rules"
+
+type Theme = "dark" | "light" | "system"
+type ResolvedTheme = "dark" | "light"
+
+type ThemeProviderProps = {
+  children: React.ReactNode
+  defaultTheme?: Theme
+  storageKey?: string
+  disableTransitionOnChange?: boolean
+}
+
+type ThemeProviderState = {
+  theme: Theme
+  setTheme: (theme: Theme) => void
+  accentColor: string
+  setAccentColor: (color: string) => void
+}
+
+const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
+const THEME_VALUES: Theme[] = ["dark", "light", "system"]
+
+const ACCENT_COLORS: Record<string, { primary: string; foreground: string }> = {
+  yellow: { primary: "#e5af4b", foreground: "#1a1a1a" },
+  red: { primary: "#dd0046", foreground: "#ffffff" },
+  green: { primary: "#25b256", foreground: "#ffffff" },
+  blue: { primary: "#48B7E8", foreground: "#1a1a1a" },
+  // Colors sold in the shop come from the shop catalog.
+  ...Object.fromEntries(
+    SHOP_ITEMS.filter((item) => item.kind === "accent").map((item) => [
+      item.value,
+      { primary: item.color, foreground: item.foreground },
+    ])
+  ),
+}
+
+const ThemeProviderContext = React.createContext<
+  ThemeProviderState | undefined
+>(undefined)
+
+function isTheme(value: string | null): value is Theme {
+  if (value === null) {
+    return false
+  }
+
+  return THEME_VALUES.includes(value as Theme)
+}
+
+function getSystemTheme(): ResolvedTheme {
+  if (window.matchMedia(COLOR_SCHEME_QUERY).matches) {
+    return "dark"
+  }
+
+  return "light"
+}
+
+// --background in src/index.css: white in light, oklch(0.148 0.004 228.8) in
+// dark. Kept as hex for the meta tag (computed from the token).
+const THEME_COLORS: Record<ResolvedTheme, string> = {
+  light: "#ffffff",
+  dark: "#090b0c",
+}
+
+function syncThemeColor(resolved: ResolvedTheme) {
+  // The static media-based metas in index.html only follow the OS. Once the
+  // app runs, the effective theme (light/dark/system) wins instead.
+  document
+    .querySelectorAll('meta[name="theme-color"]')
+    .forEach((meta) => meta.remove())
+  const meta = document.createElement("meta")
+  meta.name = "theme-color"
+  meta.content = THEME_COLORS[resolved]
+  document.head.appendChild(meta)
+}
+
+function disableTransitionsTemporarily() {
+  const style = document.createElement("style")
+  style.appendChild(
+    document.createTextNode(
+      "*,*::before,*::after{-webkit-transition:none!important;transition:none!important}"
+    )
+  )
+  document.head.appendChild(style)
+
+  return () => {
+    window.getComputedStyle(document.body)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        style.remove()
+      })
+    })
+  }
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable ||
+      !!target.closest("input, textarea, select, [contenteditable='true']"))
+  )
+}
+
+export function ThemeProvider({
+  children,
+  defaultTheme = "system",
+  storageKey = "theme",
+  disableTransitionOnChange = true,
+  ...props
+}: ThemeProviderProps) {
+  const [theme, setThemeState] = React.useState<Theme>(() => {
+    const cached = getSettingSync(storageKey)
+    return typeof cached === "string" && isTheme(cached) ? cached : defaultTheme
+  })
+
+  React.useEffect(() => {
+    getSetting(storageKey).then((stored) => {
+      if (typeof stored === "string" && isTheme(stored)) {
+        setThemeState(stored)
+      }
+    })
+  }, [storageKey])
+
+  const setTheme = React.useCallback(
+    (nextTheme: Theme) => {
+      setSetting(storageKey, nextTheme)
+      setThemeState(nextTheme)
+    },
+    [storageKey]
+  )
+
+  const [accentColor, setAccentColorState] = React.useState<string>(() => {
+    const cached = getSettingSync("accent-color")
+    return typeof cached === "string" ? cached : ""
+  })
+
+  React.useEffect(() => {
+    getSetting("accent-color").then((stored) => {
+      if (typeof stored === "string") {
+        setAccentColorState(stored)
+      }
+    })
+  }, [])
+
+  const setAccentColor = React.useCallback((color: string) => {
+    setSetting("accent-color", color)
+    setAccentColorState(color)
+  }, [])
+
+  React.useLayoutEffect(() => {
+    const root = document.documentElement
+    const resolvedTheme = theme === "system" ? getSystemTheme() : theme
+    const restoreTransitions = disableTransitionOnChange
+      ? disableTransitionsTemporarily()
+      : null
+
+    root.classList.remove("light", "dark")
+    root.classList.add(resolvedTheme)
+    syncThemeColor(resolvedTheme)
+
+    if (restoreTransitions) {
+      restoreTransitions()
+    }
+
+    if (theme !== "system") {
+      return undefined
+    }
+
+    const mediaQuery = window.matchMedia(COLOR_SCHEME_QUERY)
+    const handleChange = () => {
+      const systemTheme = getSystemTheme()
+      root.classList.remove("light", "dark")
+      root.classList.add(systemTheme)
+      syncThemeColor(systemTheme)
+    }
+
+    mediaQuery.addEventListener("change", handleChange)
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleChange)
+    }
+  }, [theme, disableTransitionOnChange])
+
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat) {
+        return
+      }
+
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return
+      }
+
+      if (isEditableTarget(event.target)) {
+        return
+      }
+
+      if (event.key.toLowerCase() !== "d") {
+        return
+      }
+
+      setThemeState((currentTheme) => {
+        const nextTheme =
+          currentTheme === "dark"
+            ? "light"
+            : currentTheme === "light"
+              ? "dark"
+              : getSystemTheme() === "dark"
+                ? "light"
+                : "dark"
+
+        setSetting(storageKey, nextTheme)
+        return nextTheme
+      })
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [storageKey])
+
+  React.useLayoutEffect(() => {
+    const root = document.documentElement
+
+    function applyAccent() {
+      if (!accentColor || !ACCENT_COLORS[accentColor]) {
+        root.style.removeProperty("--primary")
+        root.style.removeProperty("--primary-foreground")
+        root.style.removeProperty("--accent-bg-overlay")
+        return
+      }
+
+      const { primary, foreground } = ACCENT_COLORS[accentColor]
+      const isDark = root.classList.contains("dark")
+      const alpha = isDark ? 0.08 : 0.04
+
+      root.style.setProperty("--primary", primary)
+      root.style.setProperty("--primary-foreground", foreground)
+      root.style.setProperty(
+        "--accent-bg-overlay",
+        `color-mix(in srgb, ${primary} ${alpha * 100}%, transparent)`
+      )
+    }
+
+    applyAccent()
+
+    const observer = new MutationObserver(applyAccent)
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] })
+
+    return () => observer.disconnect()
+  }, [accentColor])
+
+  const value = React.useMemo(
+    () => ({
+      theme,
+      setTheme,
+      accentColor,
+      setAccentColor,
+    }),
+    [theme, setTheme, accentColor, setAccentColor]
+  )
+
+  return (
+    <ThemeProviderContext.Provider {...props} value={value}>
+      {children}
+    </ThemeProviderContext.Provider>
+  )
+}
+
+export const useTheme = () => {
+  const context = use(ThemeProviderContext)
+
+  if (context === undefined) {
+    throw new Error("useTheme must be used within a ThemeProvider")
+  }
+
+  return context
 }
 </file>
 
@@ -19103,6 +20369,216 @@ export function useAgenda(startKey: string, endKey: string) {
 }
 </file>
 
+<file path="src/pages/agenda/hooks/useAgendaPage.ts">
+"use client"
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate, useSearchParams } from "react-router"
+import { getSetting } from "@/services/storage"
+import { addDays, parseDateKey, toDayKey, weekOf } from "@/services/dates"
+import { triggerHapticLight } from "@/services/haptics"
+import { coursesForDay, type AgendaView, type Course } from "../helpers"
+import { useAgenda } from "./useAgenda"
+
+const SWIPE_PX = 60
+
+function useStoredWeekView(
+  params: URLSearchParams,
+  setParams: (p: URLSearchParams) => void
+) {
+  const hasVue = params.has("vue")
+
+  useEffect(() => {
+    if (hasVue) return
+    void getSetting("agendaView").then((stored) => {
+      if (stored !== "week") return
+      const next = new URLSearchParams(params.toString())
+      next.set("vue", "semaine")
+      setParams(next)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- restore the stored default once
+  }, [hasVue])
+}
+
+export function useAgendaPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const [navDir, setNavDir] = useState(0)
+  const touchStart = useRef<{ x: number; y: number } | null>(null)
+  // True when the drawer was opened in-session (push): closing it then goes
+  // back instead of replacing, so Android's back button closes the drawer
+  // first. Deep links (?cours= opened directly) still close via replace.
+  const pushedDrawer = useRef(false)
+
+  const dateParam = searchParams.get("date")
+  const date = useMemo(() => parseDateKey(dateParam) ?? new Date(), [dateParam])
+  const view: AgendaView =
+    searchParams.get("vue") === "semaine" ? "week" : "day"
+  const courseParam = searchParams.get("cours")
+
+  const week = weekOf(date)
+  const startKey = toDayKey(week[0])
+  const endKey = toDayKey(week[6])
+
+  const { courses, loading, error, refresh } = useAgenda(startKey, endKey)
+
+  const sorted = useMemo(
+    () =>
+      [...courses].sort(
+        (a, b) => (a.start?.getTime() ?? 0) - (b.start?.getTime() ?? 0)
+      ),
+    [courses]
+  )
+  const dayCourses = coursesForDay(sorted, toDayKey(date))
+  const weekCourses = useMemo(
+    () =>
+      sorted.filter((c) => {
+        if (!c.start) return false
+        const key = toDayKey(c.start)
+        return key >= startKey && key <= endKey
+      }),
+    [sorted, startKey, endKey]
+  )
+
+  const selected = useMemo(
+    () =>
+      courseParam
+        ? (sorted.find((c) => c.stableId === courseParam) ?? null)
+        : null,
+    [sorted, courseParam]
+  )
+
+  const commit = useCallback(
+    (mutate: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString())
+      mutate(params)
+      setSearchParams(params, { replace: true })
+    },
+    [searchParams, setSearchParams]
+  )
+
+  const setDate = useCallback(
+    (next: Date, dir?: number) => {
+      const current = toDayKey(date)
+      const target = toDayKey(next)
+      if (target !== current) triggerHapticLight()
+      setNavDir(dir ?? (target > current ? 1 : target < current ? -1 : 0))
+      // Changing day drops the drawer state, including its history entry.
+      pushedDrawer.current = false
+      commit((params) => {
+        if (target === toDayKey(new Date())) params.delete("date")
+        else params.set("date", target)
+        params.delete("cours")
+      })
+    },
+    [date, commit]
+  )
+
+  const setView = useCallback(
+    (next: AgendaView) => {
+      if (next === view) return
+      triggerHapticLight()
+      commit((params) => {
+        if (next === "week") params.set("vue", "semaine")
+        else params.delete("vue")
+      })
+    },
+    [commit, view]
+  )
+
+  const select = useCallback(
+    (course: Course | null) => {
+      if (course) {
+        if (course.stableId !== courseParam) triggerHapticLight()
+        pushedDrawer.current = true
+        const params = new URLSearchParams(searchParams.toString())
+        params.set("cours", course.stableId)
+        setSearchParams(params)
+        return
+      }
+      if (pushedDrawer.current) {
+        pushedDrawer.current = false
+        navigate(-1)
+        return
+      }
+      commit((params) => {
+        params.delete("cours")
+      })
+    },
+    [commit, courseParam, navigate, searchParams, setSearchParams]
+  )
+
+  useStoredWeekView(
+    searchParams,
+    useCallback(
+      (params) => setSearchParams(params, { replace: true }),
+      [setSearchParams]
+    )
+  )
+
+  const step = useCallback(
+    (delta: number) =>
+      setDate(addDays(date, view === "week" ? delta * 7 : delta), delta),
+    [date, view, setDate]
+  )
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag && /^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return
+      if (e.key === "ArrowLeft") {
+        e.preventDefault()
+        step(-1)
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault()
+        step(1)
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [step])
+
+  const swipe = useMemo(
+    () => ({
+      onTouchStart: (e: React.TouchEvent) => {
+        touchStart.current =
+          e.touches.length === 1
+            ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
+            : null
+      },
+      onTouchEnd: (e: React.TouchEvent) => {
+        const origin = touchStart.current
+        touchStart.current = null
+        if (!origin) return
+        const touch = e.changedTouches[0]
+        const dx = touch.clientX - origin.x
+        const dy = touch.clientY - origin.y
+        if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) < Math.abs(dy) * 1.4) return
+        step(dx < 0 ? 1 : -1)
+      },
+    }),
+    [step]
+  )
+
+  return {
+    date,
+    view,
+    navDir,
+    dayCourses,
+    weekCourses,
+    visible: view === "week" ? weekCourses : dayCourses,
+    selected,
+    loading,
+    error,
+    refresh,
+    setDate,
+    setView,
+    select,
+    swipe,
+  }
+}
+</file>
+
 <file path="src/pages/agenda/hooks/useSessionContent.ts">
 "use client"
 
@@ -19328,459 +20804,90 @@ export function PeriodPicker({
 }
 </file>
 
-<file path="src/pages/grades/helpers.ts">
-export interface Competency {
-  key: string
-  level: number | null
-  label: string
-}
+<file path="src/pages/grades/hooks/useGradesPage.ts">
+"use client"
 
-export interface Grade {
-  key: string
-  subject: string
-  subjectCode?: string
-  title: string
-  typeDevoir?: string
-  comment?: string
-  date?: Date
-  enteredOn?: Date
-  value: string
-  outOf: string
-  coef: string
-  period: string
-  competencies: Competency[]
-  nonSignificant: boolean
-}
+import { useCallback, useEffect, useRef, useState } from "react"
+import { markSeen } from "@/services/storage"
+import { triggerHapticLight } from "@/services/haptics"
+import { resolveSubjectName, useSubjects } from "@/services/subjects"
+import { averageImprovedThisWeek } from "../helpers"
+import { track } from "@/services/quests"
+import { useGrades } from "./useGrades"
 
-export interface SubjectGroup {
-  subject: string
-  subjectCode?: string
-  grades: Grade[]
-  average: number | null
-  coef: number
-}
+const HIGHLIGHT_MS = 2000
 
-// Résolveur de coefficient d'une matière (code, libellé) — injecté depuis
-// l'extérieur pour garder ce fichier sans dépendance.
-export type SubjectCoefOf = (
-  subjectCode: string | undefined,
-  subject: string
-) => number
+export function useGradesPage() {
+  const model = useGrades()
+  const [highlightedKey, setHighlightedKey] = useState<string | null>(null)
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const rowRefs = useRef(new Map<string, HTMLElement>())
+  const highlightTimer = useRef<number | null>(null)
 
-export interface Period {
-  id: string
-  label: string
-  annuel?: boolean
-}
+  useSubjects()
 
-interface TrendNewcomer {
-  key: string
-  title: string
-  display: string
-  impact: number
-}
+  useEffect(() => {
+    void markSeen("grades")
+  }, [])
 
-export interface TrendPoint {
-  key: string
-  label: string
-  fullLabel: string
-  average: number | null
-  delta: number | null
-  newcomers: TrendNewcomer[]
-}
+  // ponytail: judged on the trend of the selected period. Ceiling: an old
+  // period can still show a rise. Upgrade path: only use the current period.
+  const improved = !model.loading && averageImprovedThisWeek(model.trend)
+  useEffect(() => {
+    if (improved) void track("average-up")
+  }, [improved])
 
-export const DEFAULT_EVAL_COLORS = ["#ff0000", "#ffc000", "#1e8910", "#005bb0"]
-
-export function formatGradeDate(date?: Date): string {
-  if (!date) return ""
-  return date.toLocaleDateString("fr", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
-}
-
-export function hasGradeValue(grade: Grade): boolean {
-  return grade.value.trim() !== ""
-}
-
-export function toEvalColors(raw: unknown): string[] {
-  if (!raw || typeof raw !== "object") return DEFAULT_EVAL_COLORS
-  const record = raw as Record<string, unknown>
-  const colors = [1, 2, 3, 4].map((level) => record[`couleurEval${level}`])
-  return colors.every((color) => typeof color === "string" && color)
-    ? (colors as string[])
-    : DEFAULT_EVAL_COLORS
-}
-
-export function parseGradeNumber(raw: unknown): number | null {
-  const text = typeof raw === "number" ? String(raw) : (raw as string)
-  if (typeof text !== "string") return null
-  const normalized = text.trim().replace(",", ".")
-  if (!/^[0-9]+(\.[0-9]+)?$/.test(normalized)) return null
-  const parsed = Number(normalized)
-  return Number.isFinite(parsed) ? parsed : null
-}
-
-function subjectAverage(grades: Grade[]): number | null {
-  let weighted = 0
-  let weights = 0
-  for (const grade of grades) {
-    if (grade.nonSignificant) continue
-    const value = parseGradeNumber(grade.value)
-    const outOf = parseGradeNumber(grade.outOf)
-    if (value === null || outOf === null || outOf <= 0) continue
-    const coef = parseGradeNumber(grade.coef)
-    const weight = coef === null || coef <= 0 ? 1 : coef
-    weighted += (value / outOf) * 20 * weight
-    weights += weight
-  }
-  return weights > 0 ? weighted / weights : null
-}
-
-function toCompetencies(raw: unknown): Competency[] {
-  if (!Array.isArray(raw)) return []
-  return raw.flatMap((entry, entryIndex) => {
-    if (!entry || typeof entry !== "object") return []
-    const record = entry as Record<string, unknown>
-    const label =
-      (record.libelleCompetence as string) ||
-      (record.descriptif as string) ||
-      "Compétence"
-    const level = parseGradeNumber(record.valeur)
-    return [
-      {
-        key: `${label}-${entryIndex}`,
-        level:
-          level !== null && Number.isInteger(level) && level >= 1 && level <= 4
-            ? level
-            : null,
-        label,
-      },
-    ]
-  })
-}
-
-export function toGrade(raw: Record<string, unknown>, index: number): Grade {
-  const subject =
-    (raw.libelleMatiere as string) ||
-    (raw.codeMatiere as string) ||
-    "Sans matière"
-  return {
-    key: String(
-      (raw.id as number | string | undefined) ?? `${subject}-${index}`
-    ),
-    subject,
-    subjectCode:
-      typeof raw.codeMatiere === "string" && raw.codeMatiere.trim()
-        ? raw.codeMatiere.trim()
-        : undefined,
-    title: (raw.devoir as string) || "Évaluation",
-    typeDevoir:
-      typeof raw.typeDevoir === "string" && raw.typeDevoir.trim()
-        ? raw.typeDevoir.trim()
-        : undefined,
-    comment:
-      typeof raw.commentaire === "string" && raw.commentaire.trim()
-        ? raw.commentaire.trim()
-        : undefined,
-    date: raw.date instanceof Date ? raw.date : undefined,
-    enteredOn: raw.dateSaisie instanceof Date ? raw.dateSaisie : undefined,
-    value:
-      typeof raw.valeur === "string"
-        ? raw.valeur
-        : typeof raw.valeur === "number"
-          ? String(raw.valeur)
-          : "",
-    outOf:
-      typeof raw.noteSur === "string"
-        ? raw.noteSur
-        : typeof raw.noteSur === "number"
-          ? String(raw.noteSur)
-          : "20",
-    coef: String(raw.coef ?? "1"),
-    period: typeof raw.codePeriode === "string" ? raw.codePeriode : "",
-    competencies: toCompetencies(raw.elementsProgramme),
-    nonSignificant: raw.nonSignificatif === true || raw.nonSignificatif === "1",
-  }
-}
-
-// The API lists the all-year period with the bare code `A999Z` and no label.
-const PERIOD_LABELS: Record<string, string> = { A999Z: "Année" }
-
-export function toPeriod(raw: Record<string, unknown>): Period | null {
-  const id =
-    (raw.idPeriode as string) || (raw.codePeriode as string) || undefined
-  if (!id) return null
-  return {
-    id,
-    label: (raw.periode as string) || PERIOD_LABELS[id] || id,
-    annuel: raw.annuel === true,
-  }
-}
-
-export function pickDefaultPeriod(periods: Period[]): Period | null {
-  return (
-    periods.find((period) => period.annuel) ??
-    periods.find((period) => period.id === "A999Z") ??
-    periods[0] ??
-    null
+  useEffect(
+    () => () => {
+      if (highlightTimer.current !== null) clearTimeout(highlightTimer.current)
+    },
+    []
   )
-}
 
-export function resolvePeriod(
-  periods: Period[],
-  preferred: string | undefined
-): Period | null {
-  return (
-    periods.find((period) => period.id === preferred) ??
-    pickDefaultPeriod(periods)
-  )
-}
-
-export type AverageMethod = "subject" | "weighted" | "median"
-
-export type AverageScale = 20 | 10 | 100
-
-export function isAverageMethod(value: unknown): value is AverageMethod {
-  return value === "subject" || value === "weighted" || value === "median"
-}
-
-export function isAverageScale(value: unknown): value is AverageScale {
-  return value === 20 || value === 10 || value === 100
-}
-
-export function convertAverage(average20: number, scale: AverageScale): number {
-  return (average20 * scale) / 20
-}
-
-export function formatAverage(
-  average: number,
-  scale: AverageScale = 20
-): string {
-  if (scale === 100) return `${formatAverageValue(average, scale)} %`
-  return `${formatAverageValue(average, scale)}/${scale}`
-}
-
-export function formatAverageValue(
-  average: number,
-  scale: AverageScale = 20
-): string {
-  return convertAverage(average, scale).toFixed(2).replace(".", ",")
-}
-
-// Seuil du moment signature "belle note" : une note qui fait plaisir,
-// toutes échelles confondues (un 8/10 vaut un 16/20).
-export const GREAT_GRADE_THRESHOLD = 16
-
-// Note ramenée sur 20, ou null si elle n'est pas chiffrable. Seules les
-// notes significatives comptent : on ne célèbre jamais une note
-// non significative ou une évaluation par compétences.
-export function gradeScore20(grade: Grade): number | null {
-  if (grade.nonSignificant || !hasGradeValue(grade)) return null
-  const value = parseGradeNumber(grade.value)
-  const outOf = parseGradeNumber(grade.outOf)
-  if (value === null || outOf === null || outOf <= 0) return null
-  return (value / outOf) * 20
-}
-
-export function isGreatGrade(grade: Grade): boolean {
-  const score = gradeScore20(grade)
-  return score !== null && score >= GREAT_GRADE_THRESHOLD
-}
-
-// Interpolation ease-out pour le count-up de la moyenne : pure, testée,
-// la partie rAF vit dans AverageCard. `progress` est clampé à [0, 1].
-export function countUpValue(
-  from: number,
-  to: number,
-  progress: number
-): number {
-  const t = Math.min(1, Math.max(0, progress))
-  const eased = 1 - Math.pow(1 - t, 3)
-  return from + (to - from) * eased
-}
-
-export function groupBySubject(
-  grades: Grade[],
-  coefOf?: SubjectCoefOf
-): SubjectGroup[] {
-  const groups = new Map<string, Grade[]>()
-  for (const grade of grades) {
-    const list = groups.get(grade.subject)
-    if (list) list.push(grade)
-    else groups.set(grade.subject, [grade])
-  }
-  return [...groups.entries()]
-    .sort(([a], [b]) => a.localeCompare(b, "fr"))
-    .map(([subject, list]) => {
-      const subjectCode = list.find((grade) => grade.subjectCode)?.subjectCode
-      const parsed = coefOf?.(subjectCode, subject)
-      return {
-        subject,
-        subjectCode,
-        grades: list.sort(
-          (a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0)
-        ),
-        average: subjectAverage(list),
-        coef:
-          parsed !== undefined && Number.isFinite(parsed) && parsed > 0
-            ? parsed
-            : 1,
-      }
+  const scrollToGrade = useCallback((key: string) => {
+    triggerHapticLight()
+    rowRefs.current.get(key)?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
     })
-}
+    if (highlightTimer.current !== null) clearTimeout(highlightTimer.current)
+    setHighlightedKey(key)
+    highlightTimer.current = window.setTimeout(
+      () => setHighlightedKey(null),
+      HIGHLIGHT_MS
+    )
+  }, [])
 
-export function generalAverage(groups: SubjectGroup[]): number | null {
-  let sum = 0
-  let weights = 0
-  for (const group of groups) {
-    if (group.average === null) continue
-    sum += group.average * group.coef
-    weights += group.coef
+  const registerRow = useCallback((key: string, el: HTMLElement | null) => {
+    if (el) rowRefs.current.set(key, el)
+    else rowRefs.current.delete(key)
+  }, [])
+
+  const openGrade = useCallback((key: string) => {
+    triggerHapticLight()
+    setSelectedKey(key)
+  }, [])
+
+  const selected =
+    selectedKey !== null
+      ? (model.grades.find((grade) => grade.key === selectedKey) ?? null)
+      : null
+
+  return {
+    ...model,
+    highlightedKey,
+    registerRow,
+    scrollToGrade,
+    openGrade,
+    closeGrade: () => setSelectedKey(null),
+    selected,
+    selectedSubject: selected
+      ? resolveSubjectName(selected.subjectCode, selected.subject)
+      : "",
+    selectedPeriodLabel: selected
+      ? model.periods.find((period) => period.id === selected.period)?.label
+      : undefined,
   }
-  return weights > 0 ? sum / weights : null
-}
-
-// Moyenne pondérée globale : toutes les notes dans un seul panier, chacune
-// pesée par coef du devoir × coef de sa matière.
-export function weightedAverage(
-  grades: Grade[],
-  coefOf?: SubjectCoefOf
-): number | null {
-  let weighted = 0
-  let weights = 0
-  for (const grade of grades) {
-    const score = gradeScore20(grade)
-    if (score === null) continue
-    const gradeCoef = parseGradeNumber(grade.coef)
-    const subjectCoef = coefOf?.(grade.subjectCode, grade.subject) ?? 1
-    const safeSubject =
-      Number.isFinite(subjectCoef) && subjectCoef > 0 ? subjectCoef : 1
-    const safeGrade = gradeCoef !== null && gradeCoef > 0 ? gradeCoef : 1
-    const weight = safeGrade * safeSubject
-    weighted += score * weight
-    weights += weight
-  }
-  return weights > 0 ? weighted / weights : null
-}
-
-// Médiane des notes ramenées sur 20 (chaque note compte une fois,
-// sans pondération).
-export function medianAverage(grades: Grade[]): number | null {
-  const scores = grades.flatMap((grade) => {
-    const score = gradeScore20(grade)
-    return score === null ? [] : [score]
-  })
-  if (scores.length === 0) return null
-  scores.sort((a, b) => a - b)
-  const middle = Math.floor(scores.length / 2)
-  return scores.length % 2 === 1
-    ? scores[middle]
-    : (scores[middle - 1] + scores[middle]) / 2
-}
-
-export function computeOverallAverage(
-  grades: Grade[],
-  groups: SubjectGroup[],
-  coefOf?: SubjectCoefOf,
-  method: AverageMethod = "subject"
-): number | null {
-  if (method === "weighted") return weightedAverage(grades, coefOf)
-  if (method === "median") return medianAverage(grades)
-  return generalAverage(groups)
-}
-
-function startOfDayTime(date: Date): number {
-  const day = new Date(date)
-  day.setHours(0, 0, 0, 0)
-  return day.getTime()
-}
-
-function gradeAvailableDay(grade: Grade): number | null {
-  const exam = grade.date ?? grade.enteredOn
-  const out = grade.enteredOn ?? grade.date
-  if (!exam || !out) return null
-  return Math.max(startOfDayTime(exam), startOfDayTime(out))
-}
-
-export function gradeLabel(grade: Grade): string {
-  if (!grade.value.trim()) return "—"
-  if (!/^[0-9.,]+$/.test(grade.value.trim())) return grade.value
-  return `${grade.value.replace(".", ",")}/${grade.outOf}`
-}
-
-function averageForTrend(
-  grades: Grade[],
-  coefOf?: SubjectCoefOf,
-  method: AverageMethod = "subject"
-): number | null {
-  if (method === "weighted") return weightedAverage(grades, coefOf)
-  if (method === "median") return medianAverage(grades)
-  return generalAverage(groupBySubject(grades, coefOf))
-}
-
-export function cumulativeGeneralAverageByDay(
-  grades: Grade[],
-  coefOf?: SubjectCoefOf,
-  days = 30,
-  now: Date = new Date(),
-  method: AverageMethod = "subject"
-): TrendPoint[] {
-  const midnight = new Date(now)
-  midnight.setHours(0, 0, 0, 0)
-  const dated = grades.flatMap((grade) => {
-    const available = gradeAvailableDay(grade)
-    return available === null ? [] : [{ grade, time: available }]
-  })
-  const points: TrendPoint[] = []
-  let previous: number | null = null
-  for (let offset = days - 1; offset >= 0; offset--) {
-    const day = new Date(midnight)
-    day.setDate(midnight.getDate() - offset)
-    const dayTime = day.getTime()
-    const upto = dated
-      .filter((entry) => entry.time <= dayTime)
-      .map((entry) => entry.grade)
-    const average = averageForTrend(upto, coefOf, method)
-    const rounded = average === null ? null : Math.round(average * 100) / 100
-    const newcomers: TrendNewcomer[] = []
-    if (rounded !== null) {
-      for (const entry of dated) {
-        if (entry.time !== dayTime) continue
-        const rest = upto.filter((grade) => grade !== entry.grade)
-        const without = averageForTrend(rest, coefOf, method)
-        const impact = Math.round((rounded - (without ?? 0)) * 100) / 100
-        if (impact === 0) continue
-        newcomers.push({
-          key: entry.grade.key,
-          title: entry.grade.title,
-          display: gradeLabel(entry.grade),
-          impact,
-        })
-      }
-    }
-    const delta =
-      rounded !== null && previous !== null
-        ? Math.round((rounded - previous) * 100) / 100
-        : null
-    if (rounded !== null) previous = rounded
-    points.push({
-      key: String(dayTime),
-      label: day.toLocaleDateString("fr", {
-        day: "numeric",
-        month: "numeric",
-      }),
-      fullLabel: day.toLocaleDateString("fr", {
-        day: "numeric",
-        month: "long",
-      }),
-      average: rounded,
-      delta,
-      newcomers,
-    })
-  }
-  return points
 }
 </file>
 
@@ -22808,6 +23915,471 @@ export function LoginForm({ className, onNext }: LoginFormProps) {
 }
 </file>
 
+<file path="src/pages/grades/helpers.ts">
+export interface Competency {
+  key: string
+  level: number | null
+  label: string
+}
+
+export interface Grade {
+  key: string
+  subject: string
+  subjectCode?: string
+  title: string
+  typeDevoir?: string
+  comment?: string
+  date?: Date
+  enteredOn?: Date
+  value: string
+  outOf: string
+  coef: string
+  period: string
+  competencies: Competency[]
+  nonSignificant: boolean
+}
+
+export interface SubjectGroup {
+  subject: string
+  subjectCode?: string
+  grades: Grade[]
+  average: number | null
+  coef: number
+}
+
+// Résolveur de coefficient d'une matière (code, libellé) — injecté depuis
+// l'extérieur pour garder ce fichier sans dépendance.
+export type SubjectCoefOf = (
+  subjectCode: string | undefined,
+  subject: string
+) => number
+
+export interface Period {
+  id: string
+  label: string
+  annuel?: boolean
+}
+
+interface TrendNewcomer {
+  key: string
+  title: string
+  display: string
+  impact: number
+}
+
+export interface TrendPoint {
+  key: string
+  label: string
+  fullLabel: string
+  average: number | null
+  delta: number | null
+  newcomers: TrendNewcomer[]
+}
+
+export const DEFAULT_EVAL_COLORS = ["#ff0000", "#ffc000", "#1e8910", "#005bb0"]
+
+export function formatGradeDate(date?: Date): string {
+  if (!date) return ""
+  return date.toLocaleDateString("fr", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+}
+
+export function hasGradeValue(grade: Grade): boolean {
+  return grade.value.trim() !== ""
+}
+
+export function toEvalColors(raw: unknown): string[] {
+  if (!raw || typeof raw !== "object") return DEFAULT_EVAL_COLORS
+  const record = raw as Record<string, unknown>
+  const colors = [1, 2, 3, 4].map((level) => record[`couleurEval${level}`])
+  return colors.every((color) => typeof color === "string" && color)
+    ? (colors as string[])
+    : DEFAULT_EVAL_COLORS
+}
+
+export function parseGradeNumber(raw: unknown): number | null {
+  const text = typeof raw === "number" ? String(raw) : (raw as string)
+  if (typeof text !== "string") return null
+  const normalized = text.trim().replace(",", ".")
+  if (!/^[0-9]+(\.[0-9]+)?$/.test(normalized)) return null
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function subjectAverage(grades: Grade[]): number | null {
+  let weighted = 0
+  let weights = 0
+  for (const grade of grades) {
+    if (grade.nonSignificant) continue
+    const value = parseGradeNumber(grade.value)
+    const outOf = parseGradeNumber(grade.outOf)
+    if (value === null || outOf === null || outOf <= 0) continue
+    const coef = parseGradeNumber(grade.coef)
+    const weight = coef === null || coef <= 0 ? 1 : coef
+    weighted += (value / outOf) * 20 * weight
+    weights += weight
+  }
+  return weights > 0 ? weighted / weights : null
+}
+
+function toCompetencies(raw: unknown): Competency[] {
+  if (!Array.isArray(raw)) return []
+  return raw.flatMap((entry, entryIndex) => {
+    if (!entry || typeof entry !== "object") return []
+    const record = entry as Record<string, unknown>
+    const label =
+      (record.libelleCompetence as string) ||
+      (record.descriptif as string) ||
+      "Compétence"
+    const level = parseGradeNumber(record.valeur)
+    return [
+      {
+        key: `${label}-${entryIndex}`,
+        level:
+          level !== null && Number.isInteger(level) && level >= 1 && level <= 4
+            ? level
+            : null,
+        label,
+      },
+    ]
+  })
+}
+
+export function toGrade(raw: Record<string, unknown>, index: number): Grade {
+  const subject =
+    (raw.libelleMatiere as string) ||
+    (raw.codeMatiere as string) ||
+    "Sans matière"
+  return {
+    key: String(
+      (raw.id as number | string | undefined) ?? `${subject}-${index}`
+    ),
+    subject,
+    subjectCode:
+      typeof raw.codeMatiere === "string" && raw.codeMatiere.trim()
+        ? raw.codeMatiere.trim()
+        : undefined,
+    title: (raw.devoir as string) || "Évaluation",
+    typeDevoir:
+      typeof raw.typeDevoir === "string" && raw.typeDevoir.trim()
+        ? raw.typeDevoir.trim()
+        : undefined,
+    comment:
+      typeof raw.commentaire === "string" && raw.commentaire.trim()
+        ? raw.commentaire.trim()
+        : undefined,
+    date: raw.date instanceof Date ? raw.date : undefined,
+    enteredOn: raw.dateSaisie instanceof Date ? raw.dateSaisie : undefined,
+    value:
+      typeof raw.valeur === "string"
+        ? raw.valeur
+        : typeof raw.valeur === "number"
+          ? String(raw.valeur)
+          : "",
+    outOf:
+      typeof raw.noteSur === "string"
+        ? raw.noteSur
+        : typeof raw.noteSur === "number"
+          ? String(raw.noteSur)
+          : "20",
+    coef: String(raw.coef ?? "1"),
+    period: typeof raw.codePeriode === "string" ? raw.codePeriode : "",
+    competencies: toCompetencies(raw.elementsProgramme),
+    nonSignificant: raw.nonSignificatif === true || raw.nonSignificatif === "1",
+  }
+}
+
+// The API lists the all-year period with the bare code `A999Z` and no label.
+const PERIOD_LABELS: Record<string, string> = { A999Z: "Année" }
+
+export function toPeriod(raw: Record<string, unknown>): Period | null {
+  const id =
+    (raw.idPeriode as string) || (raw.codePeriode as string) || undefined
+  if (!id) return null
+  return {
+    id,
+    label: (raw.periode as string) || PERIOD_LABELS[id] || id,
+    annuel: raw.annuel === true,
+  }
+}
+
+export function pickDefaultPeriod(periods: Period[]): Period | null {
+  return (
+    periods.find((period) => period.annuel) ??
+    periods.find((period) => period.id === "A999Z") ??
+    periods[0] ??
+    null
+  )
+}
+
+export function resolvePeriod(
+  periods: Period[],
+  preferred: string | undefined
+): Period | null {
+  return (
+    periods.find((period) => period.id === preferred) ??
+    pickDefaultPeriod(periods)
+  )
+}
+
+export type AverageMethod = "subject" | "weighted" | "median"
+
+export type AverageScale = 20 | 10 | 100
+
+export function isAverageMethod(value: unknown): value is AverageMethod {
+  return value === "subject" || value === "weighted" || value === "median"
+}
+
+export function isAverageScale(value: unknown): value is AverageScale {
+  return value === 20 || value === 10 || value === 100
+}
+
+export function convertAverage(average20: number, scale: AverageScale): number {
+  return (average20 * scale) / 20
+}
+
+export function formatAverage(
+  average: number,
+  scale: AverageScale = 20
+): string {
+  if (scale === 100) return `${formatAverageValue(average, scale)} %`
+  return `${formatAverageValue(average, scale)}/${scale}`
+}
+
+export function formatAverageValue(
+  average: number,
+  scale: AverageScale = 20
+): string {
+  return convertAverage(average, scale).toFixed(2).replace(".", ",")
+}
+
+// Seuil du moment signature "belle note" : une note qui fait plaisir,
+// toutes échelles confondues (un 8/10 vaut un 16/20).
+export const GREAT_GRADE_THRESHOLD = 16
+
+// Note ramenée sur 20, ou null si elle n'est pas chiffrable. Seules les
+// notes significatives comptent : on ne célèbre jamais une note
+// non significative ou une évaluation par compétences.
+export function gradeScore20(grade: Grade): number | null {
+  if (grade.nonSignificant || !hasGradeValue(grade)) return null
+  const value = parseGradeNumber(grade.value)
+  const outOf = parseGradeNumber(grade.outOf)
+  if (value === null || outOf === null || outOf <= 0) return null
+  return (value / outOf) * 20
+}
+
+export function isGreatGrade(grade: Grade): boolean {
+  const score = gradeScore20(grade)
+  return score !== null && score >= GREAT_GRADE_THRESHOLD
+}
+
+// Interpolation ease-out pour le count-up de la moyenne : pure, testée,
+// la partie rAF vit dans AverageCard. `progress` est clampé à [0, 1].
+export function countUpValue(
+  from: number,
+  to: number,
+  progress: number
+): number {
+  const t = Math.min(1, Math.max(0, progress))
+  const eased = 1 - Math.pow(1 - t, 3)
+  return from + (to - from) * eased
+}
+
+export function groupBySubject(
+  grades: Grade[],
+  coefOf?: SubjectCoefOf
+): SubjectGroup[] {
+  const groups = new Map<string, Grade[]>()
+  for (const grade of grades) {
+    const list = groups.get(grade.subject)
+    if (list) list.push(grade)
+    else groups.set(grade.subject, [grade])
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b, "fr"))
+    .map(([subject, list]) => {
+      const subjectCode = list.find((grade) => grade.subjectCode)?.subjectCode
+      const parsed = coefOf?.(subjectCode, subject)
+      return {
+        subject,
+        subjectCode,
+        grades: list.sort(
+          (a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0)
+        ),
+        average: subjectAverage(list),
+        coef:
+          parsed !== undefined && Number.isFinite(parsed) && parsed > 0
+            ? parsed
+            : 1,
+      }
+    })
+}
+
+export function generalAverage(groups: SubjectGroup[]): number | null {
+  let sum = 0
+  let weights = 0
+  for (const group of groups) {
+    if (group.average === null) continue
+    sum += group.average * group.coef
+    weights += group.coef
+  }
+  return weights > 0 ? sum / weights : null
+}
+
+// Moyenne pondérée globale : toutes les notes dans un seul panier, chacune
+// pesée par coef du devoir × coef de sa matière.
+export function weightedAverage(
+  grades: Grade[],
+  coefOf?: SubjectCoefOf
+): number | null {
+  let weighted = 0
+  let weights = 0
+  for (const grade of grades) {
+    const score = gradeScore20(grade)
+    if (score === null) continue
+    const gradeCoef = parseGradeNumber(grade.coef)
+    const subjectCoef = coefOf?.(grade.subjectCode, grade.subject) ?? 1
+    const safeSubject =
+      Number.isFinite(subjectCoef) && subjectCoef > 0 ? subjectCoef : 1
+    const safeGrade = gradeCoef !== null && gradeCoef > 0 ? gradeCoef : 1
+    const weight = safeGrade * safeSubject
+    weighted += score * weight
+    weights += weight
+  }
+  return weights > 0 ? weighted / weights : null
+}
+
+// Médiane des notes ramenées sur 20 (chaque note compte une fois,
+// sans pondération).
+export function medianAverage(grades: Grade[]): number | null {
+  const scores = grades.flatMap((grade) => {
+    const score = gradeScore20(grade)
+    return score === null ? [] : [score]
+  })
+  if (scores.length === 0) return null
+  scores.sort((a, b) => a - b)
+  const middle = Math.floor(scores.length / 2)
+  return scores.length % 2 === 1
+    ? scores[middle]
+    : (scores[middle - 1] + scores[middle]) / 2
+}
+
+export function computeOverallAverage(
+  grades: Grade[],
+  groups: SubjectGroup[],
+  coefOf?: SubjectCoefOf,
+  method: AverageMethod = "subject"
+): number | null {
+  if (method === "weighted") return weightedAverage(grades, coefOf)
+  if (method === "median") return medianAverage(grades)
+  return generalAverage(groups)
+}
+
+function startOfDayTime(date: Date): number {
+  const day = new Date(date)
+  day.setHours(0, 0, 0, 0)
+  return day.getTime()
+}
+
+function gradeAvailableDay(grade: Grade): number | null {
+  const exam = grade.date ?? grade.enteredOn
+  const out = grade.enteredOn ?? grade.date
+  if (!exam || !out) return null
+  return Math.max(startOfDayTime(exam), startOfDayTime(out))
+}
+
+export function gradeLabel(grade: Grade): string {
+  if (!grade.value.trim()) return "—"
+  if (!/^[0-9.,]+$/.test(grade.value.trim())) return grade.value
+  return `${grade.value.replace(".", ",")}/${grade.outOf}`
+}
+
+function averageForTrend(
+  grades: Grade[],
+  coefOf?: SubjectCoefOf,
+  method: AverageMethod = "subject"
+): number | null {
+  if (method === "weighted") return weightedAverage(grades, coefOf)
+  if (method === "median") return medianAverage(grades)
+  return generalAverage(groupBySubject(grades, coefOf))
+}
+
+// True when today's general average beats the one from 7 days ago by at
+// least 0.05 (the trend has one point per day). Feeds the "average-up" quest:
+// it rewards significant progress, not a tiny fluctuation.
+export function averageImprovedThisWeek(trend: TrendPoint[]): boolean {
+  const now = trend.at(-1)?.average ?? null
+  const weekAgo = trend.at(-8)?.average ?? null
+  return now !== null && weekAgo !== null && now - weekAgo >= 0.05
+}
+
+export function cumulativeGeneralAverageByDay(
+  grades: Grade[],
+  coefOf?: SubjectCoefOf,
+  days = 30,
+  now: Date = new Date(),
+  method: AverageMethod = "subject"
+): TrendPoint[] {
+  const midnight = new Date(now)
+  midnight.setHours(0, 0, 0, 0)
+  const dated = grades.flatMap((grade) => {
+    const available = gradeAvailableDay(grade)
+    return available === null ? [] : [{ grade, time: available }]
+  })
+  const points: TrendPoint[] = []
+  let previous: number | null = null
+  for (let offset = days - 1; offset >= 0; offset--) {
+    const day = new Date(midnight)
+    day.setDate(midnight.getDate() - offset)
+    const dayTime = day.getTime()
+    const upto = dated
+      .filter((entry) => entry.time <= dayTime)
+      .map((entry) => entry.grade)
+    const average = averageForTrend(upto, coefOf, method)
+    const rounded = average === null ? null : Math.round(average * 100) / 100
+    const newcomers: TrendNewcomer[] = []
+    if (rounded !== null) {
+      for (const entry of dated) {
+        if (entry.time !== dayTime) continue
+        const rest = upto.filter((grade) => grade !== entry.grade)
+        const without = averageForTrend(rest, coefOf, method)
+        const impact = Math.round((rounded - (without ?? 0)) * 100) / 100
+        if (impact === 0) continue
+        newcomers.push({
+          key: entry.grade.key,
+          title: entry.grade.title,
+          display: gradeLabel(entry.grade),
+          impact,
+        })
+      }
+    }
+    const delta =
+      rounded !== null && previous !== null
+        ? Math.round((rounded - previous) * 100) / 100
+        : null
+    if (rounded !== null) previous = rounded
+    points.push({
+      key: String(dayTime),
+      label: day.toLocaleDateString("fr", {
+        day: "numeric",
+        month: "numeric",
+      }),
+      fullLabel: day.toLocaleDateString("fr", {
+        day: "numeric",
+        month: "long",
+      }),
+      average: rounded,
+      delta,
+      newcomers,
+    })
+  }
+  return points
+}
+</file>
+
 <file path="src/pages/homework/components/HomeworkEntry.tsx">
 "use client"
 
@@ -23000,8 +24572,17 @@ export function HomeworkEntry({
               </Badge>
             )}
             {assignment.onlineSubmission && (
-              <Badge variant="outline" size="sm" pill className="shrink-0 gap-1">
-                <HugeiconsIcon icon={Upload04Icon} className="size-3" aria-hidden="true" />
+              <Badge
+                variant="outline"
+                size="sm"
+                pill
+                className="shrink-0 gap-1"
+              >
+                <HugeiconsIcon
+                  icon={Upload04Icon}
+                  className="size-3"
+                  aria-hidden="true"
+                />
                 À rendre en ligne
               </Badge>
             )}
@@ -23647,6 +25228,8 @@ import { Switch as SwitchPrimitive } from "@base-ui/react/switch"
 import { AccentColorPicker } from "@/ui/accent-color-picker"
 import { useTheme } from "@/ui/theme-provider"
 import { getSetting, setSetting } from "@/services/storage"
+import { track } from "@/services/quests"
+import { useShop } from "@/hooks/use-shop"
 import { triggerHapticLight } from "@/services/haptics"
 import {
   Select,
@@ -23665,14 +25248,7 @@ const THEME_OPTIONS = [
 export function GeneralSettings() {
   const { theme, setTheme, accentColor, setAccentColor } = useTheme()
   const [haptics, setHaptics] = useState(true)
-
-  useEffect(() => {
-    try {
-      void import("@/services/quests").then((m) => {
-        void m.ensureQuestProgress({ settingsChanged: 1 })
-      })
-    } catch {}
-  }, [])
+  const { owned } = useShop()
 
   useEffect(() => {
     void getSetting("haptics").then((stored) => {
@@ -23697,7 +25273,10 @@ export function GeneralSettings() {
               value={theme}
               onValueChange={(value) => {
                 if (value === null) return
-                if (value !== theme) triggerHapticLight()
+                if (value !== theme) {
+                  triggerHapticLight()
+                  void track("setting-changed")
+                }
                 setTheme(value)
               }}
             >
@@ -23718,8 +25297,12 @@ export function GeneralSettings() {
           <AccentColorPicker
             label="Couleur de l'application"
             value={accentColor}
+            owned={owned}
             onPick={(color) => {
-              if (color !== accentColor) triggerHapticLight()
+              if (color !== accentColor) {
+                triggerHapticLight()
+                void track("setting-changed")
+              }
               setAccentColor(color)
             }}
           />
@@ -23737,6 +25320,7 @@ export function GeneralSettings() {
               onCheckedChange={(checked) => {
                 setHaptics(checked)
                 void setSetting("haptics", checked)
+                void track("setting-changed")
                 if (checked) triggerHapticLight()
               }}
               aria-label="Vibrations"
@@ -24139,6 +25723,9 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticLight } from "@/services/haptics"
+import { toDayKey } from "@/services/dates"
+import { syncHomework, track } from "@/services/quests"
+import { subjectId } from "@/services/quest-rules"
 
 import { normalizeCalendar, preserveEnrichedDetails } from "../helpers"
 import { ensureSubjects, resolveSubjectColor } from "@/services/subjects"
@@ -24187,6 +25774,7 @@ export function useHomework() {
         // ponytail: the index is light (no contenu) and a background poll
         // would otherwise wipe details merged by getHomeworkForDate.
         setAssignments((prev) => preserveEnrichedDetails(prev, colored))
+        void syncHomework(colored)
         setError(null)
         setLoading(false)
       } catch (err) {
@@ -24244,11 +25832,22 @@ export function useToggleDone(
       try {
         if (next) await ld.homework.markAsDone([assignment.id])
         else await ld.homework.markAsUndone([assignment.id])
+        // The ledger learns the new state (needed for "Semaine complète").
+        void syncHomework([{ ...assignment, done: next }])
         if (next) {
-          try {
-            const { ensureQuestProgress } = await import("@/services/quests")
-            await ensureQuestProgress({ homeworkChecked: 1 })
-          } catch {}
+          // The id makes each homework count once, however often it is ticked.
+          const id = String(assignment.id)
+          const dueDay = toDayKey(assignment.due)
+          const today = toDayKey(new Date())
+          void track("homework-done", id)
+          if (dueDay >= today) {
+            // On time = ticked by the end of the due day.
+            void track("homework-ontime", id, {
+              subject: subjectId(assignment.subjectCode, assignment.subject),
+              due: dueDay,
+            })
+          }
+          if (dueDay > today) void track("homework-early", id)
         }
       } catch (err) {
         setDone(assignment.key, !next)
@@ -24538,9 +26137,10 @@ interface ScolupDB extends DBSchema {
     key: string
     value: SubjectRecord
   }
+  // "rubies" and "xp" are numbers; "owned" and "weekly" are JSON strings.
   shop: {
     key: string
-    value: number
+    value: number | string
   }
   quests: {
     key: string
@@ -24731,6 +26331,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { getSetting } from "@/services/storage"
+import { syncGrades } from "@/services/quests"
 import {
   ensureSubjects,
   resolveSubjectCoef,
@@ -24804,6 +26405,7 @@ export function useGrades(): GradesModel {
         if (cancelled) return
         const raw = Array.isArray(result.notes) ? result.notes : []
         const grades = (raw as Record<string, unknown>[]).map(toGrade)
+        void syncGrades(grades)
         void ensureSubjects(
           grades.map((grade) => ({
             code: grade.subjectCode,
@@ -24945,6 +26547,7 @@ import { Chair02Icon, StickyNote02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useHomePage } from "./hooks/useHomePage"
 import { AccountMenu } from "./components/AccountMenu"
+import { ContractCard } from "./components/ContractCard"
 import { GradesWidget } from "./components/GradesWidget"
 import { HomeworkWidget } from "./components/HomeworkWidget"
 import { MessagesWidget } from "./components/MessagesWidget"
@@ -24955,7 +26558,8 @@ import { useRubies } from "@/hooks/use-rubies"
 import { useNavigate } from "react-router"
 import { triggerHapticLight } from "@/services/haptics"
 import { useEffect } from "react"
-import { useQuests } from "@/hooks/use-quests"
+import { track } from "@/services/quests"
+import { AnimatedNumber } from "@/ui/animated-number"
 
 const SCHOOL_LINKS = [
   { icon: Chair02Icon, label: "Absences", path: "/absences" },
@@ -24966,11 +26570,10 @@ export function HomePage() {
   const page = useHomePage()
   const rubies = useRubies()
   const navigate = useNavigate()
-  const { progress } = useQuests()
 
   useEffect(() => {
-    void progress({ bienvenue: 1 })
-  }, [progress])
+    void track("app-open")
+  }, [])
 
   useSplashTask(page.loading)
 
@@ -25007,17 +26610,14 @@ export function HomePage() {
           className="flex items-center gap-1.5 rounded-full border border-border/70 bg-card/80 px-2.5 py-1 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
           aria-label={`Ouvrir la boutique - Rubis : ${rubies}`}
         >
-          <img
-            src="/ruby.svg"
-            alt=""
-            aria-hidden="true"
-            className="size-5"
-          />
-          <span className="text-sm font-medium tabular-nums text-card-foreground">
-            {rubies}
+          <img src="/ruby.svg" alt="" aria-hidden="true" className="size-5" />
+          <span className="text-sm font-medium text-card-foreground">
+            <AnimatedNumber value={String(rubies)} />
           </span>
         </button>
       </div>
+
+      <ContractCard />
 
       <nav aria-label="Vie scolaire" className="flex gap-2">
         {SCHOOL_LINKS.map((link) => (
@@ -25231,240 +26831,6 @@ export function useCompose(onSent?: () => void) {
 }
 
 export type ComposeState = ReturnType<typeof useCompose>
-</file>
-
-<file path="src/pages/messages/hooks/useMessagesPage.ts">
-"use client"
-
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate, useSearchParams } from "react-router"
-import { ld } from "@/services/litedirecte"
-import { errorMessage } from "@/services/errors"
-import { triggerHapticLight } from "@/services/haptics"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import {
-  buildPagination,
-  countUnreadMessages,
-  MESSAGE_YEAR,
-  PAGE_SIZE,
-  parseFolderParam,
-  serializeFolderParam,
-  type FolderKey,
-  type Message,
-} from "../helpers"
-import { useMessages, useRestoreSelectedMessage } from "./useMessages"
-import { setUnreadMessagesCount } from "../unreadCount"
-
-const UNREAD_PAGINATION_SLOTS = 9
-const COMPACT_PAGINATION_SLOTS = 5
-const SEARCH_DEBOUNCE_MS = 300
-
-function matchesSearch(message: Message, query: string): boolean {
-  const normalized = query.trim().toLowerCase()
-  if (!normalized) return true
-  return [
-    message.sender,
-    message.recipients?.join(" "),
-    message.subject,
-    message.body,
-  ].some((field) => field?.toLowerCase().includes(normalized))
-}
-
-export function useMessagesPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const [input, setInput] = useState(() => searchParams.get("search") ?? "")
-  const [actionError, setActionError] = useState<string | null>(null)
-  // Same pattern as the agenda drawer: push on open so Android back closes
-  // the message first, navigate(-1) on close, replace for deep links.
-  const pushedDrawer = useRef(false)
-
-  const urlSearch = searchParams.get("search") ?? ""
-  const requestedPage = Number(searchParams.get("page")) || 1
-  const folder = parseFolderParam(searchParams.get("folder"))
-  const messageParam = searchParams.get("message")
-
-  const commit = useCallback(
-    (mutate: (params: URLSearchParams) => void) => {
-      const params = new URLSearchParams(searchParams.toString())
-      mutate(params)
-      setSearchParams(params, { replace: true })
-    },
-    [searchParams, setSearchParams]
-  )
-
-  useEffect(() => {
-    setInput(urlSearch)
-  }, [urlSearch])
-
-  useEffect(() => {
-    if (input === urlSearch) return
-    const timer = setTimeout(() => {
-      commit((params) => {
-        if (input) params.set("search", input)
-        else params.delete("search")
-        params.delete("page")
-      })
-    }, SEARCH_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [input, urlSearch, commit])
-
-  const store = useMessages()
-  const detail = useRestoreSelectedMessage({
-    messageParam,
-    sessionReady: store.sessionReady,
-    folderMessages: store.folderMessages,
-  })
-
-  const { folderMessages, loading } = store
-  const activeMessages = folderMessages[folder]
-
-  const setActiveMessages = useCallback(
-    (updater: (prev: Message[]) => Message[]) => {
-      store.setFolderMessages((prev) => ({
-        ...prev,
-        [folder]: updater(prev[folder] ?? []),
-      }))
-    },
-    [folder, store.setFolderMessages]
-  )
-
-  useEffect(() => {
-    if (loading) return
-    setUnreadMessagesCount(countUnreadMessages(folderMessages.inbox))
-  }, [loading, folderMessages])
-
-  const selectedId = detail.selected?.id ?? null
-  useEffect(() => {
-    if (typeof selectedId !== "number") return
-    setActiveMessages((prev) =>
-      prev.some((m) => m.id === selectedId && m.unread)
-        ? prev.map((m) => (m.id === selectedId ? { ...m, unread: false } : m))
-        : prev
-    )
-  }, [selectedId, setActiveMessages])
-
-  const query = input
-  const filteredMessages = useMemo(
-    () =>
-      activeMessages
-        .filter((message) => message.subject !== "[Message supprimé.]")
-        .filter((message) => matchesSearch(message, query))
-        .sort((a, b) => (b.time?.getTime() ?? 0) - (a.time?.getTime() ?? 0)),
-    [activeMessages, query]
-  )
-
-  const unreadMessages = useMemo(
-    () =>
-      query.trim() ? [] : filteredMessages.filter((message) => message.unread),
-    [filteredMessages, query]
-  )
-  const listMessages =
-    unreadMessages.length > 0
-      ? filteredMessages.filter((message) => !message.unread)
-      : filteredMessages
-
-  const totalPages = Math.max(1, Math.ceil(listMessages.length / PAGE_SIZE))
-  const currentPage = Math.min(requestedPage, totalPages)
-  const slots = useMediaQuery("(min-width: 768px)")
-    ? UNREAD_PAGINATION_SLOTS
-    : COMPACT_PAGINATION_SLOTS
-  const pagination = buildPagination(totalPages, currentPage, slots)
-
-  const selectMessage = useCallback(
-    (message: Message) => {
-      triggerHapticLight()
-      pushedDrawer.current = true
-      const params = new URLSearchParams(searchParams.toString())
-      params.set("message", String(message.id))
-      setSearchParams(params)
-      detail.openMessage(message.id, message)
-    },
-    [searchParams, setSearchParams, detail]
-  )
-
-  const closeMessage = useCallback(() => {
-    detail.dismissSelected()
-    if (pushedDrawer.current) {
-      pushedDrawer.current = false
-      navigate(-1)
-      return
-    }
-    commit((params) => params.delete("message"))
-  }, [commit, detail, navigate])
-
-  return {
-    folder,
-    query,
-    setQuery: setInput,
-    loading: store.loading,
-    error: store.error,
-    retry: () => {
-      store.setError(null)
-      store.setLoading(true)
-      store.setReloadKey((key) => key + 1)
-    },
-    messages: filteredMessages,
-    unreadMessages,
-    showUnreadHighlights: unreadMessages.length > 0 && requestedPage === 1,
-    pageMessages: listMessages.slice(
-      (currentPage - 1) * PAGE_SIZE,
-      currentPage * PAGE_SIZE
-    ),
-    requestedPage,
-    currentPage,
-    totalPages,
-    ...pagination,
-    setFolder: (value: FolderKey) => {
-      if (value !== folder) triggerHapticLight()
-      detail.dismissSelected()
-      pushedDrawer.current = false
-      commit((params) => {
-        const serialized = serializeFolderParam(value)
-        if (serialized) params.set("folder", serialized)
-        else params.delete("folder")
-        params.delete("page")
-        params.delete("message")
-      })
-    },
-    setPage: (value: number) => {
-      if (value !== currentPage) triggerHapticLight()
-      commit((params) => {
-        if (value > 1) params.set("page", String(value))
-        else params.delete("page")
-      })
-    },
-    selected: detail.selected,
-    selectMessage,
-    closeMessage,
-    retrySelected: () => {
-      if (detail.selected) selectMessage(detail.selected)
-    },
-    markUnread: (message: Message) => {
-      closeMessage()
-      setActionError(null)
-      setActiveMessages((prev) =>
-        prev.map((m) => (m.id === message.id ? { ...m, unread: true } : m))
-      )
-      ld.messages
-        .markAsUnread(message.id, { year: MESSAGE_YEAR })
-        .then(() => triggerHapticLight())
-        .catch((err) => {
-          setActiveMessages((prev) =>
-            prev.map((m) => (m.id === message.id ? { ...m, unread: false } : m))
-          )
-          setActionError(
-            errorMessage(err, "Impossible de marquer ce message comme non lu.")
-          )
-        })
-    },
-    actionError,
-    dismissActionError: () => setActionError(null),
-    contentLoading: detail.contentLoading,
-    contentRefreshing: detail.contentRefreshing,
-    contentError: detail.contentError,
-  }
-}
 </file>
 
 <file path="src/pages/messages/helpers.ts">
@@ -25910,131 +27276,6 @@ export function isDraftEmpty(draft: ComposeDraft): boolean {
 }
 </file>
 
-<file path="src/pages/settings/components/GradesSettings.tsx">
-"use client"
-
-import {
-  isAverageMethod,
-  isAverageScale,
-  type AverageMethod,
-} from "@/pages/grades/helpers"
-import {
-  setAverageMethod,
-  setAverageScale,
-  useAverageSettings,
-} from "@/services/average-settings"
-import { triggerHapticLight } from "@/services/haptics"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
-const METHOD_OPTIONS = [
-  { value: "subject", label: "Par matière" },
-  { value: "weighted", label: "Pondérée" },
-  { value: "median", label: "Médiane" },
-] as const
-
-const METHOD_HINTS: Record<AverageMethod, string> = {
-  subject: "Moyenne de chaque matière, pondérée par son coefficient.",
-  weighted:
-    "Toutes les notes dans un seul panier, chacune pesée par le coefficient de sa matière.",
-  median: "Note du milieu une fois les notes triées.",
-}
-
-const SCALE_OPTIONS = [
-  { value: "20", label: "Sur 20" },
-  { value: "10", label: "Sur 10" },
-  { value: "100", label: "Sur 100" },
-] as const
-
-export function GradesSettings() {
-  const { method, scale } = useAverageSettings()
-
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-3">
-        <p className="px-1 text-sm text-muted-foreground">
-          Calcul et affichage de tes moyennes
-        </p>
-        <div className="flex flex-col gap-5 rounded-3xl border border-border/70 bg-card px-4 py-5">
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="settings-average-method"
-              className="text-xs font-medium text-muted-foreground"
-            >
-              Calcul de la moyenne
-            </label>
-            <Select
-              items={METHOD_OPTIONS}
-              value={method}
-              onValueChange={(value) => {
-                if (isAverageMethod(value) && value !== method) {
-                  triggerHapticLight()
-                  void setAverageMethod(value)
-                }
-              }}
-            >
-              <SelectTrigger id="settings-average-method" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {METHOD_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {METHOD_HINTS[method]}
-            </p>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="settings-average-scale"
-              className="text-xs font-medium text-muted-foreground"
-            >
-              Affichage de la moyenne
-            </label>
-            <Select
-              items={SCALE_OPTIONS}
-              value={String(scale)}
-              onValueChange={(value) => {
-                const parsed = value === null ? NaN : Number(value)
-                if (isAverageScale(parsed) && parsed !== scale) {
-                  triggerHapticLight()
-                  void setAverageScale(parsed)
-                }
-              }}
-            >
-              <SelectTrigger id="settings-average-scale" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {SCALE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-</file>
-
 <file path="src/pages/settings/components/SubjectsSettings.tsx">
 "use client"
 
@@ -26416,6 +27657,125 @@ export function SubjectsSettings() {
 }
 </file>
 
+<file path="src/pages/settings/SettingsDialog.tsx">
+import type { ComponentType } from "react"
+import { AnimatePresence, m } from "motion/react"
+import { useMediaQuery } from "@/hooks/use-media-query"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { SECTIONS, type SectionId } from "./sections"
+import { AccountSettings } from "./components/AccountSettings"
+import { DataSettings } from "./components/DataSettings"
+import { GeneralSettings } from "./components/GeneralSettings"
+import { GradesSettings } from "./components/GradesSettings"
+import { SettingsNav } from "./components/SettingsNav"
+import { SubjectsSettings } from "./components/SubjectsSettings"
+
+export type { SectionId }
+
+const VIEWS: Record<SectionId, ComponentType> = {
+  general: GeneralSettings,
+  subjects: SubjectsSettings,
+  grades: GradesSettings,
+  data: DataSettings,
+  account: AccountSettings,
+}
+
+export function SettingsDialog({
+  open,
+  onOpenChange,
+  active,
+  onActiveChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  active: SectionId
+  onActiveChange: (section: SectionId) => void
+}) {
+  const isDesktop = useMediaQuery("(min-width: 640px)")
+
+  const section = SECTIONS.find((entry) => entry.id === active) ?? SECTIONS[0]
+  const View = VIEWS[section.id]
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent
+          showCloseButton
+          initialFocus={false}
+          className="flex flex-col gap-0 overflow-hidden p-0 sm:h-[min(85dvh,540px)] sm:max-w-xl"
+        >
+          <DialogHeader className="px-6 pt-5 pb-0">
+            <DialogTitle>Paramètres</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex min-h-0 flex-1 gap-5 px-6 py-5">
+            <SettingsNav
+              active={active}
+              onActiveChange={onActiveChange}
+              className="flex w-40 shrink-0 flex-col gap-1 border-r border-border/50 pr-5"
+              itemClassName="h-9 w-full justify-start px-2.5"
+            />
+            <div className="min-w-0 flex-1 overflow-y-auto">
+              <AnimatePresence mode="wait" initial={false}>
+                <m.div
+                  key={section.id}
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.15, 1] }}
+                >
+                  <View />
+                </m.div>
+              </AnimatePresence>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton
+        initialFocus={false}
+        className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0"
+      >
+        <DialogHeader className="px-5 pt-5 pb-0">
+          <DialogTitle>Paramètres</DialogTitle>
+        </DialogHeader>
+
+        <SettingsNav
+          active={active}
+          onActiveChange={onActiveChange}
+          className="flex shrink-0 flex-wrap gap-1.5 px-5 pt-4 pb-1"
+          itemClassName="shrink-0 rounded-full px-3.5"
+        />
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-6">
+          <AnimatePresence mode="wait" initial={false}>
+            <m.div
+              key={section.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.15, 1] }}
+            >
+              <View />
+            </m.div>
+          </AnimatePresence>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+</file>
+
 <file path="src/shell.tsx">
 import {
   lazy,
@@ -26471,6 +27831,7 @@ import {
 import { cn } from "@/lib/utils"
 import { AppToast } from "@/ui/app-toast"
 import { subscribeQuestToast } from "@/services/quests"
+import { toastText } from "@/services/quest-rules"
 
 const loaders = {
   messages: () => import("@/pages/messages/Messages"),
@@ -26500,7 +27861,9 @@ const PostIts = lazy(() =>
 const SettingsDialog = lazy(() =>
   loaders.settings().then((m) => ({ default: m.SettingsDialog }))
 )
-const ShopPage = lazy(() => loaders.shop().then((m) => ({ default: m.ShopPage })))
+const ShopPage = lazy(() =>
+  loaders.shop().then((m) => ({ default: m.ShopPage }))
+)
 
 const TAB_ROUTES: Record<string, string> = {
   home: "/",
@@ -26673,7 +28036,7 @@ export function MainFlow({ className, ...props }: React.ComponentProps<"div">) {
   const prevPath = useRef(pathname)
 
   useEffect(() => {
-    return subscribeQuestToast((msg) => setQuestToast(msg))
+    return subscribeQuestToast((toast) => setQuestToast(toastText(toast)))
   }, [])
 
   // One scroll container is shared by all tabs: remember its position per
@@ -26741,7 +28104,11 @@ export function MainFlow({ className, ...props }: React.ComponentProps<"div">) {
         <OfflineBanner />
         <ReauthSheet />
         <UpdateNotifier />
-        <AppToast message={questToast} onClose={() => setQuestToast(null)} />
+        <AppToast
+          message={questToast}
+          tone="success"
+          onClose={() => setQuestToast(null)}
+        />
 
         <div
           ref={scrollRef}
@@ -26791,6 +28158,7 @@ import { ArrowRight01Icon, Mortarboard01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ld } from "@/services/litedirecte"
 import { getSetting, readLastSeen } from "@/services/storage"
+import { syncGrades } from "@/services/quests"
 import { useAsync } from "@/hooks/use-async"
 import { useDelayedLoading } from "@/hooks/use-delayed-loading"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
@@ -26854,6 +28222,7 @@ export function GradesWidget() {
     const grades = (raw as Record<string, unknown>[]).map((entry, index) =>
       toGrade(entry, index)
     )
+    void syncGrades(grades)
     const rawPeriods = Array.isArray(result.periodes) ? result.periodes : []
     const periods = (rawPeriods as Record<string, unknown>[])
       .map(toPeriod)
@@ -27064,126 +28433,366 @@ export function GradesWidget() {
 }
 </file>
 
-<file path="src/pages/settings/SettingsDialog.tsx">
-import type { ComponentType } from "react"
-import { AnimatePresence, m } from "motion/react"
+<file path="src/pages/messages/hooks/useMessagesPage.ts">
+"use client"
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate, useSearchParams } from "react-router"
+import { ld } from "@/services/litedirecte"
+import { errorMessage } from "@/services/errors"
+import { triggerHapticLight } from "@/services/haptics"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { SECTIONS, type SectionId } from "./sections"
-import { AccountSettings } from "./components/AccountSettings"
-import { DataSettings } from "./components/DataSettings"
-import { GeneralSettings } from "./components/GeneralSettings"
-import { GradesSettings } from "./components/GradesSettings"
-import { SettingsNav } from "./components/SettingsNav"
-import { SubjectsSettings } from "./components/SubjectsSettings"
+  buildPagination,
+  countUnreadMessages,
+  MESSAGE_YEAR,
+  PAGE_SIZE,
+  parseFolderParam,
+  serializeFolderParam,
+  type FolderKey,
+  type Message,
+} from "../helpers"
+import { useMessages, useRestoreSelectedMessage } from "./useMessages"
+import { setUnreadMessagesCount } from "../unreadCount"
 
-export type { SectionId }
+const UNREAD_PAGINATION_SLOTS = 9
+const COMPACT_PAGINATION_SLOTS = 5
+const SEARCH_DEBOUNCE_MS = 300
 
-const VIEWS: Record<SectionId, ComponentType> = {
-  general: GeneralSettings,
-  subjects: SubjectsSettings,
-  grades: GradesSettings,
-  data: DataSettings,
-  account: AccountSettings,
+function matchesSearch(message: Message, query: string): boolean {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return true
+  return [
+    message.sender,
+    message.recipients?.join(" "),
+    message.subject,
+    message.body,
+  ].some((field) => field?.toLowerCase().includes(normalized))
 }
 
-export function SettingsDialog({
-  open,
-  onOpenChange,
-  active,
-  onActiveChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  active: SectionId
-  onActiveChange: (section: SectionId) => void
-}) {
-  try {
-    void import("@/services/quests").then((m) => {
-      void m.ensureQuestProgress({ settingsChanged: 1 })
-    })
-  } catch {}
-  const isDesktop = useMediaQuery("(min-width: 640px)")
+export function useMessagesPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const [input, setInput] = useState(() => searchParams.get("search") ?? "")
+  const [actionError, setActionError] = useState<string | null>(null)
+  // Same pattern as the agenda drawer: push on open so Android back closes
+  // the message first, navigate(-1) on close, replace for deep links.
+  const pushedDrawer = useRef(false)
 
-  const section = SECTIONS.find((entry) => entry.id === active) ?? SECTIONS[0]
-  const View = VIEWS[section.id]
+  const urlSearch = searchParams.get("search") ?? ""
+  const requestedPage = Number(searchParams.get("page")) || 1
+  const folder = parseFolderParam(searchParams.get("folder"))
+  const messageParam = searchParams.get("message")
 
-  if (isDesktop) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent
-          showCloseButton
-          initialFocus={false}
-          className="flex flex-col gap-0 overflow-hidden p-0 sm:h-[min(85dvh,540px)] sm:max-w-xl"
-        >
-          <DialogHeader className="px-6 pt-5 pb-0">
-            <DialogTitle>Paramètres</DialogTitle>
-          </DialogHeader>
+  const commit = useCallback(
+    (mutate: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString())
+      mutate(params)
+      setSearchParams(params, { replace: true })
+    },
+    [searchParams, setSearchParams]
+  )
 
-          <div className="flex min-h-0 flex-1 gap-5 px-6 py-5">
-            <SettingsNav
-              active={active}
-              onActiveChange={onActiveChange}
-              className="flex w-40 shrink-0 flex-col gap-1 border-r border-border/50 pr-5"
-              itemClassName="h-9 w-full justify-start px-2.5"
-            />
-            <div className="min-w-0 flex-1 overflow-y-auto">
-              <AnimatePresence mode="wait" initial={false}>
-                <m.div
-                  key={section.id}
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -12 }}
-                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.15, 1] }}
-                >
-                  <View />
-                </m.div>
-              </AnimatePresence>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+  useEffect(() => {
+    setInput(urlSearch)
+  }, [urlSearch])
+
+  useEffect(() => {
+    if (input === urlSearch) return
+    const timer = setTimeout(() => {
+      commit((params) => {
+        if (input) params.set("search", input)
+        else params.delete("search")
+        params.delete("page")
+      })
+    }, SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [input, urlSearch, commit])
+
+  const store = useMessages()
+  const detail = useRestoreSelectedMessage({
+    messageParam,
+    sessionReady: store.sessionReady,
+    folderMessages: store.folderMessages,
+  })
+
+  const { folderMessages, loading } = store
+  const activeMessages = folderMessages[folder]
+
+  const setActiveMessages = useCallback(
+    (updater: (prev: Message[]) => Message[]) => {
+      store.setFolderMessages((prev) => ({
+        ...prev,
+        [folder]: updater(prev[folder] ?? []),
+      }))
+    },
+    [folder, store.setFolderMessages]
+  )
+
+  useEffect(() => {
+    if (loading) return
+    setUnreadMessagesCount(countUnreadMessages(folderMessages.inbox))
+  }, [loading, folderMessages])
+
+  const selectedId = detail.selected?.id ?? null
+  useEffect(() => {
+    if (typeof selectedId !== "number") return
+    setActiveMessages((prev) =>
+      prev.some((m) => m.id === selectedId && m.unread)
+        ? prev.map((m) => (m.id === selectedId ? { ...m, unread: false } : m))
+        : prev
     )
+  }, [selectedId, setActiveMessages])
+
+  const query = input
+  const filteredMessages = useMemo(
+    () =>
+      activeMessages
+        .filter((message) => message.subject !== "[Message supprimé.]")
+        .filter((message) => matchesSearch(message, query))
+        .sort((a, b) => (b.time?.getTime() ?? 0) - (a.time?.getTime() ?? 0)),
+    [activeMessages, query]
+  )
+
+  const unreadMessages = useMemo(
+    () =>
+      query.trim() ? [] : filteredMessages.filter((message) => message.unread),
+    [filteredMessages, query]
+  )
+  const listMessages =
+    unreadMessages.length > 0
+      ? filteredMessages.filter((message) => !message.unread)
+      : filteredMessages
+
+  const totalPages = Math.max(1, Math.ceil(listMessages.length / PAGE_SIZE))
+  const currentPage = Math.min(requestedPage, totalPages)
+  const slots = useMediaQuery("(min-width: 768px)")
+    ? UNREAD_PAGINATION_SLOTS
+    : COMPACT_PAGINATION_SLOTS
+  const pagination = buildPagination(totalPages, currentPage, slots)
+
+  const selectMessage = useCallback(
+    (message: Message) => {
+      triggerHapticLight()
+      pushedDrawer.current = true
+      const params = new URLSearchParams(searchParams.toString())
+      params.set("message", String(message.id))
+      setSearchParams(params)
+      detail.openMessage(message.id, message)
+    },
+    [searchParams, setSearchParams, detail]
+  )
+
+  const closeMessage = useCallback(() => {
+    detail.dismissSelected()
+    if (pushedDrawer.current) {
+      pushedDrawer.current = false
+      navigate(-1)
+      return
+    }
+    commit((params) => params.delete("message"))
+  }, [commit, detail, navigate])
+
+  return {
+    folder,
+    query,
+    setQuery: setInput,
+    loading: store.loading,
+    error: store.error,
+    retry: () => {
+      store.setError(null)
+      store.setLoading(true)
+      store.setReloadKey((key) => key + 1)
+    },
+    messages: filteredMessages,
+    unreadMessages,
+    showUnreadHighlights: unreadMessages.length > 0 && requestedPage === 1,
+    pageMessages: listMessages.slice(
+      (currentPage - 1) * PAGE_SIZE,
+      currentPage * PAGE_SIZE
+    ),
+    requestedPage,
+    currentPage,
+    totalPages,
+    ...pagination,
+    setFolder: (value: FolderKey) => {
+      if (value !== folder) triggerHapticLight()
+      detail.dismissSelected()
+      pushedDrawer.current = false
+      commit((params) => {
+        const serialized = serializeFolderParam(value)
+        if (serialized) params.set("folder", serialized)
+        else params.delete("folder")
+        params.delete("page")
+        params.delete("message")
+      })
+    },
+    setPage: (value: number) => {
+      if (value !== currentPage) triggerHapticLight()
+      commit((params) => {
+        if (value > 1) params.set("page", String(value))
+        else params.delete("page")
+      })
+    },
+    selected: detail.selected,
+    selectMessage,
+    closeMessage,
+    retrySelected: () => {
+      if (detail.selected) selectMessage(detail.selected)
+    },
+    markUnread: (message: Message) => {
+      closeMessage()
+      setActionError(null)
+      setActiveMessages((prev) =>
+        prev.map((m) => (m.id === message.id ? { ...m, unread: true } : m))
+      )
+      ld.messages
+        .markAsUnread(message.id, { year: MESSAGE_YEAR })
+        .then(() => triggerHapticLight())
+        .catch((err) => {
+          setActiveMessages((prev) =>
+            prev.map((m) => (m.id === message.id ? { ...m, unread: false } : m))
+          )
+          setActionError(
+            errorMessage(err, "Impossible de marquer ce message comme non lu.")
+          )
+        })
+    },
+    actionError,
+    dismissActionError: () => setActionError(null),
+    contentLoading: detail.contentLoading,
+    contentRefreshing: detail.contentRefreshing,
+    contentError: detail.contentError,
   }
+}
+</file>
+
+<file path="src/pages/settings/components/GradesSettings.tsx">
+"use client"
+
+import {
+  isAverageMethod,
+  isAverageScale,
+  type AverageMethod,
+} from "@/pages/grades/helpers"
+import {
+  setAverageMethod,
+  setAverageScale,
+  useAverageSettings,
+} from "@/services/average-settings"
+import { track } from "@/services/quests"
+import { HideGradeQuestsSwitch } from "./HideGradeQuestsSwitch"
+import { triggerHapticLight } from "@/services/haptics"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+const METHOD_OPTIONS = [
+  { value: "subject", label: "Par matière" },
+  { value: "weighted", label: "Pondérée" },
+  { value: "median", label: "Médiane" },
+] as const
+
+const METHOD_HINTS: Record<AverageMethod, string> = {
+  subject: "Moyenne de chaque matière, pondérée par son coefficient.",
+  weighted:
+    "Toutes les notes dans un seul panier, chacune pesée par le coefficient de sa matière.",
+  median: "Note du milieu une fois les notes triées.",
+}
+
+const SCALE_OPTIONS = [
+  { value: "20", label: "Sur 20" },
+  { value: "10", label: "Sur 10" },
+  { value: "100", label: "Sur 100" },
+] as const
+
+export function GradesSettings() {
+  const { method, scale } = useAverageSettings()
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        showCloseButton
-        initialFocus={false}
-        className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0"
-      >
-        <DialogHeader className="px-5 pt-5 pb-0">
-          <DialogTitle>Paramètres</DialogTitle>
-        </DialogHeader>
-
-        <SettingsNav
-          active={active}
-          onActiveChange={onActiveChange}
-          className="flex shrink-0 flex-wrap gap-1.5 px-5 pt-4 pb-1"
-          itemClassName="shrink-0 rounded-full px-3.5"
-        />
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-6">
-          <AnimatePresence mode="wait" initial={false}>
-            <m.div
-              key={section.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.15, 1] }}
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3">
+        <p className="px-1 text-sm text-muted-foreground">
+          Calcul et affichage de tes moyennes
+        </p>
+        <div className="flex flex-col gap-5 rounded-3xl border border-border/70 bg-card px-4 py-5">
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="settings-average-method"
+              className="text-xs font-medium text-muted-foreground"
             >
-              <View />
-            </m.div>
-          </AnimatePresence>
+              Calcul de la moyenne
+            </label>
+            <Select
+              items={METHOD_OPTIONS}
+              value={method}
+              onValueChange={(value) => {
+                if (isAverageMethod(value) && value !== method) {
+                  triggerHapticLight()
+                  void setAverageMethod(value)
+                  void track("setting-changed")
+                }
+              }}
+            >
+              <SelectTrigger id="settings-average-method" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {METHOD_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {METHOD_HINTS[method]}
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="settings-average-scale"
+              className="text-xs font-medium text-muted-foreground"
+            >
+              Affichage de la moyenne
+            </label>
+            <Select
+              items={SCALE_OPTIONS}
+              value={String(scale)}
+              onValueChange={(value) => {
+                const parsed = value === null ? NaN : Number(value)
+                if (isAverageScale(parsed) && parsed !== scale) {
+                  triggerHapticLight()
+                  void setAverageScale(parsed)
+                  void track("setting-changed")
+                }
+              }}
+            >
+              <SelectTrigger id="settings-average-scale" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {SCALE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <HideGradeQuestsSwitch />
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   )
 }
 </file>

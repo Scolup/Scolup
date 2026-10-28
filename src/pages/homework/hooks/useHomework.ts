@@ -3,7 +3,8 @@ import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticLight } from "@/services/haptics"
 import { toDayKey } from "@/services/dates"
-import { track } from "@/services/quests"
+import { syncHomework, track } from "@/services/quests"
+import { subjectId } from "@/services/quest-rules"
 
 import { normalizeCalendar, preserveEnrichedDetails } from "../helpers"
 import { ensureSubjects, resolveSubjectColor } from "@/services/subjects"
@@ -52,6 +53,7 @@ export function useHomework() {
         // ponytail: the index is light (no contenu) and a background poll
         // would otherwise wipe details merged by getHomeworkForDate.
         setAssignments((prev) => preserveEnrichedDetails(prev, colored))
+        void syncHomework(colored)
         setError(null)
         setLoading(false)
       } catch (err) {
@@ -109,12 +111,22 @@ export function useToggleDone(
       try {
         if (next) await ld.homework.markAsDone([assignment.id])
         else await ld.homework.markAsUndone([assignment.id])
+        // The ledger learns the new state (needed for "Semaine complète").
+        void syncHomework([{ ...assignment, done: next }])
         if (next) {
           // The id makes each homework count once, however often it is ticked.
-          void track("homework-done", String(assignment.id))
-          if (toDayKey(assignment.due) > toDayKey(new Date())) {
-            void track("homework-early", String(assignment.id))
+          const id = String(assignment.id)
+          const dueDay = toDayKey(assignment.due)
+          const today = toDayKey(new Date())
+          void track("homework-done", id)
+          if (dueDay >= today) {
+            // On time = ticked by the end of the due day.
+            void track("homework-ontime", id, {
+              subject: subjectId(assignment.subjectCode, assignment.subject),
+              due: dueDay,
+            })
           }
+          if (dueDay > today) void track("homework-early", id)
         }
       } catch (err) {
         setDone(assignment.key, !next)

@@ -9,6 +9,7 @@ import { ArrowRight01Icon, Mortarboard01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ld } from "@/services/litedirecte"
 import { getSetting, readLastSeen } from "@/services/storage"
+import { syncGrades } from "@/services/quests"
 import { useAsync } from "@/hooks/use-async"
 import { useDelayedLoading } from "@/hooks/use-delayed-loading"
 import { useLiveRefresh } from "@/hooks/use-live-refresh"
@@ -72,6 +73,7 @@ export function GradesWidget() {
     const grades = (raw as Record<string, unknown>[]).map((entry, index) =>
       toGrade(entry, index)
     )
+    void syncGrades(grades)
     const rawPeriods = Array.isArray(result.periodes) ? result.periodes : []
     const periods = (rawPeriods as Record<string, unknown>[])
       .map(toPeriod)

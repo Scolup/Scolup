@@ -6,6 +6,7 @@ import { ArrowLeftIcon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { AppToast } from "@/ui/app-toast"
 import { QuestCard } from "./components/QuestCard"
+import { IncomeRules } from "./components/IncomeRules"
 import { ShopHeader } from "./components/ShopHeader"
 import { ShopItemCard } from "./components/ShopItemCard"
 import { useShopPage } from "./hooks/useShopPage"
@@ -48,6 +49,8 @@ export function ShopPage() {
             </div>
           </div>
         )}
+
+        <IncomeRules hideGrades={page.hideGrades} />
 
         <div className="flex flex-col gap-2 px-4 pb-10">
           <h2 className="text-base font-semibold">Thèmes</h2>

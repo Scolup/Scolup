@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { loadQuestProgress, subscribeQuests } from "@/services/quests"
+import { loadQuestState, subscribeQuests } from "@/services/quests"
 import {
   activeQuests,
   QUESTS,
@@ -16,25 +16,43 @@ export interface QuestItem extends QuestDef {
   state: QuestState
   count: number
   goal: number
+  tier?: number
 }
 
+interface QuestSnapshot {
+  progress: ProgressMap
+  generated: QuestDef[]
+  hideGrades: boolean
+}
+
+const EMPTY: QuestSnapshot = { progress: {}, generated: [], hideGrades: false }
+
 // Read-only: pages that want to *trigger* a quest call track() directly.
-// Returns only the quests that are active today (pools rotate).
-export function useQuests(): QuestItem[] {
-  const [progress, setProgress] = useState<ProgressMap>({})
+// Returns the quests that are active today, without the income rules (those
+// pay automatically: see INCOME in the shop) and without grade quests when
+// the student turned them off.
+export function useQuests(): { quests: QuestItem[]; hideGrades: boolean } {
+  const [snapshot, setSnapshot] = useState<QuestSnapshot>(EMPTY)
 
   useEffect(() => {
-    const load = () => void loadQuestProgress().then(setProgress)
+    const load = () => void loadQuestState().then(setSnapshot)
     load()
     return subscribeQuests(load)
   }, [])
 
   return useMemo(() => {
     const now = new Date()
-    return activeQuests(QUESTS, now).map((quest) => ({
-      ...quest,
-      period: questPeriod(quest),
-      ...questView(quest, progress, now),
-    }))
-  }, [progress])
+    const quests = activeQuests(
+      [...QUESTS, ...snapshot.generated],
+      now,
+      snapshot.hideGrades
+    )
+      .filter((quest) => !quest.income)
+      .map((quest) => ({
+        ...quest,
+        period: questPeriod(quest),
+        ...questView(quest, snapshot.progress, now),
+      }))
+    return { quests, hideGrades: snapshot.hideGrades }
+  }, [snapshot])
 }

@@ -11,6 +11,7 @@ import {
   useAverageSettings,
 } from "@/services/average-settings"
 import { track } from "@/services/quests"
+import { HideGradeQuestsSwitch } from "./HideGradeQuestsSwitch"
 import { triggerHapticLight } from "@/services/haptics"
 import {
   Select,
@@ -118,6 +119,7 @@ export function GradesSettings() {
               </SelectContent>
             </Select>
           </div>
+          <HideGradeQuestsSwitch />
         </div>
       </div>
     </div>

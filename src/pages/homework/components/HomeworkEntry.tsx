@@ -189,8 +189,17 @@ export function HomeworkEntry({
               </Badge>
             )}
             {assignment.onlineSubmission && (
-              <Badge variant="outline" size="sm" pill className="shrink-0 gap-1">
-                <HugeiconsIcon icon={Upload04Icon} className="size-3" aria-hidden="true" />
+              <Badge
+                variant="outline"
+                size="sm"
+                pill
+                className="shrink-0 gap-1"
+              >
+                <HugeiconsIcon
+                  icon={Upload04Icon}
+                  className="size-3"
+                  aria-hidden="true"
+                />
                 À rendre en ligne
               </Badge>
             )}

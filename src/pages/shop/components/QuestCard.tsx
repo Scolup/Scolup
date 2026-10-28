@@ -5,6 +5,7 @@ import type { QuestItem } from "@/hooks/use-quests"
 export function QuestCard({ quest }: { quest: QuestItem }) {
   const secret = quest.state === "secret"
   const achieved = quest.state === "achieved"
+  const endless = quest.tier !== undefined
 
   return (
     <div
@@ -27,6 +28,11 @@ export function QuestCard({ quest }: { quest: QuestItem }) {
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium">
           {secret ? "???" : quest.title}
+          {endless && !secret && (
+            <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+              Palier {quest.tier! + 1}
+            </span>
+          )}
         </div>
         <div className="truncate text-xs text-muted-foreground">
           {secret ? "À découvrir" : quest.description}
@@ -46,7 +52,7 @@ export function QuestCard({ quest }: { quest: QuestItem }) {
           className={cn("size-4", !achieved && "grayscale")}
         />
         <span className="text-sm font-medium tabular-nums">
-          +{quest.reward}
+          +{quest.reward * (endless ? quest.tier! + 1 : 1)}
         </span>
       </div>
     </div>
