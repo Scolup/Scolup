@@ -2,11 +2,11 @@ import { Chair02Icon, StickyNote02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useHomePage } from "./hooks/useHomePage"
 import { AccountMenu } from "./components/AccountMenu"
-import { ContractCard } from "./components/ContractCard"
 import { GradesWidget } from "./components/GradesWidget"
 import { HomeworkWidget } from "./components/HomeworkWidget"
 import { MessagesWidget } from "./components/MessagesWidget"
 import { NextCoursesWidget } from "./components/NextCoursesWidget"
+import { NextQuestsCard } from "./components/NextQuestsCard"
 import { AppToast } from "@/ui/app-toast"
 import { useSplashTask } from "@/services/splash"
 import { useRubies } from "@/hooks/use-rubies"
@@ -14,6 +14,7 @@ import { useNavigate } from "react-router"
 import { triggerHapticLight } from "@/services/haptics"
 import { useEffect } from "react"
 import { track } from "@/services/quests"
+import { toDayKey } from "@/services/dates"
 import { AnimatedNumber } from "@/ui/animated-number"
 
 const SCHOOL_LINKS = [
@@ -27,7 +28,8 @@ export function HomePage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    void track("app-open")
+    // The day is the key: "Assidu" counts different days, not openings.
+    void track("app-open", toDayKey(new Date()))
   }, [])
 
   useSplashTask(page.loading)
@@ -72,7 +74,7 @@ export function HomePage() {
         </button>
       </div>
 
-      <ContractCard />
+      <NextQuestsCard />
 
       <nav aria-label="Vie scolaire" className="flex gap-2">
         {SCHOOL_LINKS.map((link) => (

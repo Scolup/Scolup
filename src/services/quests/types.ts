@@ -7,15 +7,22 @@ export type QuestEvent =
   | "homework-done"
   | "homework-early"
   | "homework-ontime"
+  | "homework-late"
+  | "test-prepared"
   | "grade-received"
   | "average-up"
   | "week-complete"
+  | "week-streak"
+  | "purchase"
 
 // Details of an event, so a quest can look only at what matters to it.
 export interface QuestPayload {
   subject?: string // subject id (see subjectId)
   ratio?: number // grade / scale, 0..1
-  improved?: boolean // better than the previous grade in that subject
+  improved?: boolean // strictly better than the previous grade in that subject
+  aboveAvg?: number // ratio minus the student's average in that subject so far
+  delta?: number // ratio minus the previous grade's ratio in that subject
+  streak?: number // consecutive complete weeks, this one included
   due?: string // due day key of a homework
 }
 
@@ -24,6 +31,9 @@ export interface QuestMatch {
   subject?: string
   minRatio?: number
   improved?: boolean
+  minAboveAvg?: number
+  minDelta?: number
+  minStreak?: number
 }
 
 export interface QuestDef {
@@ -38,8 +48,6 @@ export interface QuestDef {
   match?: QuestMatch
   unique?: boolean // count each track(event, key) key once (e.g. a homework id)
   grades?: boolean // about grades: hidden when the student turns them off
-  expires?: string // last day (day key) the quest is shown
-  generated?: boolean // created for this student (see contract rules)
   secret?: boolean // shown as "???" until achieved
   silent?: boolean // no toast when achieved
 }

@@ -1,19 +1,13 @@
 // Pure "school life" logic: turns what Scolup knows about the student's school
-// (homework, grades) into quest events and into the personalised weekly
-// contract. No React, no IndexedDB, so it can be unit-tested.
+// (homework, grades) into quest events. No React, no IndexedDB, so it can be
+// unit-tested.
 //
 // Principles:
 //   - Reward effort and progress, never an absolute grade: every grade quest
 //     is relative to the student's OWN level.
 //   - Prefer events that school data can confirm over self-reported ones.
 
-import {
-  dayKey,
-  subjectId,
-  weekKey,
-  type QuestDef,
-  type QuestPayload,
-} from "./quest-rules"
+import { dayKey, subjectId, weekKey, type QuestPayload } from "./quest-rules"
 
 // ---- Homework ledger ---------------------------------------------------------
 // The school only lists upcoming homework, so Scolup remembers what it saw
@@ -82,6 +76,29 @@ export function previousWeekKey(now: Date): string {
   const date = new Date(now)
   date.setDate(date.getDate() - 7)
   return weekKey(date)
+}
+
+function addDays(key: string, days: number): string {
+  const date = new Date(`${key}T12:00:00`)
+  date.setDate(date.getDate() + days)
+  return dayKey(date)
+}
+
+// The ledger keeps about 8 weeks, so a longer streak cannot be proven anyway.
+const MAX_STREAK_WEEKS = 8
+
+// Consecutive complete weeks ending at `monday` (that week included).
+// ponytail: a week with fewer than 2 homeworks (holidays) breaks the streak.
+// Upgrade path: skip weeks the school gave nothing, once the ledger can tell
+// "no homework" from "the app was not opened".
+export function completeStreak(ledger: Ledger, monday: string): number {
+  let streak = 0
+  let week = monday
+  while (streak < MAX_STREAK_WEEKS && weekComplete(ledger, week)) {
+    streak++
+    week = addDays(week, -7)
+  }
+  return streak
 }
 
 // ---- Grades ---------------------------------------------------------------------
@@ -153,158 +170,43 @@ export function newGrades(
   }
 }
 
-// Event details of a new grade. `improved` = at least as good as the previous
-// graded evaluation of the same subject.
+const MIN_GRADES_FOR_AVERAGE = 2
+
+// Event details of a new grade, always relative to the student's own level:
+//   improved  strictly better than the previous graded evaluation (same subject)
+//   delta     how much better (or worse) than that one
+//   aboveAvg  gap to the average of the earlier grades of that subject in the
+//             same period (needs at least 2 of them to mean something)
 export function gradePayload(
   grade: GradeLite,
   all: GradeLite[]
 ): QuestPayload | null {
-  if (grade.ratio === null) return null // absent / not graded: no event
-  const previous = all
+  const ratio = grade.ratio
+  if (ratio === null) return null // absent / not graded: no event
+  const earlier = all
     .filter(
-      (other) =>
+      (other): other is GradeLite & { ratio: number } =>
         other.subject === grade.subject &&
         other.ratio !== null &&
         other.key !== grade.key &&
         other.time < grade.time
     )
-    .sort((a, b) => b.time - a.time)[0]
-  return {
+    .sort((a, b) => b.time - a.time)
+  const previous = earlier[0]
+  const payload: QuestPayload = {
     subject: grade.subject,
-    ratio: grade.ratio,
-    improved:
-      previous !== undefined &&
-      previous.ratio !== null &&
-      grade.ratio >= previous.ratio,
+    ratio,
+    improved: previous !== undefined && ratio > previous.ratio,
   }
-}
+  if (previous !== undefined) payload.delta = ratio - previous.ratio
 
-export interface Weakest {
-  id: string
-  name: string
-  average: number // 0..20
-  ratio: number // 0..1
-}
-
-// The student's most fragile subject (current period, at least 2 grades).
-export function weakestSubject(grades: GradeLite[]): Weakest | null {
-  const graded = grades.filter((grade) => grade.ratio !== null)
-  if (graded.length === 0) return null
-  const latest = [...graded].sort((a, b) => b.time - a.time)[0]
-  const groups = new Map<string, GradeLite[]>()
-  for (const grade of graded) {
-    if (grade.period !== latest.period) continue
-    groups.set(grade.subject, [...(groups.get(grade.subject) ?? []), grade])
-  }
-  let weakest: Weakest | null = null
-  for (const [id, list] of groups) {
-    if (list.length < 2) continue
-    const total = list.reduce((sum, grade) => sum + grade.coef, 0)
-    const ratio =
-      list.reduce((sum, grade) => sum + (grade.ratio ?? 0) * grade.coef, 0) /
+  const samePeriod = earlier.filter((other) => other.period === grade.period)
+  if (samePeriod.length >= MIN_GRADES_FOR_AVERAGE) {
+    const total = samePeriod.reduce((sum, other) => sum + other.coef, 0)
+    const average =
+      samePeriod.reduce((sum, other) => sum + other.ratio * other.coef, 0) /
       total
-    if (weakest === null || ratio < weakest.ratio) {
-      weakest = {
-        id,
-        name: list[0].name,
-        average: Math.round(ratio * 200) / 10,
-        ratio,
-      }
-    }
+    payload.aboveAvg = ratio - average
   }
-  return weakest
-}
-
-// ---- Weekly contract ----------------------------------------------------------
-
-export interface ContractContext {
-  week: string // Monday key
-  homeworkThisWeek: number
-  tests: { id: string; name: string; day: string }[] // this week, not past
-  weakest: Weakest | null // null when grade quests are turned off
-  hideGrades: boolean
-}
-
-export function contractContext(
-  ledger: Ledger,
-  weakest: Weakest | null,
-  hideGrades: boolean,
-  now: Date
-): ContractContext {
-  const week = weekKey(now)
-  const { from, to } = weekBounds(week)
-  const today = dayKey(now)
-  const entries = Object.values(ledger).filter(
-    (entry) => entry.d >= from && entry.d <= to
-  )
-  return {
-    week,
-    homeworkThisWeek: entries.length,
-    tests: entries
-      .filter((entry) => entry.test && entry.d >= today)
-      .sort((a, b) => a.d.localeCompare(b.d))
-      .map((entry) => ({ id: entry.s, name: entry.n, day: entry.d })),
-    weakest: hideGrades ? null : weakest,
-    hideGrades,
-  }
-}
-
-// Regenerate the contract only if what it is built from changed.
-export function contractHash(ctx: ContractContext): string {
-  return [
-    ctx.week,
-    ctx.homeworkThisWeek,
-    ctx.tests.map((test) => `${test.id}@${test.day}`).join(","),
-    ctx.weakest?.id ?? "",
-    ctx.hideGrades ? "h" : "",
-  ].join("|")
-}
-
-function addDays(key: string, days: number): string {
-  const date = new Date(`${key}T12:00:00`)
-  date.setDate(date.getDate() + days)
-  return dayKey(date)
-}
-
-// Up to personalised quests for the week. Ids contain the week, so each
-// week starts fresh and last week's can be dropped.
-export function generateContract(ctx: ContractContext): QuestDef[] {
-  const { week } = ctx
-  const sunday = addDays(week, 6)
-  const quests: QuestDef[] = []
-
-  // 1. Homework on time (all homework this week).
-  const goal = ctx.homeworkThisWeek
-  if (goal > 0) {
-    quests.push({
-      id: `contract:${week}:ontime`,
-      title: "Tout rendre à l'heure",
-      description: `Rendre tous les devoirs (${goal}) à l'heure cette semaine`,
-      reward: 25,
-      event: "homework-ontime",
-      goal,
-      unique: true,
-      period: "weekly",
-      expires: sunday,
-      generated: true,
-    })
-  }
-
-  // Devoirs en avance
-  if (goal >= 2) {
-    quests.push({
-      id: `contract:${week}:early`,
-      title: "Devoirs en avance",
-      description: "Cocher 2 devoirs avant le jour de rendu cette semaine",
-      reward: 20,
-      event: "homework-early",
-      goal: 2,
-      unique: true,
-      period: "weekly",
-      expires: sunday,
-      generated: true,
-    })
-  }
-
-  return quests
+  return payload
 }

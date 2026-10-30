@@ -125,8 +125,13 @@ export function useToggleDone(
               subject: subjectId(assignment.subjectCode, assignment.subject),
               due: dueDay,
             })
+          } else {
+            void track("homework-late", id)
           }
-          if (dueDay > today) void track("homework-early", id)
+          if (dueDay > today) {
+            void track("homework-early", id)
+            if (assignment.isTest) void track("test-prepared", id)
+          }
         }
       } catch (err) {
         setDone(assignment.key, !next)

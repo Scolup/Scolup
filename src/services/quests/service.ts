@@ -8,42 +8,25 @@ import {
   periodKey,
   QUESTS,
 } from "./index"
-import type {
-  QuestDef,
-  QuestEvent,
-  QuestPayload,
-  QuestToast,
-  ProgressMap,
-} from "./types"
+import type { QuestEvent, QuestPayload, QuestToast, ProgressMap } from "./types"
 import {
-  contractContext,
-  contractHash,
-  generateContract,
+  completeStreak,
   gradePayload,
   mergeLedger,
   newGrades,
   previousWeekKey,
   toGradeLite,
-  weakestSubject,
   weekComplete,
 } from "../school-rules"
 import { addToWeek, parseWeeks, WEEKS_KEY } from "../shop-rules"
 import {
   PROGRESS_KEY,
   LEGACY_REWARDED_KEY,
-  CONTRACT_KEY,
+  LEGACY_CONTRACT_KEYS,
   LEDGER_KEY,
   SEEN_GRADES_KEY,
-  WEAKEST_KEY,
   HIDE_GRADE_QUESTS,
 } from "./constants"
-
-export interface Contract {
-  week: string
-  hash: string
-  announced: boolean
-  quests: QuestDef[]
-}
 
 const toastListeners = new Set<(toast: QuestToast) => void>()
 const changeListeners = new Set<() => void>()
@@ -75,16 +58,6 @@ function readJson<T>(raw: unknown, fallback: T): T {
   }
 }
 
-function readContract(raw: unknown): Contract {
-  const contract = readJson<Partial<Contract>>(raw, {})
-  return {
-    week: contract.week ?? "",
-    hash: contract.hash ?? "",
-    announced: contract.announced === true,
-    quests: Array.isArray(contract.quests) ? contract.quests : [],
-  }
-}
-
 function toNumber(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0
 }
@@ -96,23 +69,20 @@ async function hideGrades(): Promise<boolean> {
 // Everything the quest screens need.
 export async function loadQuestState(): Promise<{
   progress: ProgressMap
-  generated: QuestDef[]
   hideGrades: boolean
 }> {
   try {
     const db = await getDB()
-    const [progressRaw, legacyRaw, contractRaw] = await Promise.all([
+    const [progressRaw, legacyRaw] = await Promise.all([
       db.get("quests", PROGRESS_KEY),
       db.get("quests", LEGACY_REWARDED_KEY),
-      db.get("quests", CONTRACT_KEY),
     ])
     return {
       progress: parseProgress(progressRaw, legacyRaw),
-      generated: readContract(contractRaw).quests,
       hideGrades: await hideGrades(),
     }
   } catch {
-    return { progress: {}, generated: [], hideGrades: false }
+    return { progress: {}, hideGrades: false }
   }
 }
 
@@ -130,13 +100,12 @@ export async function track(
     const quests = tx.objectStore("quests")
     const shop = tx.objectStore("shop")
 
-    const [progressRaw, legacyRaw, contractRaw] = await Promise.all([
+    const [progressRaw, legacyRaw] = await Promise.all([
       quests.get(PROGRESS_KEY),
       quests.get(LEGACY_REWARDED_KEY),
-      quests.get(CONTRACT_KEY),
     ])
     const { progress, completed } = applyEvent(
-      activeQuests([...QUESTS, ...readContract(contractRaw).quests], now, hide),
+      activeQuests(QUESTS, hide),
       parseProgress(progressRaw, legacyRaw),
       event,
       now,
@@ -172,70 +141,8 @@ export async function track(
   }
 }
 
-// Builds (or rebuilds) this week's personalised contract.
-async function refreshContract(): Promise<void> {
-  try {
-    const now = new Date()
-    const hide = await hideGrades()
-    const db = await getDB()
-    const tx = db.transaction("quests", "readwrite")
-    const store = tx.objectStore("quests")
-    const [contractRaw, ledgerRaw, weakestRaw, progressRaw, legacyRaw] =
-      await Promise.all([
-        store.get(CONTRACT_KEY),
-        store.get(LEDGER_KEY),
-        store.get(WEAKEST_KEY),
-        store.get(PROGRESS_KEY),
-        store.get(LEGACY_REWARDED_KEY),
-      ])
-    const contract = readContract(contractRaw)
-    const ctx = contractContext(
-      readJson<any>(ledgerRaw, {}),
-      readJson<any>(weakestRaw, null),
-      hide,
-      now
-    )
-    const hash = contractHash(ctx)
-    const progress = parseProgress(progressRaw, legacyRaw)
-    const sameWeek = contract.week === ctx.week
-    const started = contract.quests.some(
-      (quest) => (progress[quest.id]?.count ?? 0) > 0
-    )
-
-    let announce = false
-    if (!sameWeek || (contract.hash !== hash && !started)) {
-      const generated = generateContract(ctx)
-      announce = !(sameWeek && contract.announced) && generated.length > 0
-      const next: Contract = {
-        week: ctx.week,
-        hash,
-        announced: announce || (sameWeek && contract.announced),
-        quests: generated,
-      }
-      await store.put(JSON.stringify(next), CONTRACT_KEY)
-      const ids = new Set(generated.map((quest) => quest.id))
-      const kept = Object.fromEntries(
-        Object.entries(progress).filter(
-          ([id]) => !id.startsWith("contract:") || ids.has(id)
-        )
-      )
-      await store.put(JSON.stringify(kept), PROGRESS_KEY)
-    }
-    await tx.done
-
-    if (announce) {
-      for (const l of toastListeners) {
-        l({
-          quests: [],
-          text: "Nouveau contrat de la semaine : découvre tes quêtes !",
-        })
-      }
-    }
-    refreshQuests()
-  } catch {
-    // ponytail: same as track().
-  }
-}
+// ponytail: deletes the removed contract's data, once per session.
+let contractDropped = false
 
 export async function syncHomework(items: any[]): Promise<void> {
   try {
@@ -249,11 +156,18 @@ export async function syncHomework(items: any[]): Promise<void> {
       now
     )
     await store.put(JSON.stringify(ledger), LEDGER_KEY)
+    if (!contractDropped) {
+      contractDropped = true
+      for (const legacyKey of LEGACY_CONTRACT_KEYS)
+        await store.delete(legacyKey)
+    }
     await tx.done
 
     const last = previousWeekKey(now)
-    if (weekComplete(ledger, last)) await track("week-complete", last)
-    await refreshContract()
+    if (weekComplete(ledger, last)) {
+      await track("week-complete", last)
+      await track("week-streak", last, { streak: completeStreak(ledger, last) })
+    }
   } catch {
     // ponytail: same as track().
   }
@@ -269,14 +183,12 @@ export async function syncGrades(grades: any[]): Promise<void> {
     const seen = Array.isArray(seenParsed) ? (seenParsed as string[]) : null
     const result = newGrades(lites, seen)
     await store.put(JSON.stringify(result.seen), SEEN_GRADES_KEY)
-    await store.put(JSON.stringify(weakestSubject(lites)), WEAKEST_KEY)
     await tx.done
 
     for (const grade of result.fresh) {
       const payload = gradePayload(grade, lites)
       if (payload) await track("grade-received", grade.key, payload)
     }
-    await refreshContract()
   } catch {
     // ponytail: same as track().
   }

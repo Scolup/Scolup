@@ -1,4 +1,5 @@
 import { reloadRubies, RUBIES_KEY } from "./rubies"
+import { track } from "./quests"
 import { getDB } from "./storage"
 import {
   OWNED_KEY,
@@ -65,7 +66,10 @@ export async function buyItem(
       await store.put(JSON.stringify(result.owned), OWNED_KEY)
     }
     await tx.done
-    if (result.status === "ok") await reloadRubies()
+    if (result.status === "ok") {
+      await reloadRubies()
+      void track("purchase", item.id)
+    }
     return result.status
   } catch {
     return "error"

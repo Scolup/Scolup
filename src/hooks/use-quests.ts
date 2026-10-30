@@ -21,11 +21,10 @@ export interface QuestItem extends QuestDef {
 
 interface QuestSnapshot {
   progress: ProgressMap
-  generated: QuestDef[]
   hideGrades: boolean
 }
 
-const EMPTY: QuestSnapshot = { progress: {}, generated: [], hideGrades: false }
+const EMPTY: QuestSnapshot = { progress: {}, hideGrades: false }
 
 // Read-only: pages that want to *trigger* a quest call track() directly.
 // Returns the quests that are active today, without the income rules (those
@@ -42,11 +41,7 @@ export function useQuests(): { quests: QuestItem[]; hideGrades: boolean } {
 
   return useMemo(() => {
     const now = new Date()
-    const quests = activeQuests(
-      [...QUESTS, ...snapshot.generated],
-      now,
-      snapshot.hideGrades
-    )
+    const quests = activeQuests(QUESTS, snapshot.hideGrades)
       .filter((quest) => !quest.income)
       .map((quest) => ({
         ...quest,

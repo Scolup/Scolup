@@ -19,6 +19,13 @@ export function migrateLegacy(ids: unknown[]): ProgressMap {
   return result
 }
 
+// ponytail: progress of the removed weekly contract (ids "contract:...").
+function dropContracts(progress: ProgressMap): ProgressMap {
+  return Object.fromEntries(
+    Object.entries(progress).filter(([id]) => !id.startsWith("contract:"))
+  )
+}
+
 export function parseProgress(
   progressRaw: unknown,
   legacyRewardedRaw: unknown
@@ -26,7 +33,9 @@ export function parseProgress(
   try {
     if (typeof progressRaw === "string") {
       const parsed: unknown = JSON.parse(progressRaw)
-      if (parsed && typeof parsed === "object") return parsed as ProgressMap
+      if (parsed && typeof parsed === "object") {
+        return dropContracts(parsed as ProgressMap)
+      }
     }
     if (typeof legacyRewardedRaw === "string") {
       const ids: unknown = JSON.parse(legacyRewardedRaw)

@@ -42,14 +42,13 @@ export function useShopPage() {
   const goBack = useCallback(() => navigate(-1), [navigate])
   const dismissNotice = useCallback(() => setNotice(null), [])
 
-  // One list: what is left to do first (your personal contract, then weekly,
-  // then the long tracks), what is done last.
+  // One list: what is left to do first (weekly, then the long tracks), what
+  // is done last.
   const sortedQuests = useMemo(
     () =>
       [...quests].sort(
         (a, b) =>
           Number(a.state === "achieved") - Number(b.state === "achieved") ||
-          Number(b.generated === true) - Number(a.generated === true) ||
           PERIOD_ORDER[a.period] - PERIOD_ORDER[b.period]
       ),
     [quests]

@@ -3,29 +3,20 @@
 import { useNavigate } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
-import { useQuests } from "@/hooks/use-quests"
 import { triggerHapticLight } from "@/services/haptics"
 import { ProgressRing } from "@/ui/progress-ring"
+import { useNextQuests } from "../hooks/useNextQuests"
 
-// Home-screen advert for the quests: this week's personal contract (made from
-// the student's real homework and grades), or the weekly quests until it exists.
-export function ContractCard() {
+// Home-screen card for the quests: the next goals, nothing else.
+export function NextQuestsCard() {
   const navigate = useNavigate()
-  const { quests } = useQuests()
+  const quests = useNextQuests()
 
-  const contract = quests.filter((quest) => quest.generated)
-  const shown = (
-    contract.length > 0
-      ? contract
-      : quests.filter((quest) => quest.period === "weekly")
-  ).slice(0, 3)
-  if (shown.length === 0) return null
-
-  const done = shown.filter((quest) => quest.state === "achieved").length
+  if (quests.length === 0) return null
 
   return (
     <section
-      aria-label="Contrat de la semaine"
+      aria-label="Prochains objectifs"
       className="rounded-3xl border border-border/70 bg-card"
     >
       <div className="px-4 pt-3">
@@ -38,29 +29,22 @@ export function ContractCard() {
           className="flex min-h-11 w-full items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <span className="truncate text-sm font-semibold text-card-foreground">
-            {contract.length > 0 ? "Contrat de la semaine" : "Quêtes"}
+            {quests.length > 1 ? "Prochains objectifs" : "Prochain objectif"}
           </span>
-          <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground tabular-nums">
-            {done}/{shown.length}
-            <HugeiconsIcon
-              icon={ArrowRight01Icon}
-              className="size-4"
-              aria-hidden="true"
-            />
-          </span>
+          <HugeiconsIcon
+            icon={ArrowRight01Icon}
+            className="size-4 shrink-0 text-muted-foreground"
+            aria-hidden="true"
+          />
         </button>
       </div>
       <ul className="flex flex-col gap-1 px-4 py-2">
-        {shown.map((quest) => (
+        {quests.map((quest) => (
           <li key={quest.id} className="flex items-center gap-3 px-3.5 py-2">
             <ProgressRing
               size={32}
-              value={quest.state === "achieved" ? 1 : quest.count / quest.goal}
-              label={
-                quest.state === "achieved"
-                  ? "Quête accomplie"
-                  : `${quest.count} sur ${quest.goal}`
-              }
+              value={quest.count / quest.goal}
+              label={`${quest.count} sur ${quest.goal}`}
             />
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium text-card-foreground">
