@@ -13,6 +13,7 @@ export type QuestEvent =
   | "average-up"
   | "week-complete"
   | "week-streak"
+  | "grade-streak"
   | "purchase"
 
 // Details of an event, so a quest can look only at what matters to it.
@@ -50,6 +51,7 @@ export interface QuestDef {
   grades?: boolean // about grades: hidden when the student turns them off
   secret?: boolean // shown as "???" until achieved
   silent?: boolean // no toast when achieved
+  gauge?: string // progress id holding a live value (a streak): the ring shows it
 }
 
 export type QuestState = "secret" | "unachieved" | "achieved"

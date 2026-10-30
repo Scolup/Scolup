@@ -19,6 +19,7 @@ export interface LedgerEntry {
   test: boolean
   s: string // subject id
   n: string // subject name
+  x?: boolean // already done before this sync: Scolup did not see it completed
 }
 
 export type Ledger = Record<string, LedgerEntry>
@@ -37,16 +38,27 @@ const LEDGER_DAYS = 60
 export function mergeLedger(
   ledger: Ledger,
   items: HomeworkInput[],
-  now: Date
+  now: Date,
+  fromScolup = false
 ): Ledger {
   const next: Ledger = { ...ledger }
   for (const item of items) {
-    next[String(item.id)] = {
+    const id = String(item.id)
+    const previous = next[id]
+    // Done before this sync (at first sight, or when it is unchecked) means
+    // Scolup did not see it completed: ticking it again must never pay. Only a
+    // tick that comes from Scolup itself can complete a homework here. The
+    // flag is sticky, and also covers entries written before it existed.
+    const outside = previous
+      ? previous.done || previous.x === true
+      : item.done && !fromScolup
+    next[id] = {
       d: dayKey(item.due),
       done: item.done,
       test: item.isTest,
       s: subjectId(item.subjectCode, item.subject),
       n: item.subject,
+      ...(outside ? { x: true } : {}),
     }
   }
   const cutoff = new Date(now)
@@ -55,6 +67,11 @@ export function mergeLedger(
   return Object.fromEntries(
     Object.entries(next).filter(([, entry]) => entry.d >= oldest)
   )
+}
+
+// Homework completed outside Scolup: quests must not reward ticking it here.
+export function doneOutsideScolup(ledger: Ledger, id: string): boolean {
+  return ledger[id]?.x === true
 }
 
 function weekBounds(monday: string): { from: string; to: string } {

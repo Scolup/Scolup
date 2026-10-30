@@ -111,8 +111,9 @@ export function useToggleDone(
       try {
         if (next) await ld.homework.markAsDone([assignment.id])
         else await ld.homework.markAsUndone([assignment.id])
-        // The ledger learns the new state (needed for "Semaine complète").
-        void syncHomework([{ ...assignment, done: next }])
+        // The ledger learns the new state first: quests must know whether
+        // Scolup is the one completing this homework (see mergeLedger).
+        await syncHomework([{ ...assignment, done: next }], true)
         if (next) {
           // The id makes each homework count once, however often it is ticked.
           const id = String(assignment.id)

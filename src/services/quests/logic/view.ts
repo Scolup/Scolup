@@ -11,11 +11,14 @@ export function questView(
   const saved = progress[quest.id]
   const current =
     saved && saved.period === periodKey(questPeriod(quest), now) ? saved : null
-  const goal = quest.goal ?? 1
+  // Streak quests: the ring shows the live streak, up to the tier to reach.
+  const goal = quest.gauge ? (quest.match?.minStreak ?? 1) : (quest.goal ?? 1)
+  const live = quest.gauge ? progress[quest.gauge]?.count : current?.count
   const state: QuestState = current?.done
     ? "achieved"
     : quest.secret
       ? "secret"
       : "unachieved"
-  return { goal, count: Math.min(current?.count ?? 0, goal), state }
+  const count = current?.done ? goal : (live ?? 0)
+  return { goal, count: Math.min(count, goal), state }
 }

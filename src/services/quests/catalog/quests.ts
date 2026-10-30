@@ -1,5 +1,6 @@
 // Quest catalog - add quests here
 import type { QuestDef } from "../types"
+import { GRADE_STREAK_ID } from "../constants"
 
 export const QUESTS: QuestDef[] = [
   // ---- Income: every real school event pays a little --------------------
@@ -216,7 +217,7 @@ export const QUESTS: QuestDef[] = [
   },
   {
     id: "serie-3",
-    title: "Série de 3",
+    title: "Devoirs : série de 3",
     description: "Faire tous tes devoirs 3 semaines de suite",
     reward: 60,
     event: "week-streak",
@@ -224,7 +225,7 @@ export const QUESTS: QuestDef[] = [
   },
   {
     id: "serie-6",
-    title: "Série de 6",
+    title: "Devoirs : série de 6",
     description: "Faire tous tes devoirs 6 semaines de suite",
     reward: 150,
     event: "week-streak",
@@ -240,12 +241,56 @@ export const QUESTS: QuestDef[] = [
     grades: true,
     secret: true,
   },
+  // ---- Grade streaks: grades in a row that did not lower the average ----
+  // The live streak is kept by syncGrades (GRADE_STREAK_ID). `gauge` makes the
+  // ring show it; the tiers share one track, so only the closest is promoted.
+  {
+    id: "notes-3",
+    title: "Stable",
+    description: "Notes : 3 de suite sans faire baisser ta moyenne",
+    reward: 20,
+    event: "grade-streak",
+    match: { minStreak: 3 },
+    gauge: GRADE_STREAK_ID,
+    grades: true,
+  },
+  {
+    id: "notes-7",
+    title: "Sans faux pas",
+    description: "Notes : 7 de suite sans faire baisser ta moyenne",
+    reward: 60,
+    event: "grade-streak",
+    match: { minStreak: 7 },
+    gauge: GRADE_STREAK_ID,
+    grades: true,
+  },
+  {
+    id: "notes-15",
+    title: "Solide",
+    description: "Notes : 15 de suite sans faire baisser ta moyenne",
+    reward: 150,
+    event: "grade-streak",
+    match: { minStreak: 15 },
+    gauge: GRADE_STREAK_ID,
+    grades: true,
+  },
+  {
+    id: "notes-30",
+    title: "Inébranlable",
+    description: "Notes : 30 de suite sans faire baisser ta moyenne",
+    reward: 300,
+    event: "grade-streak",
+    match: { minStreak: 30 },
+    gauge: GRADE_STREAK_ID,
+    grades: true,
+    secret: true,
+  },
   // ---- Tutorial (one-shot) ----------------------------------------------
   {
     id: "bienvenue",
     title: "Bienvenue",
     description: "Ouvrir Scolup",
-    reward: 50,
+    reward: 10,
     event: "app-open",
     silent: true,
   },
@@ -253,21 +298,21 @@ export const QUESTS: QuestDef[] = [
     id: "un-bon-debut",
     title: "Un bon début",
     description: "Cocher un devoir",
-    reward: 15,
+    reward: 10,
     event: "homework-done",
   },
   {
     id: "tatillon",
     title: "Tâtillon",
     description: "Changer un paramètre",
-    reward: 20,
+    reward: 10,
     event: "setting-changed",
   },
   {
     id: "premier-achat",
     title: "Premier achat",
     description: "Débloquer un article dans la boutique",
-    reward: 10,
+    reward: 15,
     event: "purchase",
   },
 ]

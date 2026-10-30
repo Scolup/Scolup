@@ -10,6 +10,7 @@ interface Trackable extends QuestDef {
 // Tiers of one goal (25 / 100 / 250 homework...) share a track: only the
 // closest tier of each track is worth showing.
 function trackOf(quest: Trackable): string {
+  if (quest.gauge) return quest.gauge
   return `${quest.event}:${quest.period}:${JSON.stringify(quest.match ?? {})}`
 }
 

@@ -11,25 +11,40 @@ import {
 import type { QuestEvent, QuestPayload, QuestToast, ProgressMap } from "./types"
 import {
   completeStreak,
+  doneOutsideScolup,
   gradePayload,
   mergeLedger,
   newGrades,
   previousWeekKey,
   toGradeLite,
   weekComplete,
+  type Ledger,
 } from "../school-rules"
 import { addToWeek, parseWeeks, WEEKS_KEY } from "../shop-rules"
+import { resolveSubjectCoef } from "../subjects"
+import { gradeKeepsStreak, isAverageMethod } from "@/pages/grades/helpers"
 import {
   PROGRESS_KEY,
   LEGACY_REWARDED_KEY,
   LEGACY_CONTRACT_KEYS,
   LEDGER_KEY,
   SEEN_GRADES_KEY,
+  GRADE_STREAK_ID,
   HIDE_GRADE_QUESTS,
 } from "./constants"
 
 const toastListeners = new Set<(toast: QuestToast) => void>()
 const changeListeners = new Set<() => void>()
+
+// Events triggered by ticking a homework. Rewarded only when Scolup saw it
+// checked: a homework done outside Scolup pays nothing (see mergeLedger).
+const HOMEWORK_EVENTS = new Set<QuestEvent>([
+  "homework-done",
+  "homework-ontime",
+  "homework-late",
+  "homework-early",
+  "test-prepared",
+])
 
 export function subscribeQuestToast(
   fn: (toast: QuestToast) => void
@@ -96,6 +111,10 @@ export async function track(
     const now = new Date()
     const hide = await hideGrades()
     const db = await getDB()
+    if (key !== undefined && HOMEWORK_EVENTS.has(event)) {
+      const ledger = readJson<Ledger>(await db.get("quests", LEDGER_KEY), {})
+      if (doneOutsideScolup(ledger, key)) return
+    }
     const tx = db.transaction(["quests", "shop"], "readwrite")
     const quests = tx.objectStore("quests")
     const shop = tx.objectStore("shop")
@@ -144,7 +163,10 @@ export async function track(
 // ponytail: deletes the removed contract's data, once per session.
 let contractDropped = false
 
-export async function syncHomework(items: any[]): Promise<void> {
+export async function syncHomework(
+  items: any[],
+  fromScolup = false
+): Promise<void> {
   try {
     const now = new Date()
     const db = await getDB()
@@ -153,7 +175,8 @@ export async function syncHomework(items: any[]): Promise<void> {
     const ledger = mergeLedger(
       readJson<any>(await store.get(LEDGER_KEY), {}),
       items,
-      now
+      now,
+      fromScolup
     )
     await store.put(JSON.stringify(ledger), LEDGER_KEY)
     if (!contractDropped) {
@@ -176,6 +199,9 @@ export async function syncHomework(items: any[]): Promise<void> {
 export async function syncGrades(grades: any[]): Promise<void> {
   try {
     const lites = grades.map(toGradeLite)
+    // Read before the transaction opens: it must not wait on another store.
+    const storedMethod = await getSetting("gradesAverageMethod")
+    const method = isAverageMethod(storedMethod) ? storedMethod : "subject"
     const db = await getDB()
     const tx = db.transaction("quests", "readwrite")
     const store = tx.objectStore("quests")
@@ -183,11 +209,39 @@ export async function syncGrades(grades: any[]): Promise<void> {
     const seen = Array.isArray(seenParsed) ? (seenParsed as string[]) : null
     const result = newGrades(lites, seen)
     await store.put(JSON.stringify(result.seen), SEEN_GRADES_KEY)
+
+    // Grade streak: each new grade is judged once, in order, then the counter
+    // is kept (never recomputed from the list). A grade that says nothing
+    // (absent, first of its period) neither counts nor breaks.
+    const [progressRaw, legacyRaw] = await Promise.all([
+      store.get(PROGRESS_KEY),
+      store.get(LEGACY_REWARDED_KEY),
+    ])
+    const progress = parseProgress(progressRaw, legacyRaw)
+    const before = progress[GRADE_STREAK_ID]?.count ?? 0
+    let streak = before
+    const kept = new Map<string, number>() // grade key -> streak after it
+    for (const grade of result.fresh) {
+      const full = grades.find((candidate) => candidate.key === grade.key)
+      if (!full) continue
+      const keeps = gradeKeepsStreak(full, grades, resolveSubjectCoef, method)
+      if (keeps === null) continue
+      streak = keeps ? streak + 1 : 0
+      if (keeps) kept.set(grade.key, streak)
+    }
+    if (streak !== before) {
+      progress[GRADE_STREAK_ID] = { count: streak, period: "once", done: false }
+      await store.put(JSON.stringify(progress), PROGRESS_KEY)
+    }
     await tx.done
 
     for (const grade of result.fresh) {
       const payload = gradePayload(grade, lites)
       if (payload) await track("grade-received", grade.key, payload)
+      const streakNow = kept.get(grade.key)
+      if (streakNow) {
+        await track("grade-streak", grade.key, { streak: streakNow })
+      }
     }
   } catch {
     // ponytail: same as track().
