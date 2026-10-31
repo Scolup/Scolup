@@ -1,4 +1,4 @@
-import { reloadRubies, RUBIES_KEY } from "../rubies"
+import { PENDING_KEY, reloadRubies } from "../rubies"
 import { getDB, getSetting } from "../storage"
 import { triggerHapticLight } from "../haptics"
 import {
@@ -135,17 +135,18 @@ export async function track(
 
     const reward = completed.reduce((sum, quest) => sum + quest.reward, 0)
     if (reward > 0) {
-      const [balanceRaw, weeksRaw] = await Promise.all([
-        shop.get(RUBIES_KEY),
+      // Rewards are earned, not credited: the student claims them in the shop.
+      const [weeksRaw, pendingRaw] = await Promise.all([
         shop.get(WEEKS_KEY),
+        shop.get(PENDING_KEY),
       ])
       const weeks = addToWeek(
         parseWeeks(weeksRaw),
         periodKey("weekly", now),
         reward
       )
-      await shop.put(toNumber(balanceRaw) + reward, RUBIES_KEY)
       await shop.put(JSON.stringify(weeks), WEEKS_KEY)
+      await shop.put(toNumber(pendingRaw) + reward, PENDING_KEY)
     }
     await tx.done
 

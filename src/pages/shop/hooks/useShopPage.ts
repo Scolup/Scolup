@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useState } from "react"
 import { useNavigate } from "react-router"
 import { useQuests } from "@/hooks/use-quests"
-import { useRubies } from "@/hooks/use-rubies"
+import { usePendingRubies, useRubies } from "@/hooks/use-rubies"
 import { useShop } from "@/hooks/use-shop"
 import { triggerHapticLight } from "@/services/haptics"
-import { periodKey, type QuestPeriod } from "@/services/quest-rules"
+import { claimRubies } from "@/services/rubies"
+import { periodKey } from "@/services/quest-rules"
 import { buyItem } from "@/services/shop"
 import {
   SHOP_ITEMS,
@@ -13,12 +14,7 @@ import {
   type ShopItem,
 } from "@/services/shop-rules"
 import { useTheme } from "@/ui/theme-provider"
-
-const PERIOD_ORDER: Record<QuestPeriod, number> = {
-  daily: 0,
-  weekly: 1,
-  once: 2,
-}
+import { groupQuests } from "../helpers"
 
 interface Notice {
   text: string
@@ -34,6 +30,7 @@ function lastWeekKey(): string {
 export function useShopPage() {
   const navigate = useNavigate()
   const rubies = useRubies()
+  const pending = usePendingRubies()
   const { quests, hideGrades } = useQuests()
   const shop = useShop()
   const { accentColor, setAccentColor } = useTheme()
@@ -42,17 +39,7 @@ export function useShopPage() {
   const goBack = useCallback(() => navigate(-1), [navigate])
   const dismissNotice = useCallback(() => setNotice(null), [])
 
-  // One list: what is left to do first (weekly, then the long tracks), what
-  // is done last.
-  const sortedQuests = useMemo(
-    () =>
-      [...quests].sort(
-        (a, b) =>
-          Number(a.state === "achieved") - Number(b.state === "achieved") ||
-          PERIOD_ORDER[a.period] - PERIOD_ORDER[b.period]
-      ),
-    [quests]
-  )
+  const { groups, achieved } = useMemo(() => groupQuests(quests), [quests])
   const weekText = useMemo(
     () =>
       weekMessage(
@@ -88,9 +75,18 @@ export function useShopPage() {
     [setAccentColor]
   )
 
+  const claim = useCallback(async () => {
+    const amount = await claimRubies()
+    if (amount <= 0) return
+    triggerHapticLight()
+    setNotice({ text: `+${amount} rubis récupérés !`, tone: "success" })
+  }, [])
+
   return {
     rubies,
-    quests: sortedQuests,
+    pending,
+    groups,
+    achieved,
     hideGrades,
     weekText,
     items,
@@ -99,5 +95,6 @@ export function useShopPage() {
     goBack,
     buy,
     use,
+    claim,
   }
 }

@@ -52,6 +52,7 @@ export interface QuestDef {
   secret?: boolean // shown as "???" until achieved
   silent?: boolean // no toast when achieved
   gauge?: string // progress id holding a live value (a streak): the ring shows it
+  track?: string // tiers of one goal (25/100/250...): the shop shows the closest
 }
 
 export type QuestState = "secret" | "unachieved" | "achieved"

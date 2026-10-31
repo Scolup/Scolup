@@ -16,7 +16,6 @@ export interface QuestItem extends QuestDef {
   state: QuestState
   count: number
   goal: number
-  tier?: number
 }
 
 interface QuestSnapshot {
