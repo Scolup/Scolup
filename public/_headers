@@ -1,0 +1,5 @@
+# Le service worker ne doit jamais être mis en cache longtemps, sinon le
+# navigateur ne détecterait jamais sa nouvelle version et le bouton « Mettre
+# à jour » resterait sans effet.
+/sw.js
+    Cache-Control: no-cache
