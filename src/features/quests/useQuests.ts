@@ -1,0 +1,52 @@
+import { useEffect, useMemo, useState } from "react"
+import { loadQuestState, subscribeQuests } from "./service"
+import { activeQuests } from "./filters"
+import { QUESTS } from "./catalog"
+import { questPeriod } from "./period"
+import { questView } from "./view"
+import {
+  type ProgressMap,
+  type QuestDef,
+  type QuestPeriod,
+  type QuestState,
+} from "./types"
+
+export interface QuestItem extends QuestDef {
+  period: QuestPeriod
+  state: QuestState
+  count: number
+  goal: number
+}
+
+interface QuestSnapshot {
+  progress: ProgressMap
+  hideGrades: boolean
+}
+
+const EMPTY: QuestSnapshot = { progress: {}, hideGrades: false }
+
+// Read-only: pages that want to *trigger* a quest call track() directly.
+// Returns the quests that are active today, without the income rules (those
+// pay automatically: see INCOME in the shop) and without grade quests when
+// the student turned them off.
+export function useQuests(): { quests: QuestItem[]; hideGrades: boolean } {
+  const [snapshot, setSnapshot] = useState<QuestSnapshot>(EMPTY)
+
+  useEffect(() => {
+    const load = () => void loadQuestState().then(setSnapshot)
+    load()
+    return subscribeQuests(load)
+  }, [])
+
+  return useMemo(() => {
+    const now = new Date()
+    const quests = activeQuests(QUESTS, snapshot.hideGrades)
+      .filter((quest) => !quest.income)
+      .map((quest) => ({
+        ...quest,
+        period: questPeriod(quest),
+        ...questView(quest, snapshot.progress, now),
+      }))
+    return { quests, hideGrades: snapshot.hideGrades }
+  }, [snapshot])
+}

@@ -1,0 +1,128 @@
+import { useEffect, useRef } from "react"
+import { useSearchParams } from "react-router"
+import { m } from "motion/react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowLeftIcon } from "@hugeicons/core-free-icons"
+import { Button } from "@/components/ui/button"
+import { AppToast } from "@/components/AppToast"
+import { AnimatedNumber } from "@/components/AnimatedNumber"
+import { triggerHapticLight } from "@/services/haptics"
+import { DecoSprinkles } from "@/components/DecoOrnament"
+import { ShopView } from "@/pages/shop/ShopView"
+import { IncomeRules } from "./components/IncomeRules"
+import { QuestList } from "./components/QuestList"
+import { RubisHero } from "./components/RubisHero"
+import { RubisTabs, type RubisTab } from "./components/RubisTabs"
+import { useRubisPage } from "./hooks/useRubisPage"
+
+// The rubies hub: balance, claim, quests and the shop behind one tab switch.
+export function RubiesPage() {
+  const page = useRubisPage()
+  const [params, setParams] = useSearchParams()
+  const tab: RubisTab = params.get("tab") === "boutique" ? "shop" : "quests"
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const hasQuests = page.groups.length > 0 || page.achieved.length > 0
+
+  // Both tabs share the scroll container: a switch always starts back at the top.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 })
+  }, [tab])
+
+  const changeTab = (next: RubisTab) => {
+    triggerHapticLight()
+    setParams(next === "shop" ? { tab: "boutique" } : {}, { replace: true })
+  }
+
+  return (
+    <m.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.22, ease: [0.25, 0.1, 0.15, 1] }}
+      className="fixed inset-0 z-30 flex flex-col bg-background"
+    >
+      <header className="shrink-0 border-b border-border">
+        <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Retour"
+            className="size-11 shrink-0"
+            onClick={page.goBack}
+          >
+            <HugeiconsIcon icon={ArrowLeftIcon} className="size-5" />
+          </Button>
+          <h1 className="truncate text-base font-semibold text-foreground">
+            Rubis
+          </h1>
+          {tab === "shop" && (
+            <div className="ml-auto flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-2.5 py-1.5">
+              <img
+                src="/ruby.svg"
+                alt=""
+                aria-hidden="true"
+                className="size-5"
+              />
+              <span className="text-sm font-medium text-card-foreground">
+                <AnimatedNumber value={String(page.rubies)} />
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="px-4 pb-3">
+          <RubisTabs
+            value={tab}
+            onChange={changeTab}
+            className="w-full sm:max-w-sm"
+            buttonClassName="flex-1 sm:py-2 sm:text-sm"
+          />
+        </div>
+      </header>
+
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+        {tab === "quests" ? (
+          <>
+            <RubisHero
+              rubies={page.rubies}
+              pending={page.pending}
+              weekRubies={page.weekRubies}
+              onClaim={() => void page.claim()}
+            />
+
+            <div className="flex flex-col gap-6 px-4 pb-10">
+              {hasQuests && (
+                <section
+                  aria-labelledby="quests-heading"
+                  className="flex flex-col gap-2"
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <h2 id="quests-heading" className="text-base font-semibold">
+                      Quêtes
+                    </h2>
+                    {page.groups.length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {page.groups.length} en cours
+                      </span>
+                    )}
+                  </div>
+                  <QuestList groups={page.groups} achieved={page.achieved} />
+                </section>
+              )}
+
+              <IncomeRules hideGrades={page.hideGrades} />
+            </div>
+          </>
+        ) : (
+          <ShopView />
+        )}
+        <DecoSprinkles />
+      </div>
+
+      <AppToast
+        message={page.notice?.text ?? null}
+        tone={page.notice?.tone}
+        onClose={page.dismissNotice}
+      />
+    </m.div>
+  )
+}
