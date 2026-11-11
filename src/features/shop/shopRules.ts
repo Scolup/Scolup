@@ -37,20 +37,6 @@ export type ShopItem = AccentShopItem | ThemeShopItem
 export const SHOP_ITEMS: ShopItem[] = [
   // ---- Avant-première Noël (du 12 nov au 26 déc 2026) ---------------------
   {
-    id: "accent-houx",
-    kind: "accent",
-    label: "Rouge houx",
-    description: "Le rouge des bougies et des guirlandes de décembre.",
-    price: 300,
-    originalPrice: 375,
-    value: "houx",
-    color: "#b91c1c",
-    foreground: "#ffffff",
-    collection: "noel",
-    startsAt: new Date("2026-11-12T09:00:00"),
-    endsAt: new Date("2026-12-26T00:00:00"),
-  },
-  {
     id: "accent-sapin",
     kind: "accent",
     label: "Sapin",
@@ -106,27 +92,11 @@ export const SHOP_ITEMS: ShopItem[] = [
     startsAt: new Date("2026-11-12T09:00:00"),
     endsAt: new Date("2026-12-26T00:00:00"),
   },
-  {
-    id: "accent-sucre-orge",
-    kind: "accent",
-    label: "Sucre d'orge",
-    description:
-      "Le dégradé du blanc au rouge bonbon, comme le sucre d'orge des fêtes.",
-    price: 450,
-    value: "sucre-orge",
-    color: "#e11d48",
-    foreground: "#ffffff",
-    image:
-      "radial-gradient(140% 140% at 50% 35%, #e11d48 0%, #ff8fa3 55%, #ffffff 115%)",
-    collection: "noel",
-    startsAt: new Date("2026-11-12T09:00:00"),
-    endsAt: new Date("2026-12-26T00:00:00"),
-  },
   // ---- Exclusivité Halloween (du 19 oct au 10 nov 2026) --------
   {
     id: "accent-orange",
     kind: "accent",
-    label: "Orange Spooky",
+    label: "Citrouille",
     description:
       "L'orange brûlé des nuits d'Halloween : potirons, bonbons, devoirs finis.",
     price: 150,
@@ -141,7 +111,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: "accent-sorciere",
     kind: "accent",
-    label: "Violet Spooky",
+    label: "Violet lugubre",
     description: "Le violet de minuit, allumé à la dernière lampe.",
     price: 262,
     originalPrice: 375,
@@ -153,23 +123,9 @@ export const SHOP_ITEMS: ShopItem[] = [
     endsAt: new Date("2026-11-10T00:00:00"),
   },
   {
-    id: "accent-fantome",
-    kind: "accent",
-    label: "Fantôme Spooky",
-    description: "Un gris de brume qui glisse dans les couloirs du CDI.",
-    price: 300,
-    originalPrice: 450,
-    value: "fantome",
-    color: "#94a3b8",
-    foreground: "#1a1a1a",
-    collection: "halloween",
-    startsAt: new Date("2026-10-19T00:00:00"),
-    endsAt: new Date("2026-11-10T00:00:00"),
-  },
-  {
     id: "theme-halloween2026",
     kind: "theme",
-    label: "Thème Halloween 2026",
+    label: "Halloween",
     description:
       "Un fond de nuit d'Halloween habille toute l'app et une grande citrouille signe ton accueil. L'app sent la nuit d'Halloween.",
     price: 400,
@@ -277,32 +233,6 @@ export const SHOP_ITEMS: ShopItem[] = [
   },
   // ---- Thèmes : une ambiance pour toute l'app ---------------------------
   {
-    id: "theme-jeux",
-    kind: "theme",
-    label: "Thème Jeux vidéo",
-    description:
-      "Un fond arcade habille toute l'app et une grande manette signe ton accueil. L'app passe en mode arcade.",
-    price: 450,
-    value: "jeux",
-    color: "#7c3aed",
-    foreground: "#ffffff",
-    image:
-      "radial-gradient(120% 120% at 50% 20%, #7c3aed 0%, #22d3ee 60%, #fbbf24 100%)",
-  },
-  {
-    id: "theme-sport",
-    kind: "theme",
-    label: "Thème Sport",
-    description:
-      "Un fond de vestiaire habille toute l'app et un grand trophée signe ton accueil. L'app passe en mode vestiaire.",
-    price: 400,
-    value: "sport",
-    color: "#ea580c",
-    foreground: "#ffffff",
-    image:
-      "radial-gradient(120% 120% at 50% 20%, #ea580c 0%, #f59e0b 55%, #059669 100%)",
-  },
-  {
     id: "theme-ecole",
     kind: "theme",
     label: "Thème École",
@@ -330,6 +260,16 @@ export function shopItemIcon(
     }
   }
   return null
+}
+
+export function refundItem(
+  item: ShopItem,
+  balance: number,
+  owned: string[]
+): { status: "refunded"; balance: number; owned: string[] } {
+  const newBalance = balance - item.price
+  const newOwned = owned.filter((id) => id !== item.id)
+  return { status: "refunded", balance: newBalance, owned: newOwned }
 }
 
 // ---- Purchase ------------------------------------------------------------

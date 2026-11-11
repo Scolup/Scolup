@@ -20,8 +20,6 @@ export type ThemeColor =
   | "orange-clair"
   | "bordeaux"
   | "sorciere"
-  | "fantome"
-  | "houx"
   | "sapin"
   | "neige"
 
