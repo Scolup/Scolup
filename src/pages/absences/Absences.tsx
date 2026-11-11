@@ -62,7 +62,7 @@ export function Absences() {
           <EmptyState
             icon={Chair02Icon}
             title="Aucune absence"
-            description="Tu n'as aucune absence ni aucun retard enregistré."
+            description="Tu n'as aucune absence ni retard enregistré."
           />
         ) : (
           <AbsencesContent
