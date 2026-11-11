@@ -18,6 +18,8 @@ interface BaseShopItem {
   image?: string // css gradient painted over `color` (shop bubble + primary surfaces)
   collection?: string // limited editions, grouped in their own section (see shopLayout)
   icon?: typeof GiftIcon // shop logo, when the item deserves its own visual
+  startsAt?: Date // when the item becomes available (local time)
+  endsAt?: Date // when the item disappears (local time)
 }
 
 export interface AccentShopItem extends BaseShopItem {
@@ -33,7 +35,7 @@ export interface ThemeShopItem extends BaseShopItem {
 export type ShopItem = AccentShopItem | ThemeShopItem
 
 export const SHOP_ITEMS: ShopItem[] = [
-  // ---- Avant-première Noël (en tête de boutique, en accès anticipé) -----
+  // ---- Avant-première Noël (du 12 nov au 26 déc 2026) ---------------------
   {
     id: "accent-houx",
     kind: "accent",
@@ -45,6 +47,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     color: "#b91c1c",
     foreground: "#ffffff",
     collection: "noel",
+    startsAt: new Date("2026-11-12T09:00:00"),
+    endsAt: new Date("2026-12-26T00:00:00"),
   },
   {
     id: "accent-sapin",
@@ -56,6 +60,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     color: "#166534",
     foreground: "#ffffff",
     collection: "noel",
+    startsAt: new Date("2026-11-12T09:00:00"),
+    endsAt: new Date("2026-12-26T00:00:00"),
   },
   {
     id: "accent-neige",
@@ -67,6 +73,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     color: "#f1f5f9",
     foreground: "#1a1a1a",
     collection: "noel",
+    startsAt: new Date("2026-11-12T09:00:00"),
+    endsAt: new Date("2026-12-26T00:00:00"),
   },
   {
     id: "theme-noel",
@@ -82,6 +90,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     image:
       "radial-gradient(120% 120% at 50% 20%, #ef4444 0%, #fca5a5 55%, #e0f2fe 100%)",
     collection: "noel",
+    startsAt: new Date("2026-11-12T09:00:00"),
+    endsAt: new Date("2026-12-26T00:00:00"),
   },
   {
     id: "accent-pain-epice",
@@ -93,6 +103,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     color: "#a0522d",
     foreground: "#ffffff",
     collection: "noel",
+    startsAt: new Date("2026-11-12T09:00:00"),
+    endsAt: new Date("2026-12-26T00:00:00"),
   },
   {
     id: "accent-sucre-orge",
@@ -107,8 +119,10 @@ export const SHOP_ITEMS: ShopItem[] = [
     image:
       "radial-gradient(140% 140% at 50% 35%, #e11d48 0%, #ff8fa3 55%, #ffffff 115%)",
     collection: "noel",
+    startsAt: new Date("2026-11-12T09:00:00"),
+    endsAt: new Date("2026-12-26T00:00:00"),
   },
-  // ---- Exclusivité Halloween (s'arrête le jeudi 12 nov, voir shopLayout) --
+  // ---- Exclusivité Halloween (du 19 oct au 10 nov 2026) --------
   {
     id: "accent-orange",
     kind: "accent",
@@ -121,6 +135,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     color: "#c2410c",
     foreground: "#ffffff",
     collection: "halloween",
+    startsAt: new Date("2026-10-19T00:00:00"),
+    endsAt: new Date("2026-11-10T00:00:00"),
   },
   {
     id: "accent-sorciere",
@@ -133,6 +149,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     color: "#4c1d95",
     foreground: "#ffffff",
     collection: "halloween",
+    startsAt: new Date("2026-10-19T00:00:00"),
+    endsAt: new Date("2026-11-10T00:00:00"),
   },
   {
     id: "accent-fantome",
@@ -145,6 +163,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     color: "#94a3b8",
     foreground: "#1a1a1a",
     collection: "halloween",
+    startsAt: new Date("2026-10-19T00:00:00"),
+    endsAt: new Date("2026-11-10T00:00:00"),
   },
   {
     id: "theme-halloween2026",
@@ -159,6 +179,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     image:
       "radial-gradient(120% 120% at 50% 20%, #c2410c 0%, #f97316 55%, #4c1d95 100%)",
     collection: "halloween",
+    startsAt: new Date("2026-10-19T00:00:00"),
+    endsAt: new Date("2026-11-10T00:00:00"),
   },
   // ---- Couleurs permanentes ---------------------------------------------
   {

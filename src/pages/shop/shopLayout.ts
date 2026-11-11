@@ -10,19 +10,6 @@ export const COLLECTIONS: Record<string, { label: string; hint: string }> = {
 
 const COLLECTION_ORDER = ["noel", "halloween"] as const
 
-// Hard shelves-off dates per collection: once the line passes, the whole
-// category vanishes from the shop; kept purchases stay usable. Times are
-// read in the local timezone.
-const DEADLINES: Partial<Record<(typeof COLLECTION_ORDER)[number], Date>> = {
-  halloween: new Date("2026-11-12T09:00:00"), // the Thursday after the 2026 edition
-}
-
-// Start dates: a collection is hidden until this date (local time).
-// Christmas appears after Halloween ends (Nov 12).
-const START_DATES: Partial<Record<(typeof COLLECTION_ORDER)[number], Date>> = {
-  noel: new Date("2026-11-12T09:00:00"),
-}
-
 // "5 j 23 h", "2 h 50 min", "30 min" — the text after "Fin dans" on the
 // limited pack card. Empty once the deadline passed.
 export function countdownLabel(now: Date, end: Date): string {
@@ -80,9 +67,10 @@ export function layoutShop(
     const def = COLLECTIONS[id]
     const group = entries.filter((entry) => entry.item.collection === id)
     if (group.length === 0) continue
-    const startsAt = START_DATES[id]
+    // Use per-item dates (all items in a collection share the same dates)
+    const startsAt = group[0]?.item.startsAt
+    const endsAt = group[0]?.item.endsAt
     if (startsAt && now < startsAt) continue // the limited edition hasn't started yet
-    const endsAt = DEADLINES[id]
     if (endsAt && now >= endsAt) continue // the limited edition is over
     collections.push({
       id,
@@ -94,14 +82,17 @@ export function layoutShop(
   }
 
   const permanent = entries.filter((entry) => {
-    const id = entry.item.collection
-    if (!id) return true
-    if (!(id in COLLECTIONS)) return true // catalog surgery: keep showing
-    const startsAt = START_DATES[id as keyof typeof START_DATES]
-    if (startsAt && now < startsAt) return false // the edition hasn't started yet
-    const endsAt = DEADLINES[id as keyof typeof DEADLINES]
-    if (!endsAt) return false // the live collection owns the card
-    return now >= endsAt && entry.owned
+    const startsAt = entry.item.startsAt
+    const endsAt = entry.item.endsAt
+    // Items without event dates are always permanent colors/themes
+    if (!startsAt && !endsAt) return true
+    // Items not yet started are not shown
+    if (startsAt && now < startsAt) return false
+    // Items past their end date are removed from the shop, so owned event
+    // items no longer appear under "Couleurs & thèmes" after the event ends.
+    if (endsAt && now >= endsAt) return false
+    // Items within their window are shown
+    return true
   })
 
   return {
