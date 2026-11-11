@@ -102,7 +102,9 @@ export function useMessagesPage() {
         ? prev.map((m) => (m.id === selectedId ? { ...m, unread: false } : m))
         : prev
     )
-  }, [selectedId, setActiveMessages])
+    // A live refresh can land while the message is open with the cached list
+    // still saying unread: re-apply the read state whenever that list changes.
+  }, [selectedId, activeMessages, setActiveMessages])
 
   const query = input
   const filteredMessages = useMemo(

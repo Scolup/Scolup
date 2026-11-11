@@ -117,6 +117,17 @@ export function useRestoreSelectedMessage(opts: {
           ...(detailSender ? { senderId: detailSender.id } : {}),
           ...(detailSender?.type ? { senderType: detailSender.type } : {}),
         }
+        const wasUnread = base
+          ? !base.sent && Boolean(base.unread)
+          : !detailEntry.read
+        if (wasUnread) {
+          // getMessage already marks the message read server-side; markAsRead
+          // also patches Litedirecte's cached lists so the inbox and badge
+          // don't show it unread again until the next poll.
+          void ld.messages
+            .markAsRead(targetId, { year: MESSAGE_YEAR })
+            .catch(() => {})
+        }
         const updated: Message = base
           ? {
               ...base,
