@@ -35,7 +35,7 @@ interface BannerStyle {
 const BANNERS: Record<string, BannerStyle> = {
   noel: {
     className: "bg-gradient-to-r from-red-950 via-red-900 to-red-800",
-    tease: "Les fêtes arrivent : saisis les couleurs de décembre en premier.",
+    tease: "Les fêtes arrivent : saisis les couleurs de décembre avant qu'elles partent.",
     ornaments: [
       {
         icon: PineTreeIcon,

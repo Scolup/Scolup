@@ -4,7 +4,7 @@ import type { ShopItem } from "@/features/shop/shopRules"
 // first, then the limited editions. Every collection used in the catalog
 // must be listed here.
 export const COLLECTIONS: Record<string, { label: string; hint: string }> = {
-  noel: { label: "Avant-première Noël", hint: "En exclusivité" },
+  noel: { label: "Noël", hint: "Édition limitée" },
   halloween: { label: "Exclusivité Halloween", hint: "Édition limitée" },
 }
 
