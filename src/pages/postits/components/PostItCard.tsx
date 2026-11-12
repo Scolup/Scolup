@@ -8,10 +8,12 @@ import type { PostIt } from "../postIt"
 export function PostItCard({
   note,
   enterIndex,
+  onImageClick,
 }: {
   note: PostIt
   // Rang d'entrée (voir `rise`), ou undefined pour ne pas animer.
   enterIndex?: number
+  onImageClick?: (src: string, alt: string) => void
 }) {
   const rank = enterIndex === undefined ? null : entranceRank(enterIndex)
   return (
@@ -26,6 +28,7 @@ export function PostItCard({
     >
       <RichHtml
         html={note.html}
+        onImageClick={onImageClick}
         className={cn(
           proseClassName,
           "max-w-full min-w-0 overflow-hidden [&_*]:max-w-full [&_img]:cursor-zoom-in [&_p]:mb-2 [&_p]:last:mb-0"

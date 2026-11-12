@@ -70,7 +70,7 @@ export function DecoMotif() {
     <span
       aria-hidden="true"
       data-deco-motion
-      className="pointer-events-none absolute -top-12 -right-8 animate-[motif-float_6s_ease-in-out_infinite] opacity-30 will-change-transform dark:opacity-40"
+      className="pointer-events-none absolute -top-12 -right-8 animate-[motif-float_6s_ease-in-out_infinite] opacity-30 dark:opacity-40"
     >
       <HugeiconsIcon
         icon={motif}

@@ -14,8 +14,11 @@ function useStoredWeekView(
   setParams: (p: URLSearchParams) => void
 ) {
   const hasVue = params.has("vue")
+  const restored = useRef(false)
 
   useEffect(() => {
+    if (restored.current) return
+    restored.current = true
     if (hasVue) return
     void getSetting("agendaView").then((stored) => {
       if (stored !== "week") return
@@ -23,8 +26,7 @@ function useStoredWeekView(
       next.set("vue", "semaine")
       setParams(next)
     })
-    // Volontairement limité à `hasVue` : on restaure la vue enregistrée une seule fois.
-  }, [hasVue])
+  }, [hasVue, params, setParams])
 }
 
 export function useAgendaPage() {

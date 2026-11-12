@@ -345,10 +345,10 @@ function cleanStyle(element: Element): void {
 }
 
 function cleanAttributes(element: Element, tag: string): void {
-  const allowed = TAG_ATTRIBUTES[tag] ?? []
+  const allowed = new Set(TAG_ATTRIBUTES[tag] ?? [])
   for (const attribute of Array.from(element.attributes)) {
     const name = attribute.name.toLowerCase()
-    if (name === "style" || name === "title" || allowed.includes(name)) continue
+    if (name === "style" || name === "title" || allowed.has(name)) continue
     element.removeAttribute(attribute.name)
   }
   cleanStyle(element)

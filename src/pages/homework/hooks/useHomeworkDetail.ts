@@ -87,14 +87,7 @@ export function useHomeworkDetail(
     return () => {
       cancelled = true
     }
-  }, [
-    selected?.key,
-    selected?.dueKey,
-    selected?.id,
-    detailRetryKey,
-    setAssignments,
-    fetchedDays,
-  ])
+  }, [selected, detailRetryKey, setAssignments, fetchedDays])
 
   const liveDetail =
     detail && selected && detail.key === selected.key

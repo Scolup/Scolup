@@ -37,7 +37,8 @@ import {
   PostIts,
   RubiesPage,
 } from "./lazyPages"
-import { pathForTab, TabBar, tabForPath } from "./TabBar"
+import { pathForTab, tabForPath } from "./tabs"
+import { TabBar } from "./TabBar"
 import { useScrollMemory } from "./useScrollMemory"
 import { useTabBarShortcut } from "./useTabBarShortcut"
 
@@ -110,6 +111,7 @@ export function MainLayout({
     })
   }
   const settingsMatch = SETTINGS_PATH.exec(pathname)
+  const visitedKeys = new Set(page.visited)
   const tabElements: Record<string, React.ReactNode> = {
     "": (
       <HomeRoute
@@ -206,7 +208,7 @@ export function MainLayout({
           ref={scrollRef}
           className="flex-1 overflow-y-auto pb-[calc(var(--tabbar-height)+env(safe-area-inset-bottom))]"
         >
-          {TAB_KEYS.filter((key) => page.visited.includes(key)).map((key) => (
+          {TAB_KEYS.filter((key) => visitedKeys.has(key)).map((key) => (
             <Activity key={key} mode={key === page.key ? "visible" : "hidden"}>
               {/* Réaffiché, l'onglet rejoue son entrée : l'animation CSS
                   redémarre quand le wrapper repasse de display: none à

@@ -98,6 +98,57 @@ function EntryMeta({
   )
 }
 
+function EntrySubject({
+  assignment,
+  display,
+  color,
+  done,
+  isNew,
+}: {
+  assignment: Assignment
+  display: string
+  color?: string
+  done: boolean
+  isNew: boolean
+}) {
+  const { isTest, onlineSubmission } = assignment
+  return (
+    <span className="flex min-w-0 flex-1 items-center gap-2">
+      <span
+        className={cn(
+          "truncate text-sm font-bold",
+          done && "line-through decoration-muted-foreground/50",
+          color &&
+            "text-[color-mix(in_srgb,var(--c)_60%,black)] dark:text-[color-mix(in_srgb,var(--c)_60%,white)]"
+        )}
+        style={color ? ({ "--c": color } as CSSProperties) : undefined}
+      >
+        {display}
+      </span>
+      {isTest && (
+        <Badge variant="warning" size="sm" pill className="shrink-0">
+          Éval.
+        </Badge>
+      )}
+      {isNew && (
+        <Badge variant="info" size="sm" pill className="shrink-0">
+          Nouveau
+        </Badge>
+      )}
+      {onlineSubmission && (
+        <Badge variant="outline" size="sm" pill className="shrink-0 gap-1">
+          <HugeiconsIcon
+            icon={Upload04Icon}
+            className="size-3"
+            aria-hidden="true"
+          />
+          À rendre en ligne
+        </Badge>
+      )}
+    </span>
+  )
+}
+
 interface HomeworkEntryProps {
   assignment: Assignment
   pending?: boolean
@@ -119,7 +170,7 @@ export const HomeworkEntry = memo(function HomeworkEntry({
   onToggle,
   onSelect,
 }: HomeworkEntryProps) {
-  const { subject, done, isTest, documents, comments } = assignment
+  const { subject, done, documents, comments } = assignment
   const { display, color } = useSubjectDisplay(assignment.subjectCode, subject)
 
   const open = onSelect ? () => onSelect(assignment) : undefined
@@ -169,44 +220,13 @@ export const HomeworkEntry = memo(function HomeworkEntry({
         />
 
         <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-          <span className="flex min-w-0 flex-1 items-center gap-2">
-            <span
-              className={cn(
-                "truncate text-sm font-bold",
-                done && "line-through decoration-muted-foreground/50",
-                color &&
-                  "text-[color-mix(in_srgb,var(--c)_60%,black)] dark:text-[color-mix(in_srgb,var(--c)_60%,white)]"
-              )}
-              style={color ? ({ "--c": color } as CSSProperties) : undefined}
-            >
-              {display}
-            </span>
-            {isTest && (
-              <Badge variant="warning" size="sm" pill className="shrink-0">
-                Éval.
-              </Badge>
-            )}
-            {isNew && (
-              <Badge variant="info" size="sm" pill className="shrink-0">
-                Nouveau
-              </Badge>
-            )}
-            {assignment.onlineSubmission && (
-              <Badge
-                variant="outline"
-                size="sm"
-                pill
-                className="shrink-0 gap-1"
-              >
-                <HugeiconsIcon
-                  icon={Upload04Icon}
-                  className="size-3"
-                  aria-hidden="true"
-                />
-                À rendre en ligne
-              </Badge>
-            )}
-          </span>
+          <EntrySubject
+            assignment={assignment}
+            display={display}
+            color={color}
+            done={done}
+            isNew={isNew}
+          />
 
           <EntryMeta documents={documents} comments={comments} />
         </div>

@@ -52,13 +52,20 @@ export async function mergeIntoLocal(
 
   // ---- Lecture
   const settings: Record<string, SyncedSetting> = {}
-  for (const key of await settingsStore.getAllKeys()) {
-    if (typeof key !== "string" || !isSyncedSetting(key)) continue
-    const v = await settingsStore.get(key)
-    if (typeof v === "string" || typeof v === "boolean") {
-      settings[key] = { v, t: (await metaStore.get(`s:${key}`)) ?? 0 }
-    }
-  }
+  const settingKeys = (await settingsStore.getAllKeys()).filter(
+    (key): key is string => typeof key === "string" && isSyncedSetting(key)
+  )
+  await Promise.all(
+    settingKeys.map(async (key) => {
+      const [v, t] = await Promise.all([
+        settingsStore.get(key),
+        metaStore.get(`s:${key}`),
+      ])
+      if (typeof v === "string" || typeof v === "boolean") {
+        settings[key] = { v, t: t ?? 0 }
+      }
+    })
+  )
   const subjects: Record<string, SubjectRecord> = {}
   for (const entry of await subjectsStore.getAll()) subjects[entry.id] = entry
 
@@ -117,18 +124,22 @@ export async function mergeIntoLocal(
     wallet: false,
     quests: false,
   }
-  for (const [key, entry] of Object.entries(merged.settings)) {
-    const before = local.settings[key]
-    if (before && before.t === entry.t && before.v === entry.v) continue
-    await settingsStore.put(entry.v, key)
-    await metaStore.put(entry.t, `s:${key}`)
-    applied.settings.push(key)
-  }
-  for (const [id, entry] of Object.entries(merged.subjects)) {
-    if (canonical(local.subjects[id]) === canonical(entry)) continue
-    await subjectsStore.put(entry, id)
-    applied.subjects = true
-  }
+  await Promise.all(
+    Object.entries(merged.settings).map(async ([key, entry]) => {
+      const before = local.settings[key]
+      if (before && before.t === entry.t && before.v === entry.v) return
+      await settingsStore.put(entry.v, key)
+      await metaStore.put(entry.t, `s:${key}`)
+      applied.settings.push(key)
+    })
+  )
+  await Promise.all(
+    Object.entries(merged.subjects).map(async ([id, entry]) => {
+      if (canonical(local.subjects[id]) === canonical(entry)) return
+      await subjectsStore.put(entry, id)
+      applied.subjects = true
+    })
+  )
   if (canonical(local.wallet) !== canonical(merged.wallet)) {
     console.debug("[sync] wallet changed, writing")
     await writeWallet(shopStore, merged.wallet)
@@ -141,11 +152,13 @@ export async function mergeIntoLocal(
     [LEDGER_KEY, local.quests.ledger, merged.quests.ledger],
     [SEEN_GRADES_KEY, local.quests.seenGrades, merged.quests.seenGrades],
   ]
-  for (const [key, before, after] of questParts) {
-    if (canonical(before) === canonical(after)) continue
-    await questsStore.put(JSON.stringify(after), key)
-    applied.quests = true
-  }
+  await Promise.all(
+    questParts.map(async ([key, before, after]) => {
+      if (canonical(before) === canonical(after)) return
+      await questsStore.put(JSON.stringify(after), key)
+      applied.quests = true
+    })
+  )
 
   await tx.done
   return { state: merged, applied }

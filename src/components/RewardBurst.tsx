@@ -37,7 +37,7 @@ export function RewardBurst({ tick }: { tick: number }) {
         return (
           <span
             key={`${burst}-${index}`}
-            className="absolute bottom-24 left-1/2 size-2.5 rounded-full will-change-transform"
+            className="absolute bottom-24 left-1/2 size-2.5 rounded-full"
             style={
               {
                 backgroundColor: colors[index % colors.length],

@@ -37,14 +37,9 @@ export function usePostIts() {
     navigate("/")
   }, [navigate])
 
-  const openViewer = useCallback((event: React.MouseEvent) => {
-    const image = (event.target as HTMLElement | null)?.closest?.(
-      "img"
-    ) as HTMLImageElement | null
-    const src = image?.currentSrc || image?.getAttribute("src")
-    if (!image || !src) return
+  const openImage = useCallback((src: string, alt: string) => {
     triggerHapticLight()
-    setViewer({ src, alt: image.getAttribute("alt") ?? "" })
+    setViewer({ src, alt })
   }, [])
 
   return {
@@ -56,7 +51,7 @@ export function usePostIts() {
     viewer,
     retry,
     goBack,
-    openViewer,
+    openImage,
     setViewer,
   }
 }

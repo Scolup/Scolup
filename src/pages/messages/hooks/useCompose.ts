@@ -130,17 +130,17 @@ export function useCompose(onSent?: () => void) {
     try {
       // On téléverse les pièces jointes à l'envoi, pas à la sélection : le
       // `unc` temporaire est consommé par l'envoi qui suit, aucun état à garder.
-      const files: { unc: string; libelle: string }[] = []
-      for (const file of attachments) {
-        try {
-          files.push(await ld.messages.uploadAttachment(file))
-        } catch {
-          update({
-            error: `Impossible de téléverser « ${file.name} ». Vérifie ta connexion et réessaie.`,
-          })
-          return
-        }
-      }
+      const files = await Promise.all(
+        attachments.map(async (file) => {
+          try {
+            return await ld.messages.uploadAttachment(file)
+          } catch {
+            throw new Error(
+              `Impossible de téléverser « ${file.name} ». Vérifie ta connexion et réessaie.`
+            )
+          }
+        })
+      )
       await ld.messages.sendMessage({
         subject: subject.trim(),
         content: toMessageHtml(content),

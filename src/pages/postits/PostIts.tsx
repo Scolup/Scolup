@@ -52,15 +52,13 @@ export function PostIts() {
             description="Tu n'as aucune annonce de ton établissement pour le moment."
           />
         ) : (
-          <div
-            className="mx-auto w-full max-w-7xl columns-2 gap-3 px-4 py-4 sm:columns-3 lg:columns-4 2xl:columns-5"
-            onClick={page.openViewer}
-          >
+          <div className="mx-auto w-full max-w-7xl columns-2 gap-3 px-4 py-4 sm:columns-3 lg:columns-4 2xl:columns-5">
             {page.notes.map((note, index) => (
               <PostItCard
                 key={note.key}
                 note={note}
                 enterIndex={animateCards ? index : undefined}
+                onImageClick={page.openImage}
               />
             ))}
           </div>

@@ -1,3 +1,6 @@
+// Chargé à la demande par les deux seuls consommateurs (GradesWidget et
+// AverageCard, via React.lazy) : recharts n'entre pas dans le bundle initial.
+// react-doctor-disable-next-line react-doctor/prefer-dynamic-import
 import { Area, AreaChart, CartesianGrid, YAxis } from "recharts"
 import { memo, useRef, useState } from "react"
 import {
