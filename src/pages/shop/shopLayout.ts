@@ -32,6 +32,7 @@ export interface ShopEntry {
   active: boolean
   missing: number // rubies still missing (0 = affordable)
   featured?: boolean // the shelf's headliner theme
+  coded?: boolean // a redeemed price code lowers this item
 }
 
 interface CollectionDef {

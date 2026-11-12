@@ -1,9 +1,7 @@
-import { DetailRow } from "@/components/DetailRow"
 import { useState, type ReactElement } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Coupon01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
+import { Tick02Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer"
 import {
   discountPercent,
@@ -13,7 +11,6 @@ import {
 import { isDecoThemeId } from "@/features/shop/decoThemes"
 import { COLLECTIONS, type ShopEntry } from "../shopLayout"
 import { ThemePreview } from "./ThemePreview"
-import { useShopPromo } from "../hooks/useShopPromo"
 
 // Bottom sheet, like the other detail views. Buying keeps the sheet open:
 // the footer flips from "Débloquer" to "Utiliser" as soon as the purchase
@@ -27,16 +24,13 @@ export function ShopItemDrawer({
 }: {
   entry: ShopEntry | null
   onOpenChange: (open: boolean) => void
-  onBuy: (code?: string) => void
+  onBuy: () => void
   onUse: () => void
 }) {
   const [shown, setShown] = useState<ShopEntry | null>(entry)
   if (entry && !sameEntry(entry, shown)) setShown(entry)
 
   const item: ShopItem | null = shown?.item ?? null
-  const promo = useShopPromo(entry?.item.id)
-  const price = item ? Math.min(item.price, promo.price ?? item.price) : 0
-  const discounted = applyPromo(shown, item, price, promo.price !== null)
 
   return (
     <Drawer open={!!entry} onOpenChange={onOpenChange}>
@@ -47,16 +41,9 @@ export function ShopItemDrawer({
 
             <ItemVisual item={item} />
 
-            <PriceBox
-              shown={shown}
-              price={price}
-              discounted={discounted}
-              promo={promo}
-            />
+            <PriceBox shown={shown} />
 
-            {!shown.owned && <PromoForm promo={promo} price={price} />}
-            {discounted &&
-              ownedFooter(discounted, onUse, () => onBuy(promo.appliedCode))}
+            {ownedFooter(shown, onUse, onBuy)}
           </div>
         )}
       </DrawerContent>
@@ -80,20 +67,6 @@ function DrawerHeading({ item }: { item: ShopItem }) {
       )}
     </div>
   )
-}
-
-function applyPromo(
-  shown: ShopEntry | null,
-  item: ShopItem | null,
-  price: number,
-  hasPromo: boolean
-): ShopEntry | null {
-  if (!shown || !item || !hasPromo) return shown
-  return {
-    ...shown,
-    item: { ...item, price, originalPrice: item.price },
-    missing: Math.max(0, shown.missing - (item.price - price)),
-  }
 }
 
 function ItemVisual({ item }: { item: ShopItem }) {
@@ -131,102 +104,25 @@ function ItemVisual({ item }: { item: ShopItem }) {
   )
 }
 
-function PriceBox({
-  shown,
-  price,
-  discounted,
-  promo,
-}: {
-  shown: ShopEntry
-  price: number
-  discounted: ShopEntry | null
-  promo: ReturnType<typeof useShopPromo>
-}) {
-  const discount = discounted
-    ? discountPercent(price, discounted.item.originalPrice)
-    : null
+function PriceBox({ shown }: { shown: ShopEntry }) {
+  const { item, coded } = shown
+  const discount = discountPercent(item.price, item.originalPrice)
   return (
     <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-muted/50 px-4 py-3">
       <span className="min-w-0 text-xs text-muted-foreground">
-        {promo.price !== null && !shown.owned
-          ? "Prix avec le code promo"
-          : ownedStateLabel(shown, discount)}
+        {coded ? "Prix avec ton code" : ownedStateLabel(shown, discount)}
       </span>
       <span className="flex shrink-0 items-center gap-1.5">
         {discount && (
           <span className="text-xs text-muted-foreground tabular-nums line-through">
-            {discounted?.item.originalPrice}
+            {item.originalPrice}
           </span>
         )}
         <span className="flex items-center gap-1 text-lg font-semibold">
           <img src="/ruby.svg" alt="" aria-hidden="true" className="size-4" />
-          {price}
+          {item.price}
         </span>
       </span>
-    </div>
-  )
-}
-
-function PromoForm({
-  promo,
-  price,
-}: {
-  promo: ReturnType<typeof useShopPromo>
-  price: number
-}) {
-  const applied = promo.price !== null
-  return (
-    <div className="mt-5">
-      <DetailRow
-        icon={Coupon01Icon}
-        label="Code promo"
-        value={
-          <form
-            className="mt-2"
-            onSubmit={(event) => {
-              event.preventDefault()
-              promo.apply()
-            }}
-          >
-            <div className="flex gap-2">
-              <Input
-                id="shop-promo"
-                aria-label="Code promo"
-                value={promo.code}
-                onChange={(event) => promo.setCode(event.target.value)}
-                placeholder="Saisir un code"
-                autoComplete="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                maxLength={128}
-                aria-invalid={Boolean(promo.error)}
-                aria-describedby="shop-promo-status"
-                className="min-h-11 min-w-0 flex-1"
-              />
-              <Button
-                type="submit"
-                variant="outline"
-                className="min-h-11"
-                disabled={!promo.code.trim() || applied}
-              >
-                Appliquer
-              </Button>
-            </div>
-            <p
-              id="shop-promo-status"
-              role="status"
-              className={
-                promo.error
-                  ? "mt-2 text-sm text-destructive"
-                  : "mt-2 text-sm text-muted-foreground"
-              }
-            >
-              {promo.error ||
-                (applied ? `Code appliqué : ${price} rubis.` : "")}
-            </p>
-          </form>
-        }
-      />
     </div>
   )
 }

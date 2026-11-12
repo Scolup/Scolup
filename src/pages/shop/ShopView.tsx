@@ -87,8 +87,8 @@ export function ShopView() {
       <ShopItemDrawer
         entry={page.selected}
         onOpenChange={page.deselect}
-        onBuy={(code) => {
-          if (page.selected) void page.buy(page.selected.item, code)
+        onBuy={() => {
+          if (page.selected) void page.buy(page.selected.item)
         }}
         onUse={() => {
           if (page.selected) page.use(page.selected.item)

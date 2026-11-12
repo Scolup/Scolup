@@ -21,13 +21,14 @@ export interface Wallet {
   claimed: Record<string, true>
   spent: Record<string, number>
   gifts: Record<string, number>
+  coupons: Record<string, number> // prix réduit par article (code promo)
 }
 
 export const WALLET_KEY = "wallet"
 const KEPT_WEEKS = 12
 
 function emptyWallet(): Wallet {
-  return { earned: {}, claimed: {}, spent: {}, gifts: {} }
+  return { earned: {}, claimed: {}, spent: {}, gifts: {}, coupons: {} }
 }
 
 function toCount(value: unknown): number {
@@ -57,7 +58,7 @@ export function parseWallet(raw: unknown): Wallet {
       if (flag === true) wallet.claimed[id] = true
     }
   }
-  for (const table of ["spent", "gifts"] as const) {
+  for (const table of ["spent", "gifts", "coupons"] as const) {
     const source = raw[table]
     if (!isRecord(source)) continue
     for (const [id, amount] of Object.entries(source)) {
@@ -93,6 +94,9 @@ export function mergeWallets(a: Wallet, b: Wallet): Wallet {
     claimed: { ...a.claimed, ...b.claimed },
     spent: maxByKey(a.spent, b.spent, Math.max),
     gifts: maxByKey(a.gifts, b.gifts, Math.max),
+    // Un code peut avoir été utilisé sur deux appareils : le prix le plus bas
+    // l'emporte, comme le reste de la fusion.
+    coupons: maxByKey(a.coupons, b.coupons, Math.min),
   }
 }
 
@@ -168,6 +172,28 @@ export function claimAll(wallet: Wallet): Wallet {
 export function spend(wallet: Wallet, itemId: string, price: number): Wallet {
   if (itemId in wallet.spent) return wallet
   return { ...wallet, spent: { ...wallet.spent, [itemId]: toCount(price) } }
+}
+
+// A reward that must land on the balance right away (a redeemed code): earned
+// and claimed in one step, without touching the other pending rewards.
+export function earnNow(
+  wallet: Wallet,
+  id: string,
+  amount: number,
+  week: string
+): Wallet {
+  const earned = earn(wallet, id, amount, week)
+  if (earned === wallet) return wallet
+  return { ...earned, claimed: { ...earned.claimed, [id]: true } }
+}
+
+// A code that lowers one item: the wallet remembers the price to charge until
+// the purchase. The lowest price wins when two devices redeem the same code.
+export function coupon(wallet: Wallet, itemId: string, price: number): Wallet {
+  return {
+    ...wallet,
+    coupons: { ...wallet.coupons, [itemId]: toCount(price) },
+  }
 }
 
 function give(wallet: Wallet, id: string, amount: number): Wallet {
