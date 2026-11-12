@@ -38,15 +38,6 @@ export interface SyncDoc extends SyncState {
   savedAt: number // ms
 }
 
-export function emptyState(): SyncState {
-  return {
-    settings: {},
-    subjects: {},
-    wallet: parseWallet(null),
-    quests: { progress: {}, ledger: {}, seenGrades: null },
-  }
-}
-
 export function mergeStates(a: SyncState, b: SyncState): SyncState {
   return {
     settings: mergeSettings(a.settings, b.settings),

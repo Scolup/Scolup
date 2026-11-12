@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react"
 import { useRubies } from "@/features/shop/useRubies"
 import { useShop } from "@/features/shop/useShop"
 import { useTheme } from "@/components/ThemeProvider"
+import { celebrate } from "@/lib/celebrate"
 import { triggerHapticLight } from "@/services/haptics"
 import { buyItem } from "@/features/shop/shop"
 import { getRubies } from "@/features/shop/rubies"
@@ -56,6 +57,7 @@ export function useShopPage() {
     const status = await buyItem(item.id, code)
     triggerHapticLight()
     if (status === "ok") {
+      celebrate()
       const what =
         item.kind === "theme"
           ? `${item.label} débloqué`

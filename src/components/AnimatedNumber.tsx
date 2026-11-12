@@ -21,7 +21,7 @@ export function AnimatedNumber({
               initial={{ y: "65%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "-65%", opacity: 0 }}
-              transition={{ duration: 0.25, ease: EASE_OUT }}
+              transition={{ duration: 0.2, ease: EASE_OUT }}
               className="inline-block"
             >
               {char === " " ? " " : char}

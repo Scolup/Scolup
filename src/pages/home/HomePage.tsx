@@ -8,6 +8,7 @@ import { MessagesWidget } from "./components/MessagesWidget"
 import { NextCoursesWidget } from "./components/NextCoursesWidget"
 import { NextQuestsCard } from "./components/NextQuestsCard"
 import { AppToast } from "@/components/AppToast"
+import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useSplashTask } from "@/services/splash"
 import { useRubies } from "@/features/shop/useRubies"
 import { useNavigate } from "react-router"
@@ -34,6 +35,19 @@ export function HomePage() {
   }, [])
 
   useSplashTask(page.loading)
+
+  const isMedium = useMediaQuery("(min-width: 640px)")
+  const isWide = useMediaQuery("(min-width: 1280px)")
+  const columnCount = isWide ? 3 : isMedium ? 2 : 1
+  const widgets = [
+    <HomeworkWidget key="homework" />,
+    <NextCoursesWidget key="courses" />,
+    <GradesWidget key="grades" />,
+    <MessagesWidget key="messages" />,
+  ]
+  const widgetColumns = Array.from({ length: columnCount }, (_, column) =>
+    widgets.filter((_, index) => index % columnCount === column)
+  )
 
   return (
     <div className="relative isolate flex flex-col gap-4 px-4 pt-4 pb-6">
@@ -68,7 +82,7 @@ export function HomePage() {
               navigate("/rubis")
             }}
             aria-label={`Rubis : ${rubies} — boutique et quêtes`}
-            className="flex h-11 items-center gap-1.5 rounded-full border border-border/70 bg-card/80 px-3 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex h-11 press items-center gap-1.5 rounded-full border border-border/70 bg-card/80 px-3 outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <img src="/ruby.svg" alt="" aria-hidden="true" className="size-5" />
             <span className="text-sm font-medium text-card-foreground">
@@ -86,7 +100,7 @@ export function HomePage() {
             key={link.path}
             type="button"
             onClick={() => page.openPage(link.path)}
-            className="flex min-h-14 flex-1 items-center gap-3 rounded-full border border-border/70 bg-card px-4 py-3 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex min-h-14 flex-1 press items-center gap-3 rounded-full border border-border/70 bg-card px-4 py-3 text-left outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-text">
               <HugeiconsIcon
@@ -103,11 +117,15 @@ export function HomePage() {
         ))}
       </nav>
 
-      <div className="columns-1 gap-4 sm:columns-2 xl:columns-3 [&>*]:mb-4 [&>*]:min-w-0 [&>*]:break-inside-avoid">
-        <HomeworkWidget />
-        <NextCoursesWidget />
-        <GradesWidget />
-        <MessagesWidget />
+      {/* Colonnes explicites (répartition à tour de rôle) plutôt que CSS
+          `columns` : quand un widget passe du squelette au contenu, les autres
+          ne sont plus rééquilibrés ni déplacés. */}
+      <div className="flex items-start gap-4">
+        {widgetColumns.map((column, index) => (
+          <div key={index} className="flex min-w-0 flex-1 flex-col gap-4">
+            {column}
+          </div>
+        ))}
       </div>
     </div>
   )

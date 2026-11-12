@@ -1,9 +1,9 @@
-import { m } from "motion/react"
+import type { CSSProperties } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Attachment01Icon } from "@hugeicons/core-free-icons"
 import { cn, avatarTint } from "@/lib/utils"
 import { dayName } from "@/lib/dates"
-import { fadeUp } from "@/lib/motion"
+import { entranceRank } from "@/lib/motion"
 import { highlight } from "@/components/Highlight"
 import { recipientsLabel } from "../format"
 
@@ -52,17 +52,10 @@ interface MessagePreviewProps {
   image?: string
   className?: string
   query?: string
+  // Rang d'entrée dans la liste (voir `rise`), ou undefined pour ne pas animer.
+  enterIndex?: number
   onSelect?: () => void
 }
-
-const dotVariants = {
-  hidden: { scale: 0, opacity: 0 },
-  visible: {
-    scale: 1,
-    opacity: 1,
-    transition: { type: "spring", stiffness: 500, damping: 15 },
-  },
-} as const
 
 export function MessagePreview({
   sender,
@@ -76,23 +69,24 @@ export function MessagePreview({
   image,
   className,
   query,
+  enterIndex,
   onSelect,
 }: MessagePreviewProps) {
   const who = recipientsLabel({ sent, recipients }) ?? sender
+  const rank = enterIndex === undefined ? null : entranceRank(enterIndex)
   return (
-    <m.div
-      variants={fadeUp(12, 0.4)}
+    <div
+      style={rank !== null ? ({ "--i": rank } as CSSProperties) : undefined}
       className={cn(
         "relative flex size-full items-center justify-center p-4",
+        rank !== null && "rise",
         className
       )}
     >
-      <m.button
+      <button
         type="button"
         onClick={onSelect}
-        whileTap={{ scale: 0.975 }}
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        className="flex w-full items-center gap-3 rounded-2xl border border-transparent bg-input/50 p-3 text-left transition-[background-color,box-shadow] duration-200 outline-none hover:bg-muted/70 hover:shadow-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+        className="flex w-full press-lg items-center gap-3 rounded-2xl border border-transparent bg-input/50 p-3 text-left outline-none hover:bg-muted/70 hover:shadow-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
       >
         <div
           className={cn(
@@ -114,9 +108,8 @@ export function MessagePreview({
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               {unread && (
-                <m.span
-                  variants={dotVariants}
-                  className="size-2 shrink-0 rounded-full bg-unread"
+                <span
+                  className="size-2 shrink-0 animate-[badge-pop_0.25s_ease-out] rounded-full bg-unread"
                   aria-label="Non lu"
                 />
               )}
@@ -157,7 +150,7 @@ export function MessagePreview({
             </span>
           )}
         </div>
-      </m.button>
-    </m.div>
+      </button>
+    </div>
   )
 }

@@ -1,12 +1,10 @@
-import { AnimatePresence, m } from "motion/react"
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { Mortarboard01Icon } from "@hugeicons/core-free-icons"
 import { EmptyState } from "@/components/EmptyState"
-import { FadeIn } from "@/components/FadeIn"
 import { InlineError } from "@/components/InlineError"
 import { Button } from "@/components/ui/button"
 import { impactsByGrade } from "@/features/grades/trend"
-import { staggerContainer } from "@/lib/motion"
+import { useFirstVisit } from "@/hooks/useFirstVisit"
 import type { useGradesPage } from "../hooks/useGradesPage"
 import { AverageCard } from "./AverageCard"
 import { GradesSkeleton } from "./GradesSkeleton"
@@ -21,9 +19,7 @@ export function GradesContent({
   page: ReturnType<typeof useGradesPage>
   showSkeleton: boolean
 }) {
-  // Point survolé sur le graphe : tant qu'il a le focus, la carte affiche sa
-  // moyenne à la place de la moyenne actuelle.
-  const [focusedAverage, setFocusedAverage] = useState<number | null>(null)
+  const animateRows = useFirstVisit("grades-rows")
   const impacts = useMemo(() => impactsByGrade(page.trend), [page.trend])
 
   if (page.loading) return showSkeleton ? <GradesSkeleton /> : null
@@ -52,50 +48,43 @@ export function GradesContent({
     )
   }
 
+  // Un seul fondu quand la période change (la clé remonte le bloc) ; les
+  // premières lignes de la première visite seulement ont leur léger décalage.
+  let offset = 0
+
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <m.div
-        key={page.selectedPeriod ?? "all"}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.22, ease: [0.25, 0.1, 0.15, 1] }}
-      >
-        <FadeIn>
-          <m.div
-            variants={staggerContainer(0.035, 0.05)}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-col gap-6 px-4 pt-4 pb-6"
-          >
-            {page.overallAverage !== null && (
-              <AverageCard
-                average={page.overallAverage}
-                focusedAverage={focusedAverage}
-                onFocusAverage={setFocusedAverage}
-                trend={page.trend}
-                trendDomain={page.trendDomain}
-                hasTrend={page.hasTrend}
-              />
-            )}
-            <RecentGradesStrip
-              grades={page.recentGrades}
-              impacts={impacts}
-              onPick={page.scrollToGrade}
-            />
-            {page.groups.map((group) => (
-              <SubjectGroupSection
-                key={group.subject}
-                group={group}
-                evalColors={page.evalColors}
-                highlightedKey={page.highlightedKey}
-                registerRow={page.registerRow}
-                onOpen={page.openGrade}
-              />
-            ))}
-          </m.div>
-        </FadeIn>
-      </m.div>
-    </AnimatePresence>
+    <div
+      key={page.selectedPeriod ?? "all"}
+      className="flex content-in flex-col gap-6 px-4 pt-4 pb-6"
+    >
+      {page.overallAverage !== null && (
+        <AverageCard
+          average={page.overallAverage}
+          trend={page.trend}
+          trendDomain={page.trendDomain}
+          hasTrend={page.hasTrend}
+        />
+      )}
+      <RecentGradesStrip
+        grades={page.recentGrades}
+        impacts={impacts}
+        onPick={page.scrollToGrade}
+      />
+      {page.groups.map((group) => {
+        const start = offset
+        offset += group.grades.length
+        return (
+          <SubjectGroupSection
+            key={group.subject}
+            group={group}
+            offset={animateRows ? start : undefined}
+            evalColors={page.evalColors}
+            highlightedKey={page.highlightedKey}
+            registerRow={page.registerRow}
+            onOpen={page.openGrade}
+          />
+        )
+      })}
+    </div>
   )
 }

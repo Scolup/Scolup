@@ -15,7 +15,7 @@
     "format": "oxfmt --write \"**/*.{ts,tsx}\"",
     "format:check": "oxfmt --check \"**/*.{ts,tsx}\"",
     "typecheck": "tsc -b --noEmit",
-    "doctor": "bunx react-doctor@latest",
+    "doctor": "react-doctor",
     "precommit": "bun run format && bun run build"
   },
   "dependencies": {

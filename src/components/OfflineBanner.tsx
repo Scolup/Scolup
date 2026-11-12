@@ -69,7 +69,7 @@ export function OfflineBanner() {
           initial={{ height: 0, opacity: 0, y: -8 }}
           animate={{ height: "auto", opacity: 1, y: 0 }}
           exit={{ height: 0, opacity: 0, y: -8 }}
-          transition={{ duration: 0.25, ease: [0.25, 0.1, 0.15, 1] }}
+          transition={{ duration: 0.2, ease: [0.25, 0.1, 0.15, 1] }}
           className="flex min-h-0 items-center justify-center overflow-hidden px-4 py-0.5"
         >
           <p className="flex min-w-0 items-center justify-center gap-1 text-center text-[11px] leading-tight text-muted-foreground/60">

@@ -127,7 +127,7 @@ export function SubjectRow({ subject }: { subject: ListedSubject }) {
         <CollapsibleTrigger
           aria-expanded={open}
           aria-label={`${open ? "Réduire" : "Personnaliser"} ${display}`}
-          className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition-colors outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex min-h-14 w-full press-lg items-center gap-3 px-4 py-3 text-left outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <span
             aria-hidden="true"
@@ -148,7 +148,7 @@ export function SubjectRow({ subject }: { subject: ListedSubject }) {
             icon={ChevronDownIcon}
             aria-hidden="true"
             className={cn(
-              "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+              "size-4 shrink-0 text-muted-foreground transition-transform duration-150",
               open && "rotate-180"
             )}
           />

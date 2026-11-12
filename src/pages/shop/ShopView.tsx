@@ -125,7 +125,7 @@ function OfflineShop() {
       action={
         <button
           type="button"
-          className="mt-4 text-xs font-medium text-primary underline-offset-4 hover:text-primary-text"
+          className="mt-4 press text-xs font-medium text-primary underline-offset-4 hover:text-primary-text"
           onClick={() => void window.dispatchEvent(new Event("online"))}
         >
           Se reconnecter

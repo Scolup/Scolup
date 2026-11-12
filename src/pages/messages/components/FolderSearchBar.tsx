@@ -74,7 +74,7 @@ export function FolderSearchBar({
       <div className="group/search relative min-w-0 flex-1">
         <HugeiconsIcon
           icon={Search01Icon}
-          className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground transition-colors duration-200 group-focus-within/search:text-foreground"
+          className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground transition-colors duration-150 group-focus-within/search:text-foreground"
           aria-hidden="true"
         />
         <Input
@@ -92,7 +92,7 @@ export function FolderSearchBar({
               onInputChange("")
             }}
             aria-label="Effacer la recherche"
-            className="absolute top-1/2 right-1 flex size-6 -translate-y-1/2 animate-in items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 zoom-in-90 fade-in hover:bg-muted hover:text-foreground"
+            className="absolute top-1/2 right-1 flex size-6 -translate-y-1/2 press-sm animate-in items-center justify-center rounded-full text-muted-foreground zoom-in-90 fade-in hover:bg-muted hover:text-foreground"
           >
             <HugeiconsIcon
               icon={Cancel01Icon}

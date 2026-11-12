@@ -262,16 +262,6 @@ export function shopItemIcon(
   return null
 }
 
-export function refundItem(
-  item: ShopItem,
-  balance: number,
-  owned: string[]
-): { status: "refunded"; balance: number; owned: string[] } {
-  const newBalance = balance - item.price
-  const newOwned = owned.filter((id) => id !== item.id)
-  return { status: "refunded", balance: newBalance, owned: newOwned }
-}
-
 // ---- Purchase ------------------------------------------------------------
 
 export type PurchaseStatus = "ok" | "owned" | "poor"
@@ -342,21 +332,4 @@ export function weekSummary(
     lastWeek: stats[lastKey] ?? 0,
     best,
   }
-}
-
-// One encouraging sentence, or null when there is nothing nice to say yet.
-// Never mentions a loss: a bad week simply shows nothing.
-export function weekMessage({
-  thisWeek,
-  lastWeek,
-  best,
-}: WeekSummary): string | null {
-  if (thisWeek <= 0) return null
-  if (best > 0 && thisWeek > best) {
-    return `Record personnel : +${thisWeek} cette semaine`
-  }
-  if (lastWeek > 0 && thisWeek >= lastWeek) {
-    return `+${thisWeek} cette semaine : tu fais mieux que la semaine dernière`
-  }
-  return `+${thisWeek} rubis cette semaine`
 }

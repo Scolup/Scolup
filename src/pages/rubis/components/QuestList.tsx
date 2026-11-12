@@ -110,7 +110,7 @@ function AchievedQuests({
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger
         className={cn(
-          "flex min-h-11 w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left transition-colors outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring/50",
+          "flex min-h-11 w-full press-lg items-center justify-between gap-3 px-3.5 py-2.5 text-left outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring/50",
           divided && "border-t border-border/60"
         )}
       >
@@ -122,7 +122,7 @@ function AchievedQuests({
           icon={ChevronDownIcon}
           aria-hidden="true"
           className={cn(
-            "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+            "size-4 shrink-0 text-muted-foreground transition-transform duration-150",
             open && "rotate-180"
           )}
         />

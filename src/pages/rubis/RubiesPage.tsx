@@ -41,7 +41,7 @@ export function RubiesPage() {
     <m.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.22, ease: [0.25, 0.1, 0.15, 1] }}
+      transition={{ duration: 0.18, ease: [0.25, 0.1, 0.15, 1] }}
       className="fixed inset-0 z-30 flex flex-col bg-background"
     >
       <header className="shrink-0 border-b border-border">
@@ -106,7 +106,7 @@ export function RubiesPage() {
               action={
                 <button
                   type="button"
-                  className="mt-4 text-sm font-medium text-primary underline-offset-4 hover:text-primary-text"
+                  className="mt-4 press text-sm font-medium text-primary underline-offset-4 hover:text-primary-text"
                   onClick={() => void window.dispatchEvent(new Event("online"))}
                 >
                   Se reconnecter

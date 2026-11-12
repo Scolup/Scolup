@@ -206,7 +206,7 @@ function ThemeSwatch({
                 d="M5 13l4 4L19 7"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.24, ease: "easeOut" }}
               />
             </svg>
           </m.span>

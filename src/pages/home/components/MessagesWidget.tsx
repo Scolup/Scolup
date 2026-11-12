@@ -62,7 +62,7 @@ export function MessagesWidget() {
   return (
     <section
       aria-label="Messages non lus"
-      className="flex flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
+      className="flex content-in flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
     >
       <button
         type="button"
@@ -70,7 +70,7 @@ export function MessagesWidget() {
           triggerHapticLight()
           navigate("/messages")
         }}
-        className="flex min-h-11 items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="flex min-h-11 press-lg items-center justify-between gap-2 rounded-2xl px-3.5 outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         <span className="truncate text-sm font-semibold text-card-foreground">
           Messages
@@ -92,7 +92,7 @@ export function MessagesWidget() {
             triggerHapticLight()
             navigate(`/messages?message=${message.id}`)
           }}
-          className="flex min-h-12 items-center gap-2.5 rounded-2xl bg-input/50 px-3.5 py-2.5 text-left transition-colors outline-none hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex min-h-12 press-lg items-center gap-2.5 rounded-2xl bg-input/50 px-3.5 py-2.5 text-left outline-none hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <span
             aria-hidden="true"

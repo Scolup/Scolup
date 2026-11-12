@@ -56,7 +56,7 @@ export function RecentGradesStrip({
                 great
                   ? { ...SPRING_POP, delay }
                   : {
-                      duration: 0.4,
+                      duration: 0.3,
                       ease: EASE_OUT,
                       delay,
                     }

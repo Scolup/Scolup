@@ -59,7 +59,7 @@ export function TwoFactorForm({
 
       <m.button
         type="button"
-        className="mt-2 cursor-pointer text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-primary-text"
+        className="mt-2 press cursor-pointer text-sm text-muted-foreground underline underline-offset-4 hover:text-primary-text"
         whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 17 }}
         onClick={onBack}

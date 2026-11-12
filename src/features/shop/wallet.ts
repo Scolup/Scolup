@@ -26,7 +26,7 @@ export interface Wallet {
 export const WALLET_KEY = "wallet"
 const KEPT_WEEKS = 12
 
-export function emptyWallet(): Wallet {
+function emptyWallet(): Wallet {
   return { earned: {}, claimed: {}, spent: {}, gifts: {} }
 }
 
@@ -170,7 +170,7 @@ export function spend(wallet: Wallet, itemId: string, price: number): Wallet {
   return { ...wallet, spent: { ...wallet.spent, [itemId]: toCount(price) } }
 }
 
-export function give(wallet: Wallet, id: string, amount: number): Wallet {
+function give(wallet: Wallet, id: string, amount: number): Wallet {
   return { ...wallet, gifts: { ...wallet.gifts, [id]: toCount(amount) } }
 }
 

@@ -213,6 +213,7 @@ function ownedFooter(
   if (!shown.owned) {
     return (
       <Button
+        key="buy"
         onClick={onBuy}
         disabled={shown.missing > 0}
         className="mt-4 h-11 w-full"
@@ -233,10 +234,11 @@ function ownedFooter(
 
   return (
     <Button
+      key="owned"
       variant="outline"
       disabled={usedAccent}
       onClick={onUse}
-      className="mt-4 h-11 w-full"
+      className="mt-4 h-11 w-full animate-[badge-pop_0.28s_ease-out]"
     >
       {shown.active ? (
         usedAccent ? (

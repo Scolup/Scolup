@@ -22,7 +22,7 @@ export function IncomeRules({ hideGrades }: { hideGrades: boolean }) {
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="overflow-hidden rounded-2xl border border-border/70 bg-card">
-        <CollapsibleTrigger className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring/50">
+        <CollapsibleTrigger className="flex min-h-11 w-full press-lg items-center justify-between gap-3 px-4 py-3 text-left outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring/50">
           <span className="flex min-w-0 flex-col gap-0.5">
             <span className="text-sm font-semibold">
               Comment gagner des rubis
@@ -35,7 +35,7 @@ export function IncomeRules({ hideGrades }: { hideGrades: boolean }) {
             icon={ChevronDownIcon}
             aria-hidden="true"
             className={cn(
-              "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+              "size-4 shrink-0 text-muted-foreground transition-transform duration-150",
               open && "rotate-180"
             )}
           />

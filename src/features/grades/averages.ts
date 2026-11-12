@@ -113,7 +113,7 @@ function generalAverage(groups: SubjectGroup[]): number | null {
 
 // Moyenne pondérée globale : toutes les notes dans un seul panier, chacune
 // pesée par coef du devoir × coef de sa matière.
-export function weightedAverage(
+function weightedAverage(
   grades: Grade[],
   coefOf?: SubjectCoefOf
 ): number | null {
@@ -136,7 +136,7 @@ export function weightedAverage(
 
 // Médiane des notes ramenées sur 20 (chaque note compte une fois,
 // sans pondération).
-export function medianAverage(grades: Grade[]): number | null {
+function medianAverage(grades: Grade[]): number | null {
   const scores = grades.flatMap((grade) => {
     const score = gradeScore20(grade)
     return score === null ? [] : [score]

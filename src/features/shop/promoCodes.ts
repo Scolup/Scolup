@@ -8,7 +8,7 @@ export interface PromoCode {
 // l'élève le tape — insensible à la casse — et prix en rubis). Ils sont
 // lisibles dans le bundle livré, et le portefeuille reste local : un code
 // n'est qu'une surprise, jamais un secret.
-export const PROMO_CODES: readonly PromoCode[] = [
+const PROMO_CODES: readonly PromoCode[] = [
   {
     itemId: "theme-halloween2026",
     code: "SRY6",

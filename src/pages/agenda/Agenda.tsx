@@ -66,7 +66,7 @@ export function Agenda() {
         key={toDayKey(page.date)}
         initial={{ opacity: 0, x: page.navDir * 32 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.22, ease: EASE_OUT }}
+        transition={{ duration: 0.18, ease: EASE_OUT }}
       >
         <DayView
           date={page.date}

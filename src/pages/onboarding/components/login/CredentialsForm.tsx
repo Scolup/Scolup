@@ -59,7 +59,7 @@ export function CredentialsForm({
             <m.button
               type="button"
               onClick={onTogglePassword}
-              className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+              className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 press-sm items-center justify-center rounded-lg text-muted-foreground hover:text-foreground"
               whileTap={{ scale: 0.85 }}
               transition={{ type: "spring", stiffness: 500, damping: 15 }}
               aria-label={

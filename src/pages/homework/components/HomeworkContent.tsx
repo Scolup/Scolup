@@ -1,4 +1,5 @@
 import { HugeiconsIcon } from "@hugeicons/react"
+import { RichHtml } from "@/components/RichHtml"
 import { m, AnimatePresence } from "motion/react"
 import { EASE_OUT } from "@/lib/motion"
 import {
@@ -133,9 +134,10 @@ export function HomeworkContent({
           icon={Notebook01Icon}
           label="Contenu"
           value={
-            <span
+            <RichHtml
+              as="span"
+              html={assignment.content}
               className={cn(proseClassName, "mt-1")}
-              dangerouslySetInnerHTML={{ __html: assignment.content }}
             />
           }
         />

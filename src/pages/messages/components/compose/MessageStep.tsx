@@ -32,7 +32,7 @@ export function MessageStep({ compose }: { compose: ComposeState }) {
           <button
             type="button"
             onClick={() => compose.setStep(1)}
-            className="flex min-h-11 w-full items-center gap-2 rounded-2xl border border-border/60 bg-input/50 px-3 text-left text-sm"
+            className="flex min-h-11 w-full press-lg items-center gap-2 rounded-2xl border border-border/60 bg-input/50 px-3 text-left text-sm"
           >
             <HugeiconsIcon
               icon={ArrowLeft01Icon}

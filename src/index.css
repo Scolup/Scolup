@@ -213,6 +213,182 @@
   }
 }
 
+/* ── Mouvement ────────────────────────────────────────────────────────────
+   Jetons partagés avec lib/motion.ts (mêmes durées, mêmes courbes). Règle :
+   on n'anime que transform et opacity, jamais filter, ombre ni dimensions
+   (sauf les panneaux dépliables). Tout ce qui est en boucle est en CSS pur,
+   donc exécuté par le compositeur et non par le thread principal. */
+:root {
+  --ease-out: cubic-bezier(0.25, 0.1, 0.15, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 90ms;
+  --duration-base: 150ms;
+  --duration-slow: 240ms;
+}
+
+/* T1 : retour tactile immédiat sur tout ce qui se touche. `press` pour les
+   lignes et boutons, `press-sm` pour les petites icônes, `press-lg` pour les
+   grandes cartes (un cran plus discret). Le :active d'un `button` natif
+   démarre au doigt posé, sans attendre le relâché. */
+@utility press {
+  -webkit-tap-highlight-color: transparent;
+  transition-property: transform, background-color, opacity, box-shadow;
+  transition-duration: var(--duration-fast), var(--duration-base),
+    var(--duration-base), var(--duration-base);
+  transition-timing-function: var(--ease-out);
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    transform: scale(0.97);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &:active:not(:disabled, [aria-disabled="true"]) {
+      transform: none;
+    }
+  }
+}
+
+@utility press-sm {
+  -webkit-tap-highlight-color: transparent;
+  transition-property: transform, background-color, opacity;
+  transition-duration: var(--duration-fast), var(--duration-base),
+    var(--duration-base);
+  transition-timing-function: var(--ease-out);
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    transform: scale(0.9);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &:active:not(:disabled, [aria-disabled="true"]) {
+      transform: none;
+    }
+  }
+}
+
+@utility press-lg {
+  -webkit-tap-highlight-color: transparent;
+  transition-property: transform, background-color, opacity, box-shadow;
+  transition-duration: var(--duration-fast), var(--duration-base),
+    var(--duration-base), var(--duration-base);
+  transition-timing-function: var(--ease-out);
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    transform: scale(0.985);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &:active:not(:disabled, [aria-disabled="true"]) {
+      transform: none;
+    }
+  }
+}
+
+/* T3 : changement d'écran. Le wrapper (display: contents) ne change rien à la
+   mise en page ; seul le premier enfant, la page elle-même, joue l'entrée.
+   --page-dx donne le sens : on arrive de la droite en avançant dans les
+   onglets, de la gauche en reculant. Pas d'animation de sortie : zéro
+   latence ajoutée. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--page-dx, 0px), 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.page-enter {
+  display: contents;
+}
+
+.page-enter > * {
+  animation: page-in var(--duration-slow) var(--ease-out) backwards;
+}
+
+/* T2 : apparition d'un élément de liste. L'index (plafonné côté JS) règle un
+   léger décalage ; --i vaut 0 hors des premiers éléments visibles. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@utility rise {
+  animation: rise var(--duration-slow) var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 25ms);
+}
+
+/* Fondu d'un contenu qui remplace son squelette de chargement. */
+@keyframes content-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility content-in {
+  animation: content-in var(--duration-base) var(--ease-out) backwards;
+}
+
+/* Neige : chute en transform, balancement en `translate` (propriété
+   individuelle) : deux animations compositées, aucune ne réveille le thread
+   principal. La chute est relative à la hauteur de l'écran. */
+@keyframes snow-fall {
+  from {
+    transform: translate3d(0, -16px, 0);
+  }
+  to {
+    transform: translate3d(0, 110dvh, 0);
+  }
+}
+
+@keyframes snow-sway {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  33% {
+    translate: var(--sway-a, 8px) 0;
+  }
+  66% {
+    translate: calc(var(--sway-b, 4px) * -1) 0;
+  }
+}
+
+@keyframes burst {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(0.5);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(var(--bx), var(--by), 0) scale(1);
+  }
+}
+
+@keyframes motif-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-10deg);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0) rotate(-6deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter > *,
+  .rise,
+  .content-in,
+  [data-deco-motion] {
+    animation: none !important;
+  }
+}
+
 /* Tactile uniquement : aucun contour de focus ni flash au toucher dans les
    graphiques. Le wrapper recharts prend le focus via accessibilityLayer et
    chaque navigateur tactile l'habille à sa façon (contour blanc, halo gris)

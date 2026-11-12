@@ -33,7 +33,7 @@ export function Absences() {
     <m.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.22, ease: [0.25, 0.1, 0.15, 1] }}
+      transition={{ duration: 0.18, ease: [0.25, 0.1, 0.15, 1] }}
       className="fixed inset-0 z-30 flex flex-col bg-background"
     >
       <div className="flex shrink-0 items-center gap-2 border-b border-border p-4">

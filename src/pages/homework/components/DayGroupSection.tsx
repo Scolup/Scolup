@@ -9,11 +9,15 @@ export function DayGroupSection({
   pending,
   onToggle,
   onSelect,
+  offset,
 }: {
   group: DayGroup
   pending: Set<string>
   onToggle: (assignment: Assignment) => void
   onSelect: (assignment: Assignment) => void
+  // Rang du premier devoir de ce groupe dans la liste entière (pour le
+  // décalage d'entrée), ou undefined pour ne pas animer.
+  offset?: number
 }) {
   const overdue =
     daysUntil(group.date) < 0 && group.assignments.some((a) => !a.done)
@@ -29,12 +33,13 @@ export function DayGroupSection({
           {dayLabel(group.date)}
         </span>
       </h2>
-      {group.assignments.map((assignment) => (
+      {group.assignments.map((assignment, index) => (
         <HomeworkEntry
           key={assignment.key}
           assignment={assignment}
           pending={pending.has(assignment.key)}
-          onToggle={() => onToggle(assignment)}
+          enterIndex={offset === undefined ? undefined : offset + index}
+          onToggle={onToggle}
           onSelect={onSelect}
         />
       ))}
