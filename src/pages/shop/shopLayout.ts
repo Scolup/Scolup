@@ -3,9 +3,9 @@ import type { ShopItem } from "@/features/shop/shopRules"
 // Limited-edition collections, in display order: the Christmas preview
 // first, then the limited editions. Every collection used in the catalog
 // must be listed here.
-export const COLLECTIONS: Record<string, { label: string; hint: string }> = {
-  noel: { label: "Noël", hint: "Édition limitée" },
-  halloween: { label: "Exclusivité Halloween", hint: "Édition limitée" },
+export const COLLECTIONS: Record<string, { label: string }> = {
+  noel: { label: "Noël" },
+  halloween: { label: "Exclusivité Halloween" },
 }
 
 const COLLECTION_ORDER = ["noel", "halloween"] as const
@@ -37,7 +37,6 @@ export interface ShopEntry {
 interface CollectionDef {
   id: (typeof COLLECTION_ORDER)[number]
   label: string
-  hint: string
   entries: ShopEntry[]
   endsAt?: Date // set while the limited edition is still running
 }
@@ -75,21 +74,22 @@ export function layoutShop(
     collections.push({
       id,
       label: def.label,
-      hint: def.hint,
       entries: withFeaturedTheme(group),
       endsAt,
     })
   }
 
   const permanent = entries.filter((entry) => {
+    // Collection items live only in their own section, never under
+    // "Couleurs & thèmes", even while their edition is running.
+    if (entry.item.collection) return false
     const startsAt = entry.item.startsAt
     const endsAt = entry.item.endsAt
     // Items without event dates are always permanent colors/themes
     if (!startsAt && !endsAt) return true
     // Items not yet started are not shown
     if (startsAt && now < startsAt) return false
-    // Items past their end date are removed from the shop, so owned event
-    // items no longer appear under "Couleurs & thèmes" after the event ends.
+    // Items past their end date are not shown
     if (endsAt && now >= endsAt) return false
     // Items within their window are shown
     return true

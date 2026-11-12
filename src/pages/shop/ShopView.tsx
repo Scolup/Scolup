@@ -47,7 +47,6 @@ export function ShopView() {
                 <CollectionBanner
                   id={group.id}
                   label={group.label}
-                  hint={group.hint}
                   countdown={
                     group.endsAt ? countdownLabel(now, group.endsAt) : ""
                   }
@@ -71,11 +70,7 @@ export function ShopView() {
             aria-labelledby="collection-colors"
             className="flex flex-col gap-2.5"
           >
-            <CollectionBanner
-              id="colors"
-              label="Couleurs & thèmes"
-              hint="L'épicerie des couleurs"
-            />
+            <CollectionBanner id="colors" label="Couleurs & thèmes" />
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
               {colors.map((entry) => (
                 <ShopCard
