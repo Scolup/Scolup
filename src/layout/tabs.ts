@@ -4,10 +4,12 @@ import {
   Home01Icon,
   LibraryIcon,
   Mortarboard01Icon,
+  BookOpen01Icon,
 } from "@hugeicons/core-free-icons"
 
 export const TABS = [
   { value: "home", path: "/", label: "Accueil", icon: Home01Icon },
+  { value: "learn", path: "/learn", label: "Apprendre", icon: BookOpen01Icon },
   {
     value: "messages",
     path: "/messages",

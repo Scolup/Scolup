@@ -32,12 +32,13 @@ import {
   Agenda,
   Grades,
   Homework,
+  Learn,
   Messages,
   pageLoaders,
   PostIts,
   RubiesPage,
 } from "./lazyPages"
-import { pathForTab, tabForPath } from "./tabs"
+import { pathForTab, tabForPath, TABS } from "./tabs"
 import { TabBar } from "./TabBar"
 import { useScrollMemory } from "./useScrollMemory"
 import { useTabBarShortcut } from "./useTabBarShortcut"
@@ -47,7 +48,7 @@ import { useTabBarShortcut } from "./useTabBarShortcut"
 // retrouve l'écran tel qu'on l'a laissé (état, données, défilement), sans
 // rechargement, et ses effets (rafraîchissements) sont suspendus tant qu'il
 // est masqué.
-const TAB_KEYS = ["", "messages", "agenda", "homework", "grades"]
+const TAB_KEYS = TABS.map(({ path }) => path.slice(1))
 const PAGE_SHIFT_PX = 12
 
 const SETTINGS_PATH = /^\/settings(?:\/([^/]+))?\/?$/
@@ -83,10 +84,14 @@ export function MainLayout({
   ...props
 }: React.ComponentProps<"div">) {
   const navigate = useNavigate()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const unreadMessages = useMessagesBadge()
   const tabBarHidden = useTabBarShortcut()
-  const scrollRef = useScrollMemory(pathname)
+  const scrollRef = useScrollMemory(
+    pathname === "/learn"
+      ? `/learn:${new URLSearchParams(search).get("vue") ?? "accueil"}`
+      : pathname
+  )
   // Entrée de page : on arrive de la droite en avançant, de la gauche en
   // reculant. Rien ne joue au tout premier affichage (le splash couvre).
   const pageKey = pageKeyForPath(pathname)
@@ -123,6 +128,7 @@ export function MainLayout({
     agenda: <Agenda />,
     homework: <Homework />,
     grades: <Grades />,
+    learn: <Learn />,
   }
   const [questToast, setQuestToast] = useState<string | null>(null)
   // Each quest reward bumps this tick: the active deco theme celebrates it.

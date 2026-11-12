@@ -11,11 +11,13 @@ export function RubisHero({
   pending,
   weekRubies,
   onClaim,
+  icon = "/ruby.svg",
 }: {
   rubies: number
   pending: number
   weekRubies: number
   onClaim: () => void
+  icon?: string
 }) {
   const hasPending = pending > 0
 
@@ -25,7 +27,7 @@ export function RubisHero({
     <div className="overflow-hidden pt-6 pb-4">
       <div className="flex items-center gap-2 pr-4">
         <img
-          src="/ruby.svg"
+          src={icon}
           alt=""
           aria-hidden="true"
           className="pointer-events-none -ml-11 size-32 shrink-0 opacity-70 dark:opacity-60"
@@ -49,7 +51,7 @@ export function RubisHero({
           )}
         >
           {hasPending && (
-            <img src="/ruby.svg" alt="" aria-hidden="true" className="size-4" />
+            <img src={icon} alt="" aria-hidden="true" className="size-4" />
           )}
           {hasPending ? `Récupérer +${pending}` : "Rien à récupérer"}
         </Button>

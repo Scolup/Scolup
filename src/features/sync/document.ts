@@ -16,6 +16,11 @@ import {
   type SyncedSetting,
 } from "./merge"
 import { isSyncedSetting } from "./keys"
+import {
+  mergeLearn,
+  parseLearn,
+  type LearnProgress,
+} from "@/features/learn/progress"
 
 export const DOC_VERSION = 1
 
@@ -23,6 +28,7 @@ export interface SyncState {
   settings: Record<string, SyncedSetting>
   subjects: Record<string, SubjectRecord>
   wallet: Wallet
+  learn: LearnProgress
   quests: {
     progress: ProgressMap
     ledger: Ledger
@@ -43,6 +49,7 @@ export function mergeStates(a: SyncState, b: SyncState): SyncState {
     settings: mergeSettings(a.settings, b.settings),
     subjects: mergeSubjects(a.subjects, b.subjects),
     wallet: mergeWallets(a.wallet, b.wallet),
+    learn: mergeLearn(a.learn, b.learn),
     quests: {
       progress: mergeProgress(a.quests.progress, b.quests.progress),
       ledger: mergeLedgers(a.quests.ledger, b.quests.ledger),
@@ -128,6 +135,7 @@ export function parseDoc(text: string): SyncDoc | null {
     settings,
     subjects,
     wallet: parseWallet(raw.wallet),
+    learn: parseLearn(raw.learn),
     quests: {
       progress: isRecord(quests.progress)
         ? (quests.progress as ProgressMap)

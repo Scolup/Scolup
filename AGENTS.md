@@ -174,7 +174,7 @@ A bug report names a symptom. Grep every caller of the function you're touching 
 
 ## Tabs stay alive
 
-- Les cinq onglets (accueil, messages, agenda, devoirs, notes) restent montés une fois visités, chacun dans une `<Activity>` de `MainLayout`. Un onglet masqué garde son état et son DOM, mais ses effets sont nettoyés puis relancés à l'affichage : un effet ne doit pas supposer que le composant est démonté en quittant l'onglet. Les écrans secondaires (rubis, absences, post-its) restent de simples routes.
+- Les six onglets (accueil, messages, agenda, devoirs, notes, apprendre) restent montés une fois visités, chacun dans une `<Activity>` de `MainLayout`. Un onglet masqué garde son état et son DOM, mais ses effets sont nettoyés puis relancés à l'affichage : un effet ne doit pas supposer que le composant est démonté en quittant l'onglet. Les écrans secondaires (rubis, absences, post-its) restent de simples routes.
 - `HomeRoute` ne lit pas l'URL : `MainLayout` lui indique si les réglages sont ouverts et sur quelle section.
 
 ## HTML venu de l'ENT

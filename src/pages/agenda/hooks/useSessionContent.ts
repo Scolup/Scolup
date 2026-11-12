@@ -1,7 +1,7 @@
 import { toDocuments } from "@/pages/homework/mappers"
 import { useEffect, useState } from "react"
 import { getFriendlyErrorMessage } from "litedirecte"
-import { ld } from "@/services/litedirecte"
+import { fetchDayEntries } from "@/pages/homework/fetchDayEntries"
 import { toDayKey } from "@/lib/dates"
 import type { Course } from "../types"
 import type { HomeworkDocument } from "@/pages/homework/types"
@@ -13,18 +13,6 @@ interface SessionContent {
 
 const dayCache = new Map<string, Array<Record<string, unknown>>>()
 const inflight = new Map<string, Promise<Array<Record<string, unknown>>>>()
-
-function entriesOf(payload: unknown): Array<Record<string, unknown>> {
-  if (Array.isArray(payload)) return payload as Array<Record<string, unknown>>
-  if (payload && typeof payload === "object") {
-    const record = payload as Record<string, unknown>
-    for (const key of ["matieres", "subjects"]) {
-      if (Array.isArray(record[key]))
-        return record[key] as Array<Record<string, unknown>>
-    }
-  }
-  return []
-}
 
 function matchesSubject(
   entry: Record<string, unknown>,
@@ -55,12 +43,11 @@ function toSession(
   return { html, documents: toDocuments(detail?.documents) }
 }
 
-async function fetchDayEntries(dayKey: string) {
+async function loadDay(dayKey: string) {
   const cached = inflight.get(dayKey)
   if (cached) return cached
   const promise = (async () => {
-    const raw = (await ld.homework.getHomeworkForDate(dayKey)) as unknown
-    const entries = entriesOf(raw)
+    const entries = await fetchDayEntries(dayKey)
     dayCache.set(dayKey, entries)
     return entries
   })()
@@ -101,7 +88,7 @@ export function useSessionContent(course: Course | null) {
     setError(null)
     ;(async () => {
       try {
-        const entries = await fetchDayEntries(dayKey)
+        const entries = await loadDay(dayKey)
         if (cancelled) return
         setSession(toSession(entries, code, title))
       } catch (err) {

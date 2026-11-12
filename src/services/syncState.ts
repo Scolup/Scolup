@@ -15,12 +15,18 @@ import { mergeStates, type SyncState } from "@/features/sync/document"
 import { isSyncedSetting } from "@/features/sync/keys"
 import { canonical, type SyncedSetting } from "@/features/sync/merge"
 import { getDB, type SubjectRecord } from "./storage"
+import {
+  exchangedRubies,
+  parseLearn,
+  withGemExchange,
+} from "@/features/learn/progress"
 
 export interface Applied {
   settings: string[] // réglages modifiés
   subjects: boolean
   wallet: boolean
   quests: boolean
+  learn: boolean
 }
 
 function readJson<T>(raw: unknown, fallback: T): T {
@@ -36,12 +42,13 @@ function readJson<T>(raw: unknown, fallback: T): T {
 // Fusionne les états distants dans la base locale et renvoie l'état obtenu.
 // Sans état distant, c'est une simple lecture.
 export async function mergeIntoLocal(
-  remotes: SyncState[]
+  remotes: SyncState[],
+  accountId: string
 ): Promise<{ state: SyncState; applied: Applied }> {
   console.debug("[sync] mergeIntoLocal: remotes =", remotes.length)
   const db = await getDB()
   const tx = db.transaction(
-    ["settings", "meta", "subjects", "shop", "quests"],
+    ["settings", "meta", "subjects", "shop", "quests", "learn"],
     "readwrite"
   )
   const settingsStore = tx.objectStore("settings")
@@ -49,6 +56,7 @@ export async function mergeIntoLocal(
   const subjectsStore = tx.objectStore("subjects")
   const shopStore = tx.objectStore("shop")
   const questsStore = tx.objectStore("quests")
+  const learnStore = tx.objectStore("learn")
 
   // ---- Lecture
   const settings: Record<string, SyncedSetting> = {}
@@ -84,6 +92,7 @@ export async function mergeIntoLocal(
     settings,
     subjects,
     wallet: localWallet,
+    learn: parseLearn(await learnStore.get(accountId)),
     quests: {
       progress: parseProgress(
         await questsStore.get(PROGRESS_KEY),
@@ -109,7 +118,16 @@ export async function mergeIntoLocal(
   })
 
   // ---- Fusion
-  const merged = remotes.reduce(mergeStates, local)
+  const combined = remotes.reduce(mergeStates, local)
+  const exchanged = Math.max(
+    combined.learn.exchanged,
+    exchangedRubies(combined.wallet, accountId)
+  )
+  const merged = {
+    ...combined,
+    learn: { ...combined.learn, exchanged },
+    wallet: withGemExchange(combined.wallet, accountId, exchanged),
+  }
   console.debug(
     "[sync] merged wallet earned:",
     Object.keys(merged.wallet.earned).length,
@@ -123,6 +141,7 @@ export async function mergeIntoLocal(
     subjects: false,
     wallet: false,
     quests: false,
+    learn: false,
   }
   await Promise.all(
     Object.entries(merged.settings).map(async ([key, entry]) => {
@@ -159,6 +178,11 @@ export async function mergeIntoLocal(
       applied.quests = true
     })
   )
+
+  if (canonical(local.learn) !== canonical(merged.learn)) {
+    await learnStore.put(merged.learn, accountId)
+    applied.learn = true
+  }
 
   await tx.done
   return { state: merged, applied }

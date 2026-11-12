@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticLight } from "@/services/haptics"
 import { mergeDayDetails } from "../updates"
 import { normalizeCalendar } from "../mappers"
+import { fetchDayEntries } from "../fetchDayEntries"
 import type { Assignment, AssignmentsSetter } from "../types"
 
 export function useHomeworkDetail(
@@ -49,18 +49,9 @@ export function useHomeworkDetail(
     setDetailError(null)
     ;(async () => {
       try {
-        const raw = (await ld.homework.getHomeworkForDate(
-          selected.dueKey
-        )) as unknown
+        const entries = await fetchDayEntries(selected.dueKey)
         if (cancelled) return
-        const list = Array.isArray((raw as { matieres?: unknown }).matieres)
-          ? (raw as { matieres: unknown[] }).matieres
-          : Array.isArray((raw as { subjects?: unknown }).subjects)
-            ? (raw as { subjects: unknown[] }).subjects
-            : Array.isArray(raw)
-              ? raw
-              : []
-        const parsed = normalizeCalendar({ [selected.dueKey]: list })
+        const parsed = normalizeCalendar({ [selected.dueKey]: entries })
         const found =
           parsed.find((a) => a.id === selected.id) ?? parsed[0] ?? null
         fetchedDays.add(selected.dueKey)

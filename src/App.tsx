@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router"
 import { useOnboardingStatus } from "./features/onboarding/useOnboardingStatus"
 import { lazyPage } from "./lib/lazyPage"
 import { revealRoute } from "./services/splash"
+import { warmLearnEmbeddings } from "./services/learnEmbeddings"
 
 import { DecoParticles } from "@/components/DecoOrnament"
 
@@ -36,6 +37,8 @@ function Loading() {
 
 export default function App() {
   const { hasCompletedOnboarding, isLoading } = useOnboardingStatus()
+
+  useEffect(warmLearnEmbeddings, [])
 
   useEffect(() => {
     if (isLoading) {

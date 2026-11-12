@@ -12,11 +12,11 @@ import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useSplashTask } from "@/services/splash"
 import { useRubies } from "@/features/shop/useRubies"
 import { useNavigate } from "react-router"
-import { triggerHapticLight } from "@/services/haptics"
 import { useEffect } from "react"
 import { track } from "@/features/quests/service"
 import { toDayKey } from "@/lib/dates"
-import { AnimatedNumber } from "@/components/AnimatedNumber"
+import { CurrencyPill } from "@/components/CurrencyPill"
+import { triggerHapticLight } from "@/services/haptics"
 import { DecoMotif } from "@/components/DecoOrnament"
 
 const SCHOOL_LINKS = [
@@ -75,20 +75,14 @@ export function HomePage() {
           onAboutOpenChange={page.setAboutOpen}
         />
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
+          <CurrencyPill
+            amount={rubies}
+            currency="rubis"
+            onOpen={() => {
               triggerHapticLight()
               navigate("/rubis")
             }}
-            aria-label={`Rubis : ${rubies} — boutique et quêtes`}
-            className="flex h-11 press items-center gap-1.5 rounded-full border border-border/70 bg-card/80 px-3 outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            <img src="/ruby.svg" alt="" aria-hidden="true" className="size-5" />
-            <span className="text-sm font-medium text-card-foreground">
-              <AnimatedNumber value={String(rubies)} />
-            </span>
-          </button>
+          />
         </div>
       </div>
 

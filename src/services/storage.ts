@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb"
 import type { Wallet } from "@/features/shop/wallet"
+import type { LearnProgress } from "@/features/learn/progress"
 import { isSyncedSetting } from "@/features/sync/keys"
 import { markDirty } from "./syncSignal"
 
@@ -32,6 +33,10 @@ interface ScolupDB extends DBSchema {
     key: string
     value: string
   }
+  learn: {
+    key: string
+    value: LearnProgress
+  }
   // Horodatage (ms) de chaque réglage synchronisé, clé "s:<réglage>".
   meta: {
     key: string
@@ -43,7 +48,7 @@ let dbInstance: IDBPDatabase<ScolupDB> | null = null
 
 export async function getDB(): Promise<IDBPDatabase<ScolupDB>> {
   if (!dbInstance) {
-    dbInstance = await openDB<ScolupDB>("scolup", 6, {
+    dbInstance = await openDB<ScolupDB>("scolup", 7, {
       upgrade(db, oldVersion) {
         if (oldVersion < 1) db.createObjectStore("settings")
         else if (!db.objectStoreNames.contains("settings")) {
@@ -60,6 +65,9 @@ export async function getDB(): Promise<IDBPDatabase<ScolupDB>> {
         }
         if (oldVersion < 6 && !db.objectStoreNames.contains("meta")) {
           db.createObjectStore("meta")
+        }
+        if (oldVersion < 7 && !db.objectStoreNames.contains("learn")) {
+          db.createObjectStore("learn")
         }
       },
     })

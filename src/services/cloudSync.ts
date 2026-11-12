@@ -31,6 +31,7 @@ import {
 import type { SyncListing } from "./cloudTransport"
 import { ld } from "./litedirecte"
 import { mergeIntoLocal, type Applied } from "./syncState"
+import { publishLearn } from "@/features/learn/learnStore"
 import type { SyncState } from "@/features/sync/document"
 import { onDirty } from "./syncSignal"
 
@@ -212,7 +213,7 @@ async function runOnce(): Promise<void> {
   }
   const accountId = String(account.id)
   const me = deviceId()
-  console.debug("[sync] account:", accountId, "device:", me)
+  console.debug("[sync] device:", me)
 
   const listing = await listSyncFolder()
   if (!listing) {
@@ -262,7 +263,8 @@ async function runOnce(): Promise<void> {
 
   // 2. Fusionner dans la base locale (une seule transaction).
   console.debug("[sync] merging", peers.length, "peer(s)")
-  const { state, applied } = await mergeIntoLocal(peers)
+  const { state, applied } = await mergeIntoLocal(peers, accountId)
+  if (applied.learn) publishLearn(accountId, state.learn)
   console.debug("[sync] applied:", applied)
   applyToUi(applied, state)
 
@@ -270,14 +272,6 @@ async function runOnce(): Promise<void> {
   const own = groups.get(me) ?? []
   const print = fingerprint(state)
   const lastPrint = readStored(FINGERPRINT_KEY)
-  console.debug(
-    "[sync] fingerprint:",
-    print,
-    "last:",
-    lastPrint,
-    "own files:",
-    own.length
-  )
   if (print !== lastPrint || own.length === 0) {
     const rev = Number(readStored(REV_KEY) ?? 0) + 1
     const doc: SyncDoc = {

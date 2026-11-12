@@ -51,6 +51,7 @@ export function TabBar({
           <BottomNavigationItem
             key={tab.value}
             value={tab.value}
+            className="min-h-11 px-0.5"
             {...(isActive ? { onClick: onRetap } : {})}
           >
             <BottomNavigationItemIcon
@@ -68,7 +69,7 @@ export function TabBar({
               </m.span>
               {count > 0 && <UnreadBadge key={count} count={count} />}
             </BottomNavigationItemIcon>
-            <BottomNavigationItemLabel>
+            <BottomNavigationItemLabel className="text-[10px] min-[400px]:text-xs">
               {tab.label}
               {count > 0 && (
                 <span className="sr-only">{unreadLabel(count)}</span>

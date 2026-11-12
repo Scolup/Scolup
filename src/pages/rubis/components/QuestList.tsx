@@ -9,14 +9,19 @@ import {
 } from "@/components/ui/collapsible"
 import { ProgressRing } from "@/components/ProgressRing"
 import type { QuestItem } from "@/features/quests/useQuests"
-import type { QuestGroup } from "../groupQuests"
+type DisplayQuest = Pick<
+  QuestItem,
+  "id" | "state" | "title" | "description" | "count" | "goal" | "reward"
+>
 
 export function QuestList({
   groups,
   achieved,
+  icon = "/ruby.svg",
 }: {
-  groups: QuestGroup[]
-  achieved: QuestItem[]
+  groups: { quest: DisplayQuest; tier: number; tiers: number }[]
+  achieved: DisplayQuest[]
+  icon?: string
 }) {
   if (groups.length === 0 && achieved.length === 0) return null
 
@@ -30,13 +35,18 @@ export function QuestList({
                 quest={quest}
                 tier={tiers > 1 ? tier : undefined}
                 tiers={tiers}
+                icon={icon}
               />
             </li>
           ))}
         </ul>
       )}
       {achieved.length > 0 && (
-        <AchievedQuests quests={achieved} divided={groups.length > 0} />
+        <AchievedQuests
+          quests={achieved}
+          divided={groups.length > 0}
+          icon={icon}
+        />
       )}
     </div>
   )
@@ -46,10 +56,12 @@ function QuestRow({
   quest,
   tier,
   tiers,
+  icon,
 }: {
-  quest: QuestItem
+  quest: DisplayQuest
   tier?: number
   tiers?: number
+  icon: string
 }) {
   const achieved = quest.state === "achieved"
 
@@ -79,7 +91,7 @@ function QuestRow({
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <img
-          src="/ruby.svg"
+          src={icon}
           alt=""
           aria-hidden="true"
           className={cn("size-4", !achieved && "grayscale")}
@@ -100,9 +112,11 @@ function QuestRow({
 function AchievedQuests({
   quests,
   divided,
+  icon,
 }: {
-  quests: QuestItem[]
+  quests: DisplayQuest[]
   divided: boolean
+  icon: string
 }) {
   const [open, setOpen] = useState(false)
 
@@ -131,7 +145,7 @@ function AchievedQuests({
         <ul className="divide-y divide-border/60 border-t border-border/60">
           {quests.map((quest) => (
             <li key={quest.id}>
-              <QuestRow quest={quest} />
+              <QuestRow quest={quest} icon={icon} />
             </li>
           ))}
         </ul>
