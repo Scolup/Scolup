@@ -15,19 +15,19 @@ import { countdownLabel, layoutShop } from "./shopLayout"
 // The shop shelf, shown as the rubies hub's second tab: the header, back
 // button and balance stay in the hub.
 export function ShopView() {
-  const page = useShopPage()
-  const showSkeleton = useDelayedLoading(!page.ready)
-  const [offline, setOffline] = useState(() => getSyncStatus().offline)
-
-  useEffect(() => onSyncStatus(() => setOffline(getSyncStatus().offline)), [])
-  // A ticking clock drives the limited-edition countdowns and makes the
-  // collection vanish on time without a page reload.
+  // A ticking clock drives the limited-edition countdowns, the flash sale and
+  // makes the collection vanish on time without a page reload.
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 30_000)
     return () => window.clearInterval(timer)
   }, [])
 
+  const page = useShopPage(now)
+  const showSkeleton = useDelayedLoading(!page.ready)
+  const [offline, setOffline] = useState(() => getSyncStatus().offline)
+
+  useEffect(() => onSyncStatus(() => setOffline(getSyncStatus().offline)), [])
   const { collections, colors } = layoutShop(page.items, now)
 
   return (

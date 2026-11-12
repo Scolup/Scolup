@@ -41,7 +41,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Sapin",
     description: "Le vert des sapins que la première neige recouvre.",
-    price: 450,
+    price: 200,
     value: "sapin",
     color: "#166534",
     foreground: "#ffffff",
@@ -54,7 +54,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Blanc neige",
     description: "Un blanc de première neige, encore intact.",
-    price: 600,
+    price: 200,
     value: "neige",
     color: "#f1f5f9",
     foreground: "#1a1a1a",
@@ -68,8 +68,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     label: "Thème Noël",
     description:
       "La neige tombe sur tous les écrans, cadeaux et étoiles tapissent l'app et un grand cadeau signe ton accueil. Toute l'app passe en mode décembre.",
-    price: 400,
-    originalPrice: 500,
+    price: 600,
     value: "noel",
     color: "#ef4444",
     foreground: "#ffffff",
@@ -84,7 +83,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Pain d'épice",
     description: "Le brun doré des goûters de décembre.",
-    price: 375,
+    price: 250,
     value: "pain-epice",
     color: "#a0522d",
     foreground: "#ffffff",
@@ -99,8 +98,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     label: "Citrouille",
     description:
       "L'orange brûlé des nuits d'Halloween : potirons, bonbons, devoirs finis.",
-    price: 150,
-    originalPrice: 225,
+    price: 250,
     value: "orange",
     color: "#c2410c",
     foreground: "#ffffff",
@@ -113,8 +111,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Violet lugubre",
     description: "Le violet de minuit, allumé à la dernière lampe.",
-    price: 262,
-    originalPrice: 375,
+    price: 200,
     value: "sorciere",
     color: "#4c1d95",
     foreground: "#ffffff",
@@ -128,7 +125,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     label: "Halloween",
     description:
       "Un fond de nuit d'Halloween habille toute l'app et une grande citrouille signe ton accueil. L'app sent la nuit d'Halloween.",
-    price: 400,
+    price: 500,
     value: "halloween2026",
     color: "#c2410c",
     foreground: "#ffffff",
@@ -144,7 +141,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Violet",
     description: "Le violet des grandes idées.",
-    price: 225,
+    price: 200,
     value: "violet",
     color: "#8b5cf6",
     foreground: "#ffffff",
@@ -154,7 +151,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Turquoise",
     description: "L'eau claire des vacances d'été.",
-    price: 225,
+    price: 250,
     value: "teal",
     color: "#0d9488",
     foreground: "#1a1a1a",
@@ -164,8 +161,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Cobalt",
     description: "Un bleu franc, taillé pour viser haut.",
-    price: 300,
-    originalPrice: 375,
+    price: 250,
+    originalPrice: 300,
     value: "cobalt",
     color: "#1d4ed8",
     foreground: "#ffffff",
@@ -175,7 +172,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Rose",
     description: "Une couleur qui ne passe jamais inaperçue.",
-    price: 450,
+    price: 200,
     value: "pink",
     color: "#db2777",
     foreground: "#ffffff",
@@ -185,7 +182,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Aurore",
     description: "Un cyan électrique, comme une aurore boréale.",
-    price: 750,
+    price: 200,
     value: "aurore",
     color: "#22d3ee",
     foreground: "#1a1a1a",
@@ -195,7 +192,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Or",
     description: "La couleur des records battus.",
-    price: 1125,
+    price: 300,
+    originalPrice: 350,
     value: "or",
     color: "#ca8a04",
     foreground: "#1a1a1a",
@@ -205,7 +203,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Menthe",
     description: "Le vert frais de la rentrée, encore tout neuf.",
-    price: 225,
+    price: 200,
     value: "menthe",
     color: "#34d399",
     foreground: "#1a1a1a",
@@ -215,7 +213,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     kind: "accent",
     label: "Orange",
     description: "L'orange des boîtes de crayons, bien vif.",
-    price: 225,
+    price: 200,
     value: "orange-clair",
     color: "#fb923c",
     foreground: "#1a1a1a",
@@ -226,7 +224,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     label: "Bordeaux",
     description:
       "Le rouge le plus foncé de la boutique : profond, sérieux, chic.",
-    price: 225,
+    price: 200,
     value: "bordeaux",
     color: "#641220",
     foreground: "#ffffff",
@@ -246,6 +244,28 @@ export const SHOP_ITEMS: ShopItem[] = [
       "radial-gradient(120% 120% at 50% 20%, #4f46e5 0%, #818cf8 55%, #fde68a 100%)",
   },
 ]
+
+// ---- Flash sale ----------------------------------------------------------
+// Half price on every permanent color, for the whole day of 27 November 2026
+// (local time). Collection items keep their own price.
+const FLASH_SALE_START = new Date("2026-11-27T00:00:00")
+const FLASH_SALE_END = new Date("2026-11-28T00:00:00")
+
+// The item as the shop must show and sell it right now: during the flash sale
+// a permanent color comes half price, its normal price crossed out.
+export function withSale(item: ShopItem, now: Date): ShopItem {
+  const onSale =
+    item.kind === "accent" &&
+    !item.collection &&
+    now >= FLASH_SALE_START &&
+    now < FLASH_SALE_END
+  if (!onSale) return item
+  return {
+    ...item,
+    price: Math.round(item.price / 2),
+    originalPrice: item.price,
+  }
+}
 
 // The shop-bubble logo: an explicit icon when the item carries one, else the
 // theme's motif, and nothing for plain colors.

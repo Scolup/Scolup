@@ -6,6 +6,7 @@ import { markDirty } from "@/services/syncSignal"
 import {
   purchase,
   SHOP_ITEMS,
+  withSale,
   type PurchaseStatus,
   type WeekStats,
 } from "./shopRules"
@@ -39,11 +40,12 @@ export async function buyItem(
   const item = SHOP_ITEMS.find((candidate) => candidate.id === id)
   if (!item) return "unknown"
   try {
+    const onSale = withSale(item, new Date())
     const discount = code ? promoPrice(item.id, code) : null
     if (code && discount === null) return "invalid-promo"
     const pricedItem = {
-      ...item,
-      price: Math.min(item.price, discount ?? item.price),
+      ...onSale,
+      price: Math.min(onSale.price, discount ?? onSale.price),
     }
     const db = await getDB()
     const tx = db.transaction("shop", "readwrite")

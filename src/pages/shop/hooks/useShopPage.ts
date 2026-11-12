@@ -10,6 +10,7 @@ import {
   itemActive,
   itemOwned,
   SHOP_ITEMS,
+  withSale,
   type ShopItem,
 } from "@/features/shop/shopRules"
 import type { ShopEntry } from "../shopLayout"
@@ -19,7 +20,7 @@ interface Notice {
   tone: "success" | "error"
 }
 
-export function useShopPage() {
+export function useShopPage(now: Date) {
   const rubies = useRubies()
   const { state, ready } = useShop()
   const { accentColor, setAccentColor, decoTheme, setDecoTheme } = useTheme()
@@ -32,13 +33,16 @@ export function useShopPage() {
   // (the item dialog syncs its own copy of the open entry during render).
   const items: ShopEntry[] = useMemo(
     () =>
-      SHOP_ITEMS.map((item) => ({
-        item,
-        owned: itemOwned(item, state.owned),
-        active: itemActive(item, accentColor, decoTheme),
-        missing: Math.max(0, item.price - rubies),
-      })),
-    [state.owned, accentColor, decoTheme, rubies]
+      SHOP_ITEMS.map((item) => {
+        const priced = withSale(item, now)
+        return {
+          item: priced,
+          owned: itemOwned(priced, state.owned),
+          active: itemActive(priced, accentColor, decoTheme),
+          missing: Math.max(0, priced.price - rubies),
+        }
+      }),
+    [state.owned, accentColor, decoTheme, rubies, now]
   )
 
   // The dialog entry derives from items, so a purchase re-renders it live.
