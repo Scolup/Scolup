@@ -37,7 +37,7 @@ export function AppToast({
           initial={{ opacity: 0, y: 12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 8, scale: 0.98 }}
-          transition={{ duration: 0.22, ease: [0.25, 0.1, 0.15, 1] }}
+          transition={{ duration: 0.18, ease: [0.25, 0.1, 0.15, 1] }}
           role={success ? "status" : "alert"}
           style={{
             bottom:
@@ -63,7 +63,7 @@ export function AppToast({
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex size-8 shrink-0 press-sm items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <HugeiconsIcon
               icon={Cancel01Icon}

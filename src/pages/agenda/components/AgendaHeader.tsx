@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { fr } from "react-day-picker/locale/fr"
 import { cn } from "@/lib/utils"
+import { SPRING_SOFT } from "@/lib/motion"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -64,7 +65,7 @@ function ViewSwitch({
             onViewChange(value)
           }}
           className={cn(
-            "relative rounded-full px-3 py-1 text-xs font-medium transition-colors duration-200 outline-none",
+            "relative press rounded-full px-3 py-1 text-xs font-medium outline-none",
             "focus-visible:ring-3 focus-visible:ring-ring/30",
             buttonClassName,
             view === value
@@ -75,7 +76,7 @@ function ViewSwitch({
           {view === value && (
             <m.span
               layoutId="agenda-view-pill"
-              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              transition={SPRING_SOFT}
               className="absolute inset-0 rounded-full bg-card shadow-sm"
               aria-hidden="true"
             />
@@ -132,7 +133,7 @@ export function AgendaHeader({
                   type="button"
                   aria-label="Choisir une date"
                   title="Choisir une date"
-                  className="flex min-w-0 shrink-0 cursor-pointer flex-col rounded-lg px-1 text-left transition-colors outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="flex min-w-0 shrink-0 press cursor-pointer flex-col rounded-lg px-1 text-left outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/40"
                 />
               }
             >
@@ -215,7 +216,7 @@ export function AgendaHeader({
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: "spring", stiffness: 500, damping: 22 }}
                   className={cn(
-                    "relative flex size-8 items-center justify-center rounded-full text-sm tabular-nums transition-colors duration-200",
+                    "relative flex size-8 items-center justify-center rounded-full text-sm tabular-nums",
                     isSelected
                       ? "font-bold text-primary-foreground"
                       : isDayToday

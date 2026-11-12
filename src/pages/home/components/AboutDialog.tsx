@@ -132,6 +132,7 @@ export function AboutDialog({
               render={
                 <a
                   href={link.href}
+                  aria-label={link.label}
                   target={link.external ? "_blank" : undefined}
                   rel={link.external ? "noopener noreferrer" : undefined}
                 />

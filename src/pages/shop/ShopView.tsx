@@ -15,19 +15,19 @@ import { countdownLabel, layoutShop } from "./shopLayout"
 // The shop shelf, shown as the rubies hub's second tab: the header, back
 // button and balance stay in the hub.
 export function ShopView() {
-  const page = useShopPage()
-  const showSkeleton = useDelayedLoading(!page.ready)
-  const [offline, setOffline] = useState(() => getSyncStatus().offline)
-
-  useEffect(() => onSyncStatus(() => setOffline(getSyncStatus().offline)), [])
-  // A ticking clock drives the limited-edition countdowns and makes the
-  // collection vanish on time without a page reload.
+  // A ticking clock drives the limited-edition countdowns, the flash sale and
+  // makes the collection vanish on time without a page reload.
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 30_000)
     return () => window.clearInterval(timer)
   }, [])
 
+  const page = useShopPage(now)
+  const showSkeleton = useDelayedLoading(!page.ready)
+  const [offline, setOffline] = useState(() => getSyncStatus().offline)
+
+  useEffect(() => onSyncStatus(() => setOffline(getSyncStatus().offline)), [])
   const { collections, colors } = layoutShop(page.items, now)
 
   return (
@@ -47,7 +47,6 @@ export function ShopView() {
                 <CollectionBanner
                   id={group.id}
                   label={group.label}
-                  hint={group.hint}
                   countdown={
                     group.endsAt ? countdownLabel(now, group.endsAt) : ""
                   }
@@ -71,11 +70,7 @@ export function ShopView() {
             aria-labelledby="collection-colors"
             className="flex flex-col gap-2.5"
           >
-            <CollectionBanner
-              id="colors"
-              label="Couleurs & thèmes"
-              hint="L'épicerie des couleurs"
-            />
+            <CollectionBanner id="colors" label="Couleurs & thèmes" />
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
               {colors.map((entry) => (
                 <ShopCard
@@ -92,8 +87,8 @@ export function ShopView() {
       <ShopItemDrawer
         entry={page.selected}
         onOpenChange={page.deselect}
-        onBuy={(code) => {
-          if (page.selected) void page.buy(page.selected.item, code)
+        onBuy={() => {
+          if (page.selected) void page.buy(page.selected.item)
         }}
         onUse={() => {
           if (page.selected) page.use(page.selected.item)
@@ -125,7 +120,7 @@ function OfflineShop() {
       action={
         <button
           type="button"
-          className="mt-4 text-xs font-medium text-primary underline-offset-4 hover:text-primary-text"
+          className="mt-4 press text-xs font-medium text-primary underline-offset-4 hover:text-primary-text"
           onClick={() => void window.dispatchEvent(new Event("online"))}
         >
           Se reconnecter

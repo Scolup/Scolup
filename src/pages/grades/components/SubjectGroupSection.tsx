@@ -1,6 +1,6 @@
-import { m } from "motion/react"
+import type { CSSProperties } from "react"
 import { cn } from "@/lib/utils"
-import { EASE_OUT } from "@/lib/motion"
+import { entranceRank } from "@/lib/motion"
 import {
   resolveSubjectColor,
   resolveSubjectName,
@@ -23,12 +23,16 @@ export function SubjectGroupSection({
   highlightedKey,
   registerRow,
   onOpen,
+  offset,
 }: {
   group: SubjectGroup
   evalColors: string[]
   highlightedKey: string | null
   registerRow: (key: string, el: HTMLElement | null) => void
   onOpen: (key: string) => void
+  // Rang de la première note du groupe dans la page (décalage d'entrée), ou
+  // undefined pour ne pas animer.
+  offset?: number
 }) {
   const { scale } = useAverageSettings()
   const color = resolveSubjectColor(group.subjectCode, group.subject)
@@ -76,22 +80,21 @@ export function SubjectGroupSection({
         {group.grades.map((grade, index) => {
           const dateLabel = formatGradeDate(grade.date)
           const showCoef = grade.coef !== "1" && grade.coef !== "0"
+          const rank =
+            offset === undefined ? null : entranceRank(offset + index)
           return (
-            <m.button
+            <button
               key={grade.key}
               type="button"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.35,
-                ease: EASE_OUT,
-                delay: 0.05 + index * 0.03,
-              }}
+              style={
+                rank !== null ? ({ "--i": rank } as CSSProperties) : undefined
+              }
               ref={(el) => registerRow(grade.key, el)}
               onClick={() => onOpen(grade.key)}
               aria-label={`Voir le détail : ${grade.title}`}
               className={cn(
-                "flex min-h-14 w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors duration-300",
+                "flex min-h-14 w-full press-lg cursor-pointer items-center gap-3 px-4 py-3 text-left active:bg-muted/50",
+                rank !== null && "rise",
                 index > 0 && "border-t border-border/60",
                 grade.nonSignificant && "opacity-60",
                 highlightedKey === grade.key && "bg-primary/[0.08]"
@@ -135,7 +138,7 @@ export function SubjectGroupSection({
                   {gradeLabel(grade)}
                 </span>
               )}
-            </m.button>
+            </button>
           )
         })}
       </div>

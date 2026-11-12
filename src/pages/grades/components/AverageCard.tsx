@@ -1,7 +1,14 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react"
+import {
+  lazy,
+  Suspense,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react"
 import { countUpValue } from "@/lib/countUp"
 import { formatAverage, formatAverageValue } from "@/features/grades/averages"
-import { type TrendPoint } from "@/features/grades/types"
+import { type AverageScale, type TrendPoint } from "@/features/grades/types"
 import { useAverageSettings } from "@/features/grades/averageSettings"
 import { AnimatedNumber } from "@/components/AnimatedNumber"
 
@@ -11,58 +18,65 @@ const GradesTrendChart = lazy(() =>
 
 // Count-up honnête (valeur réelle interpolée, ~700 ms ease-out) : la moyenne
 // est le chiffre émotionnel de l'app, elle mérite le seul moment expressif.
+// Le texte est écrit directement dans le DOM à chaque image : aucun état React,
+// donc aucun re-rendu de la carte (ni du graphe) pendant l'animation.
 // Reduced-motion : valeur directe, sans mouvement.
-function useCountUp(target: number): number {
-  const [value, setValue] = useState(target)
+function useCountUp(
+  target: number,
+  scale: AverageScale,
+  ref: RefObject<HTMLSpanElement | null>
+) {
   const from = useRef(target)
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const element = ref.current
     if (
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
-      from.current === target
+      !element ||
+      from.current === target ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      setValue(target)
       from.current = target
       return
     }
     const start = from.current
     const t0 = performance.now()
-    const duration = 700
+    const duration = 500
     let raf = 0
     const tick = (now: number) => {
       const progress = (now - t0) / duration
-      setValue(countUpValue(start, target, progress))
+      const value = countUpValue(start, target, progress)
+      from.current = value
+      if (ref.current) {
+        ref.current.textContent = formatAverageValue(value, scale)
+      }
       if (progress < 1) raf = requestAnimationFrame(tick)
       else from.current = target
     }
+    // Première image synchrone : pas de flash de la valeur finale.
+    element.textContent = formatAverageValue(start, scale)
     raf = requestAnimationFrame(tick)
-    return () => {
-      cancelAnimationFrame(raf)
-      from.current = target
-    }
-  }, [target])
-  return value
+    return () => cancelAnimationFrame(raf)
+  }, [target, scale, ref])
 }
 
 export function AverageCard({
   average,
-  focusedAverage,
-  onFocusAverage,
   trend,
   trendDomain,
   hasTrend,
 }: {
   average: number
-  focusedAverage?: number | null
-  onFocusAverage?: (average: number | null) => void
   trend: TrendPoint[]
   trendDomain: [number, number]
   hasTrend: boolean
 }) {
   const { scale } = useAverageSettings()
-  const animated = useCountUp(average)
+  const countRef = useRef<HTMLSpanElement>(null)
+  useCountUp(average, scale, countRef)
   // Tant qu'un point du graphe a le focus, sa moyenne s'affiche en direct
-  // (sans count-up : le doigt pilote) ; au relâcher, retour à la moyenne.
-  const shown = focusedAverage ?? animated
+  // (le doigt pilote, chiffres qui roulent) ; au relâcher, retour à la
+  // moyenne. L'état vit ici et non dans la page : le survol ne re-rend plus
+  // toute la liste des notes.
+  const [focusedAverage, setFocusedAverage] = useState<number | null>(null)
   return (
     <section
       aria-label={`Moyenne générale : ${formatAverage(average, scale)}`}
@@ -73,10 +87,19 @@ export function AverageCard({
           Moyenne générale
         </span>
         <span className="tabular-nums">
-          <AnimatedNumber
-            value={formatAverageValue(shown, scale)}
-            className="text-2xl font-bold text-card-foreground"
-          />
+          {focusedAverage !== null ? (
+            <AnimatedNumber
+              value={formatAverageValue(focusedAverage, scale)}
+              className="text-2xl font-bold text-card-foreground"
+            />
+          ) : (
+            <span
+              ref={countRef}
+              className="inline-flex text-2xl font-bold text-card-foreground tabular-nums"
+            >
+              {formatAverageValue(average, scale)}
+            </span>
+          )}
           <span className="text-xs text-muted-foreground">
             {scale === 100 ? " %" : `/${scale}`}
           </span>
@@ -91,7 +114,7 @@ export function AverageCard({
           <GradesTrendChart
             trend={trend}
             domain={trendDomain}
-            onFocus={onFocusAverage}
+            onFocus={setFocusedAverage}
           />
         </Suspense>
       )}

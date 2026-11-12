@@ -109,7 +109,7 @@ export function FeedbackDialog({
                       aria-checked={selected}
                       onClick={() => onTypeChange(option.value)}
                       className={cn(
-                        "flex min-h-11 flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                        "flex min-h-11 press flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 text-center outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
                         selected
                           ? "border-transparent bg-accent text-foreground"
                           : "border-border/70 bg-card text-muted-foreground hover:bg-muted/40"

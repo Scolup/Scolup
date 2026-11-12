@@ -1,4 +1,5 @@
 import { Notebook01Icon } from "@hugeicons/core-free-icons"
+import { RichHtml } from "@/components/RichHtml"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -56,9 +57,10 @@ export function CourseSession({ course }: { course: Course }) {
                 icon={Notebook01Icon}
                 label="Contenu de séance"
                 value={
-                  <span
+                  <RichHtml
+                    as="span"
+                    html={session.html}
                     className={cn(proseClassName, "mt-1")}
-                    dangerouslySetInnerHTML={{ __html: session.html }}
                   />
                 }
               />

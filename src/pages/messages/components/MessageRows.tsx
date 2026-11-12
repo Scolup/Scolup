@@ -1,7 +1,7 @@
-import { m } from "motion/react"
+import { useState } from "react"
 import { MailOpen01Icon, Search01Icon } from "@hugeicons/core-free-icons"
 import { Separator } from "@/components/ui/separator"
-import { staggerContainer } from "@/lib/motion"
+import { useFirstVisit } from "@/hooks/useFirstVisit"
 import { EmptyState } from "@/components/EmptyState"
 import type { FolderKey, Message } from "../types"
 import { MessagePreview } from "./MessagePreview"
@@ -25,19 +25,23 @@ export function MessageRows({
   page: number
   onSelect: (message: Message) => void
 }) {
+  // Changer de dossier ou de page rejoue toujours l'entrée ; revenir sur
+  // l'onglet Messages, non (les premiers messages seulement, voir ENTRANCE_CAP).
+  const key = `${folder}-${page}`
+  const firstVisit = useFirstVisit("messages-list")
+  const [initialKey] = useState(key)
+  const animate = firstVisit || key !== initialKey
+  const unreadCount = showUnreadHighlights ? unreadMessages.length : 0
+
   return (
-    <m.div
-      key={`${folder}-${page}`}
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer(0.045, 0.05)}
-    >
+    <div key={key}>
       {showUnreadHighlights && (
         <>
-          {unreadMessages.map((message) => (
+          {unreadMessages.map((message, index) => (
             <MessagePreview
               key={`unread-${message.id}`}
               {...message}
+              enterIndex={animate ? index : undefined}
               query={query}
               onSelect={() => onSelect(message)}
             />
@@ -47,10 +51,11 @@ export function MessageRows({
       )}
 
       {messages.length > 0 ? (
-        pageMessages.map((message) => (
+        pageMessages.map((message, index) => (
           <MessagePreview
             key={message.id}
             {...message}
+            enterIndex={animate ? unreadCount + index : undefined}
             query={query}
             onSelect={() => onSelect(message)}
           />
@@ -66,6 +71,6 @@ export function MessageRows({
           }
         />
       )}
-    </m.div>
+    </div>
   )
 }

@@ -130,7 +130,7 @@ export function GradesWidget() {
   return (
     <section
       aria-label={`Moyenne générale : ${formatAverageValue(average, scale)}${scale === 100 ? " %" : `/${scale}`}`}
-      className="relative flex flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
+      className="relative flex content-in flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
     >
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-3 px-3.5">
@@ -140,7 +140,7 @@ export function GradesWidget() {
               triggerHapticLight()
               navigate("/grades")
             }}
-            className="flex min-h-11 items-center gap-1 text-sm font-semibold text-card-foreground transition-colors outline-none hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex min-h-11 press items-center gap-1 text-sm font-semibold text-card-foreground outline-none hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             Moyenne générale
             <HugeiconsIcon
@@ -186,7 +186,7 @@ export function GradesWidget() {
                 triggerHapticLight()
                 navigate("/grades")
               }}
-              className="flex min-h-11 items-center gap-2.5 rounded-2xl px-3.5 py-2 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="flex min-h-11 press-lg items-center gap-2.5 rounded-2xl px-3.5 py-2 text-left outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               <span
                 aria-hidden="true"

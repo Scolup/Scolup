@@ -50,7 +50,7 @@ export function NextCoursesWidget() {
   return (
     <section
       aria-label={dayLabel(day.date)}
-      className="flex flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
+      className="flex content-in flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
     >
       <button
         type="button"
@@ -58,7 +58,7 @@ export function NextCoursesWidget() {
           triggerHapticLight()
           navigate(`/agenda?date=${day.key}`)
         }}
-        className="flex min-h-11 items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="flex min-h-11 press-lg items-center justify-between gap-2 rounded-2xl px-3.5 outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         <span className="truncate text-sm font-semibold text-card-foreground">
           {dayLabel(day.date)}
@@ -80,7 +80,7 @@ export function NextCoursesWidget() {
             triggerHapticLight()
             navigate(`/agenda?date=${day.key}`)
           }}
-          className="flex min-h-12 items-center gap-3 rounded-2xl bg-input/50 px-3.5 py-2.5 text-left transition-colors outline-none hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex min-h-12 press-lg items-center gap-3 rounded-2xl bg-input/50 px-3.5 py-2.5 text-left outline-none hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <span className="flex shrink-0 flex-col items-center tabular-nums">
             <span className="text-xs font-bold text-card-foreground">

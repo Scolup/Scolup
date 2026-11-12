@@ -20,7 +20,7 @@ export function ShopCard({
       onClick={onSelect}
       aria-label={`Voir ${item.kind === "theme" ? "le thème" : "la couleur"} ${item.label}${discount ? `, en réduction de ${discount} %` : ""}`}
       className={cn(
-        "flex items-center gap-3 border bg-card text-left transition-transform duration-200 outline-none hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-0",
+        "flex items-center gap-3 border bg-card text-left transition-transform duration-150 outline-none hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-0 active:scale-[0.98]",
         featured
           ? "h-32 rounded-3xl bg-rose-50 p-3.5 sm:col-span-2 lg:col-span-3 dark:bg-rose-950/20"
           : "h-19 rounded-2xl p-2.5",
@@ -82,7 +82,7 @@ function SaleChip({
 // The bubble, ringed when it is the current theme; a small check sits on it
 // once the item is owned. Themes keep the same round shape but carry their
 // featured icon, so a theme never reads as a color.
-export function ShopBubble({
+function ShopBubble({
   item,
   className,
   owned,

@@ -20,7 +20,7 @@ export function ContactRow({
       onClick={onToggle}
       aria-pressed={selected}
       className={cn(
-        "flex min-h-12 w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition-colors",
+        "flex min-h-12 w-full press-lg items-center gap-3 rounded-2xl border px-3 py-2.5 text-left",
         selected
           ? "border-primary/40 bg-primary/10"
           : "border-border/60 bg-input/50 active:bg-muted"

@@ -1,5 +1,6 @@
 import { m } from "motion/react"
 import { cn } from "@/lib/utils"
+import { SPRING_SOFT } from "@/lib/motion"
 
 export type RubisTab = "quests" | "shop"
 
@@ -40,7 +41,7 @@ export function RubisTabs({
             aria-selected={active}
             onClick={() => onChange(tab.value)}
             className={cn(
-              "relative rounded-full px-3 py-1 text-xs font-medium transition-colors duration-200 outline-none",
+              "relative press rounded-full px-3 py-1 text-xs font-medium outline-none",
               "focus-visible:ring-3 focus-visible:ring-ring/30",
               buttonClassName,
               active
@@ -51,7 +52,7 @@ export function RubisTabs({
             {active && (
               <m.span
                 layoutId="rubis-tab-pill"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                transition={SPRING_SOFT}
                 className="absolute inset-0 rounded-full bg-card shadow-sm"
                 aria-hidden="true"
               />

@@ -14,7 +14,7 @@ export function toPeriod(raw: Record<string, unknown>): Period | null {
   }
 }
 
-export function pickDefaultPeriod(periods: Period[]): Period | null {
+function pickDefaultPeriod(periods: Period[]): Period | null {
   return (
     periods.find((period) => period.annuel) ??
     periods.find((period) => period.id === "A999Z") ??

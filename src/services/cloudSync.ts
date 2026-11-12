@@ -28,6 +28,7 @@ import {
   removeNodes,
   writeText,
 } from "./cloudTransport"
+import type { SyncListing } from "./cloudTransport"
 import { ld } from "./litedirecte"
 import { mergeIntoLocal, type Applied } from "./syncState"
 import type { SyncState } from "@/features/sync/document"
@@ -223,39 +224,41 @@ async function runOnce(): Promise<void> {
 
   // 1. Lire les autres appareils. Un fichier illisible est ignoré, jamais fatal.
   const peers: SyncDoc[] = []
-  const stale = []
-  for (const [id, nodes] of groups) {
-    if (id === me) continue
-    try {
-      console.debug("[sync] reading peer", id)
-      const text = await readText(nodes[0])
-      const doc = parseDoc(decodeBase64(text))
-      if (!doc) {
-        console.debug("[sync] peer", id, "parse failed")
-        continue
+  const stale: SyncListing["files"] = []
+  await Promise.all(
+    [...groups].map(async ([id, nodes]) => {
+      if (id === me) return
+      try {
+        console.debug("[sync] reading peer", id)
+        const text = await readText(nodes[0])
+        const doc = parseDoc(decodeBase64(text))
+        if (!doc) {
+          console.debug("[sync] peer", id, "parse failed")
+          return
+        }
+        if (doc.deviceId !== id || doc.accountId !== accountId) {
+          console.debug("[sync] peer", id, "mismatch (deviceId/accountId)")
+          return
+        }
+        if (Date.now() - doc.savedAt > STALE_MS) {
+          console.debug("[sync] peer", id, "stale")
+          stale.push(...nodes)
+        } else {
+          console.debug(
+            "[sync] peer",
+            id,
+            "ok, rev:",
+            doc.rev,
+            "savedAt:",
+            doc.savedAt
+          )
+          peers.push(doc)
+        }
+      } catch (e) {
+        console.warn("[sync] peer", id, "read error:", e)
       }
-      if (doc.deviceId !== id || doc.accountId !== accountId) {
-        console.debug("[sync] peer", id, "mismatch (deviceId/accountId)")
-        continue
-      }
-      if (Date.now() - doc.savedAt > STALE_MS) {
-        console.debug("[sync] peer", id, "stale")
-        stale.push(...nodes)
-      } else {
-        console.debug(
-          "[sync] peer",
-          id,
-          "ok, rev:",
-          doc.rev,
-          "savedAt:",
-          doc.savedAt
-        )
-        peers.push(doc)
-      }
-    } catch (e) {
-      console.warn("[sync] peer", id, "read error:", e)
-    }
-  }
+    })
+  )
 
   // 2. Fusionner dans la base locale (une seule transaction).
   console.debug("[sync] merging", peers.length, "peer(s)")

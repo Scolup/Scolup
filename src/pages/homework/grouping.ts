@@ -27,7 +27,7 @@ export function groupByDay(assignments: Assignment[]): DayGroup[] {
 
 const RECENT_OVERDUE_DAYS = 7
 
-export function partitionGroups(groups: DayGroup[]): {
+function partitionGroups(groups: DayGroup[]): {
   overdue: DayGroup[]
   staleOverdue: DayGroup[]
   upcoming: DayGroup[]

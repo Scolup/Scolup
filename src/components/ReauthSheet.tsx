@@ -77,7 +77,7 @@ function CredentialsForm({
           <button
             type="button"
             onClick={onTogglePassword}
-            className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+            className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 press-sm items-center justify-center rounded-lg text-muted-foreground hover:text-foreground"
             aria-label={
               showPassword
                 ? "Masquer le mot de passe"
@@ -160,7 +160,7 @@ function TwoFactorForm({
 
       <button
         type="button"
-        className="mt-1 cursor-pointer text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-primary-text"
+        className="mt-1 press cursor-pointer text-sm text-muted-foreground underline underline-offset-4 hover:text-primary-text"
         onClick={onBack}
       >
         Retour aux identifiants

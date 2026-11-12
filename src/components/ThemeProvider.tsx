@@ -147,8 +147,6 @@ export function ThemeProvider({
   // A theme and an accent color are mutually exclusive: the theme owns the
   // app accent while it is on, so the settings must never show both equipped.
   const [accentColor, setAccentColorState] = React.useState<string>(() => {
-    const cachedTheme = getSettingSync("deco-theme")
-    if (typeof cachedTheme === "string" && isDecoThemeId(cachedTheme)) return ""
     const cached = getSettingSync("accent-color")
     return typeof cached === "string" ? cached : ""
   })
@@ -183,10 +181,6 @@ export function ThemeProvider({
   const setDecoTheme = React.useCallback((value: string) => {
     setSetting("deco-theme", value)
     setDecoThemeState(value)
-    if (value) {
-      setSetting("accent-color", "")
-      setAccentColorState("")
-    }
   }, [])
 
   // Une synchronisation a pu changer le thème, l'accent ou le décor : on les relit.
@@ -201,9 +195,7 @@ export function ThemeProvider({
       ]).then(([accent, deco]) => {
         const theme = typeof deco === "string" ? deco : ""
         setDecoThemeState(theme)
-        setAccentColorState(
-          theme ? "" : typeof accent === "string" ? accent : ""
-        )
+        setAccentColorState(typeof accent === "string" ? accent : "")
       })
     }
     window.addEventListener(SETTINGS_SYNCED_EVENT, reload)

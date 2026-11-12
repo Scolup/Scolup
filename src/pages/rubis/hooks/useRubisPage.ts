@@ -4,6 +4,7 @@ import { useQuests } from "@/features/quests/useQuests"
 import { usePendingRubies, useRubies } from "@/features/shop/useRubies"
 import { useShop } from "@/features/shop/useShop"
 import { triggerHapticLight } from "@/services/haptics"
+import { celebrate } from "@/lib/celebrate"
 import { claimRubies } from "@/features/shop/rubies"
 import { periodKey } from "@/features/quests/period"
 import { weekSummary } from "@/features/shop/shopRules"
@@ -43,6 +44,7 @@ export function useRubisPage() {
     const amount = await claimRubies()
     if (amount <= 0) return
     triggerHapticLight()
+    celebrate()
     setNotice({ text: `+${amount} rubis récupérés !`, tone: "success" })
   }, [])
 

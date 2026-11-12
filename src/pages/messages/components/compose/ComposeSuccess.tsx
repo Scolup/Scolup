@@ -30,7 +30,7 @@ export function ComposeSuccess({ onClose }: { onClose: () => void }) {
             strokeLinejoin="round"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
-            transition={{ duration: 0.35, ease: "easeOut", delay: 0.12 }}
+            transition={{ duration: 0.28, ease: "easeOut", delay: 0.1 }}
           />
         </svg>
       </m.span>

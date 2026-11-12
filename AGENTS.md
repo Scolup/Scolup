@@ -162,3 +162,21 @@ A bug report names a symptom. Grep every caller of the function you're touching 
 - [ ] The UI works on a phone-sized viewport, with no desktop-only interactions.
 - [ ] React Doctor was run if the change was large.
 - [ ] No secrets or student data in code or logs.
+
+## Motion and touch feedback
+
+- Animate only `transform` and `opacity`. Never `filter`, shadows or dimensions (the only exception is the collapsible panel height in `components/ui/collapsible.tsx`). No infinite JavaScript animation: loops are CSS keyframes.
+- Every tappable element gets press feedback: `press` (rows, buttons, pills), `press-sm` (small icon buttons, switches) or `press-lg` (large cards and full-width rows). Use `Button` or one of these utilities; do not add `whileTap` per row.
+- List entrances use the `rise` utility with `entranceRank` from `lib/motion.ts` (capped at `ENTRANCE_CAP`) and `useFirstVisit`, so revisiting a tab does not replay them. Content replacing a skeleton uses `content-in`.
+- Tab changes are handled once in `MainLayout` (`page-enter`). Pages must not add their own entrance on top, except full-screen overlay pages (listed in `OVERLAY_PAGES`).
+- Durations, easings and springs come from the `--duration-*` / `--ease-*` variables in `index.css` and from `lib/motion.ts`; keep both in sync.
+- Moments forts (rubis récupérés, achat réussi, quête accomplie) : appeler `celebrate()` de `lib/celebrate.ts` ; `RewardBurst` (monté dans `MainLayout`) joue la gerbe, en CSS pur.
+
+## Tabs stay alive
+
+- Les cinq onglets (accueil, messages, agenda, devoirs, notes) restent montés une fois visités, chacun dans une `<Activity>` de `MainLayout`. Un onglet masqué garde son état et son DOM, mais ses effets sont nettoyés puis relancés à l'affichage : un effet ne doit pas supposer que le composant est démonté en quittant l'onglet. Les écrans secondaires (rubis, absences, post-its) restent de simples routes.
+- `HomeRoute` ne lit pas l'URL : `MainLayout` lui indique si les réglages sont ouverts et sur quelle section.
+
+## HTML venu de l'ENT
+
+- Jamais de `dangerouslySetInnerHTML` direct : passer par `RichHtml` (`components/RichHtml.tsx`), qui applique `sanitizeHtml` (`lib/html.ts`, liste blanche de balises, attributs et styles).

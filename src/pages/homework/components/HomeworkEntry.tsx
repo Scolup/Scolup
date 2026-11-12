@@ -1,3 +1,4 @@
+import { memo } from "react"
 import type { CSSProperties, KeyboardEvent } from "react"
 import { m } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -9,7 +10,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 import { useSubjectDisplay } from "@/features/subjects/resolve"
-import { fadeUp } from "@/lib/motion"
+import { entranceRank } from "@/lib/motion"
 import { Badge } from "@/components/ui/badge"
 import type { Assignment } from "../types"
 
@@ -42,7 +43,7 @@ function DoneToggle({
           : `Marquer « ${subject} » comme fait`
       }
       className={cn(
-        "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200 outline-none",
+        "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-150 outline-none",
         done
           ? "border-done bg-done text-background"
           : "border-muted-foreground/40 hover:border-muted-foreground",
@@ -97,22 +98,79 @@ function EntryMeta({
   )
 }
 
+function EntrySubject({
+  assignment,
+  display,
+  color,
+  done,
+  isNew,
+}: {
+  assignment: Assignment
+  display: string
+  color?: string
+  done: boolean
+  isNew: boolean
+}) {
+  const { isTest, onlineSubmission } = assignment
+  return (
+    <span className="flex min-w-0 flex-1 items-center gap-2">
+      <span
+        className={cn(
+          "truncate text-sm font-bold",
+          done && "line-through decoration-muted-foreground/50",
+          color &&
+            "text-[color-mix(in_srgb,var(--c)_60%,black)] dark:text-[color-mix(in_srgb,var(--c)_60%,white)]"
+        )}
+        style={color ? ({ "--c": color } as CSSProperties) : undefined}
+      >
+        {display}
+      </span>
+      {isTest && (
+        <Badge variant="warning" size="sm" pill className="shrink-0">
+          Éval.
+        </Badge>
+      )}
+      {isNew && (
+        <Badge variant="info" size="sm" pill className="shrink-0">
+          Nouveau
+        </Badge>
+      )}
+      {onlineSubmission && (
+        <Badge variant="outline" size="sm" pill className="shrink-0 gap-1">
+          <HugeiconsIcon
+            icon={Upload04Icon}
+            className="size-3"
+            aria-hidden="true"
+          />
+          À rendre en ligne
+        </Badge>
+      )}
+    </span>
+  )
+}
+
 interface HomeworkEntryProps {
   assignment: Assignment
   pending?: boolean
   isNew?: boolean
-  onToggle?: () => void
+  // Rang d'entrée dans la liste (voir `rise`), ou undefined pour ne pas animer.
+  enterIndex?: number
+  onToggle?: (assignment: Assignment) => void
   onSelect?: (assignment: Assignment) => void
 }
 
-export function HomeworkEntry({
+// Mémoïsée : cocher un devoir ne doit re-rendre que cette ligne, pas toute la
+// liste (le Set `pending` change d'identité, mais chaque ligne ne reçoit que
+// son booléen).
+export const HomeworkEntry = memo(function HomeworkEntry({
   assignment,
   pending = false,
   isNew = false,
+  enterIndex,
   onToggle,
   onSelect,
 }: HomeworkEntryProps) {
-  const { subject, done, isTest, documents, comments } = assignment
+  const { subject, done, documents, comments } = assignment
   const { display, color } = useSubjectDisplay(assignment.subjectCode, subject)
 
   const open = onSelect ? () => onSelect(assignment) : undefined
@@ -130,14 +188,14 @@ export function HomeworkEntry({
       }
     : undefined
 
+  const rank = enterIndex === undefined ? null : entranceRank(enterIndex)
+
   return (
-    <m.div
-      variants={fadeUp(12, 0.4)}
-      layout
-      exit={{ opacity: 0, scale: 0.98 }}
-      className="px-4 py-1.5"
+    <div
+      className={cn("px-4 py-1.5", rank !== null && "rise")}
+      style={rank !== null ? ({ "--i": rank } as CSSProperties) : undefined}
     >
-      <m.div
+      <div
         role={open ? "button" : undefined}
         tabIndex={open ? 0 : undefined}
         aria-label={open ? `Voir le devoir de ${display}` : undefined}
@@ -147,12 +205,10 @@ export function HomeworkEntry({
           onActivate?.()
         }}
         onKeyDown={onActivateKey}
-        whileTap={open ? { scale: 0.98 } : undefined}
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
         className={cn(
-          "flex min-h-11 items-center gap-3 rounded-2xl border border-transparent bg-input/50 px-3.5 py-3 transition-[background-color,box-shadow,opacity] duration-200",
+          "flex min-h-11 items-center gap-3 rounded-2xl border border-transparent bg-input/50 px-3.5 py-3",
           "hover:bg-muted/70 hover:shadow-sm has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/30",
-          open && "cursor-pointer",
+          open && "press-lg cursor-pointer",
           done && "opacity-55"
         )}
       >
@@ -160,52 +216,21 @@ export function HomeworkEntry({
           subject={display}
           done={done}
           pending={pending}
-          onToggle={onToggle}
+          onToggle={onToggle ? () => onToggle(assignment) : undefined}
         />
 
         <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-          <span className="flex min-w-0 flex-1 items-center gap-2">
-            <span
-              className={cn(
-                "truncate text-sm font-bold",
-                done && "line-through decoration-muted-foreground/50",
-                color &&
-                  "text-[color-mix(in_srgb,var(--c)_60%,black)] dark:text-[color-mix(in_srgb,var(--c)_60%,white)]"
-              )}
-              style={color ? ({ "--c": color } as CSSProperties) : undefined}
-            >
-              {display}
-            </span>
-            {isTest && (
-              <Badge variant="warning" size="sm" pill className="shrink-0">
-                Éval.
-              </Badge>
-            )}
-            {isNew && (
-              <Badge variant="info" size="sm" pill className="shrink-0">
-                Nouveau
-              </Badge>
-            )}
-            {assignment.onlineSubmission && (
-              <Badge
-                variant="outline"
-                size="sm"
-                pill
-                className="shrink-0 gap-1"
-              >
-                <HugeiconsIcon
-                  icon={Upload04Icon}
-                  className="size-3"
-                  aria-hidden="true"
-                />
-                À rendre en ligne
-              </Badge>
-            )}
-          </span>
+          <EntrySubject
+            assignment={assignment}
+            display={display}
+            color={color}
+            done={done}
+            isNew={isNew}
+          />
 
           <EntryMeta documents={documents} comments={comments} />
         </div>
-      </m.div>
-    </m.div>
+      </div>
+    </div>
   )
-}
+})

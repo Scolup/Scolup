@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { Navigate, useNavigate, useParams } from "react-router"
+import { Navigate, useNavigate } from "react-router"
 import { HomePage } from "@/pages/home/HomePage"
 import {
   isSectionId,
@@ -8,12 +8,19 @@ import {
 } from "@/pages/settings/sections"
 import { SettingsDialog } from "./lazyPages"
 
-// Un seul composant pour les deux routes (« / » et « /settings »): React
-// garde `<HomePage />` monté pendant la navigation au lieu de le recréer, ce
-// qui évite de recharger tous les widgets de l'accueil.
-export function HomeRoute({ settings = false }: { settings?: boolean }) {
+// L'accueil et les réglages partagent un seul composant : `<HomePage />` reste
+// monté quand on ouvre ou ferme les réglages au lieu d'être recréé, ce qui
+// évite de recharger tous les widgets. MainLayout indique si les réglages sont
+// ouverts (`settings`) et sur quelle section (`sectionId`) ; l'accueil est
+// gardé en vie par une <Activity>, il ne lit donc pas l'URL lui-même.
+export function HomeRoute({
+  settings = false,
+  sectionId,
+}: {
+  settings?: boolean
+  sectionId?: string
+}) {
   const navigate = useNavigate()
-  const { sectionId } = useParams()
   const redirects =
     sectionId === "general" ||
     (sectionId !== undefined && !isSectionId(sectionId))

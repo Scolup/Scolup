@@ -21,7 +21,7 @@ export function NextQuestsCard() {
   return (
     <section
       aria-label="Prochains objectifs"
-      className="rounded-3xl border border-border/70 bg-card"
+      className="content-in rounded-3xl border border-border/70 bg-card"
     >
       <div className="px-4 pt-3">
         <button
@@ -30,7 +30,7 @@ export function NextQuestsCard() {
             triggerHapticLight()
             navigate("/rubis")
           }}
-          className="flex min-h-11 w-full items-center justify-between gap-2 rounded-2xl px-3.5 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex min-h-11 w-full press-lg items-center justify-between gap-2 rounded-2xl px-3.5 outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <span className="truncate text-sm font-semibold text-card-foreground">
             {quests.length > 1 ? "Prochains objectifs" : "Prochain objectif"}

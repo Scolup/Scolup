@@ -1,4 +1,5 @@
 import { m, AnimatePresence } from "motion/react"
+import { RichHtml } from "@/components/RichHtml"
 import { MailOpen01Icon } from "@hugeicons/core-free-icons"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Documents } from "@/components/Documents"
@@ -44,7 +45,7 @@ export function MessageContent({
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25, ease: [0.25, 0.1, 0.15, 1] }}
+          transition={{ duration: 0.2, ease: [0.25, 0.1, 0.15, 1] }}
         >
           <InlineError message={error} onRetry={onRetry} />
         </m.div>
@@ -54,13 +55,10 @@ export function MessageContent({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3, ease: [0.25, 0.1, 0.15, 1] }}
+          transition={{ duration: 0.24, ease: [0.25, 0.1, 0.15, 1] }}
         >
           {message.body ? (
-            <div
-              className={proseClassName}
-              dangerouslySetInnerHTML={{ __html: message.body }}
-            />
+            <RichHtml html={message.body} className={proseClassName} />
           ) : (
             <EmptyState
               className="p-6"

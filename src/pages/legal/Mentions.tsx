@@ -17,10 +17,25 @@ export function Mentions() {
         au site, écrivez à <a href="mailto:hi@scolup.com">hi@scolup.com</a>.
       </p>
 
+      <h2>Nom de domaine</h2>
+      <p>
+        Le nom de domaine <strong>scolup.com</strong> est la propriété exclusive
+        de Monsieur Alexis C., agissant en qualité de Co-Directeur du studio
+        typeof.fr.
+      </p>
+      <p>
+        En sa qualité de technicien et d'administrateur unique du domaine, toute
+        modification des zones DNS, tout transfert ou toute exploitation non
+        autorisée du nom de domaine <strong>scolup.com</strong> fera l'objet de
+        poursuites judiciaires immédiates.
+      </p>
+
       <h2>Hébergeur</h2>
       <p>
-        Scolup est hébergé par <strong>Cloudflare, Inc.</strong>, 101 Townsend
-        Street, San Francisco, CA 94107, États-Unis (
+        L'hébergement et l'infrastructure réseau de Scolup sont assurés par{" "}
+        <strong>Cloudflare, Inc.</strong>, dont le siège social est situé au 101
+        Townsend Street, San Francisco, CA 94107, États-Unis (téléphone :{" "}
+        <a href="tel:+16503198930">+1 650 319 8930</a>, site internet :{" "}
         <a
           href="https://www.cloudflare.com"
           target="_blank"
@@ -32,6 +47,14 @@ export function Mentions() {
         par <strong>Procsy</strong>, un relais open source exécuté sur
         l'infrastructure de Cloudflare Workers ; son fonctionnement est détaillé
         dans nos <Link to="/security">pages de sécurité</Link>.
+      </p>
+      <p>
+        Pour l'Europe, les questions relatives à la protection des données
+        peuvent être adressées à son délégué à la protection des données (DPO)
+        par courrier électronique à{" "}
+        <a href="mailto:dpo@cloudflare.com">dpo@cloudflare.com</a>, ou auprès de
+        sa filiale <strong>Cloudflare France SAS</strong>, 6 place de la
+        Madeleine, 75008 Paris, France.
       </p>
 
       <h2>Hébergement de vos données</h2>

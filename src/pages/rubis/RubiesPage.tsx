@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react"
 import { useSearchParams } from "react-router"
 import { m } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowLeftIcon } from "@hugeicons/core-free-icons"
+import {
+  ArrowLeftIcon,
+  Coupon01Icon,
+  WifiDisconnected01Icon,
+} from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { AppToast } from "@/components/AppToast"
 import { AnimatedNumber } from "@/components/AnimatedNumber"
@@ -10,12 +14,12 @@ import { EmptyState } from "@/components/EmptyState"
 import { triggerHapticLight } from "@/services/haptics"
 import { ShopView } from "@/pages/shop/ShopView"
 import { IncomeRules } from "./components/IncomeRules"
+import { PromoDrawer } from "./components/PromoDrawer"
 import { QuestList } from "./components/QuestList"
 import { RubisHero } from "./components/RubisHero"
 import { RubisTabs, type RubisTab } from "./components/RubisTabs"
 import { useRubisPage } from "./hooks/useRubisPage"
 import { getSyncStatus, onSyncStatus } from "@/services/cloudSync"
-import { WifiDisconnected01Icon } from "@hugeicons/core-free-icons"
 
 // The rubies hub: balance, claim, quests and the shop behind one tab switch.
 export function RubiesPage() {
@@ -25,6 +29,7 @@ export function RubiesPage() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const hasQuests = page.groups.length > 0 || page.achieved.length > 0
   const [offline, setOffline] = useState(() => getSyncStatus().offline)
+  const [codeOpen, setCodeOpen] = useState(false)
   useEffect(() => onSyncStatus(() => setOffline(getSyncStatus().offline)), [])
 
   // Both tabs share the scroll container: a switch always starts back at the top.
@@ -41,7 +46,7 @@ export function RubiesPage() {
     <m.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.22, ease: [0.25, 0.1, 0.15, 1] }}
+      transition={{ duration: 0.18, ease: [0.25, 0.1, 0.15, 1] }}
       className="fixed inset-0 z-30 flex flex-col bg-background"
     >
       <header className="shrink-0 border-b border-border">
@@ -58,8 +63,21 @@ export function RubiesPage() {
           <h1 className="truncate text-base font-semibold text-foreground">
             Rubis
           </h1>
+          <Button
+            variant="outline"
+            aria-label="J’ai un code"
+            className="ml-auto h-11 shrink-0 gap-1.5 rounded-full px-3.5"
+            onClick={() => setCodeOpen(true)}
+          >
+            <HugeiconsIcon
+              icon={Coupon01Icon}
+              className="size-4"
+              aria-hidden="true"
+            />
+            Code
+          </Button>
           {tab === "shop" && (
-            <div className="ml-auto flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-2.5 py-1.5">
+            <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-2.5 py-1.5">
               <img
                 src="/ruby.svg"
                 alt=""
@@ -106,7 +124,7 @@ export function RubiesPage() {
               action={
                 <button
                   type="button"
-                  className="mt-4 text-sm font-medium text-primary underline-offset-4 hover:text-primary-text"
+                  className="mt-4 press text-sm font-medium text-primary underline-offset-4 hover:text-primary-text"
                   onClick={() => void window.dispatchEvent(new Event("online"))}
                 >
                   Se reconnecter
@@ -150,6 +168,15 @@ export function RubiesPage() {
           <ShopView />
         )}
       </div>
+
+      <PromoDrawer
+        open={codeOpen}
+        onOpenChange={setCodeOpen}
+        onSeeShop={() => {
+          changeTab("shop")
+          setCodeOpen(false)
+        }}
+      />
 
       <AppToast
         message={page.notice?.text ?? null}

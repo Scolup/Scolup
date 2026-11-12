@@ -2,7 +2,7 @@ import { m } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowLeftIcon, StickyNote02Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
-import { FadeIn } from "@/components/FadeIn"
+import { useFirstVisit } from "@/hooks/useFirstVisit"
 import { EmptyState } from "@/components/EmptyState"
 import { InlineError } from "@/components/InlineError"
 import { useDelayedLoading } from "@/hooks/useDelayedLoading"
@@ -14,12 +14,13 @@ import { usePostIts } from "./hooks/usePostIts"
 export function PostIts() {
   const page = usePostIts()
   const showSkeleton = useDelayedLoading(page.loading)
+  const animateCards = useFirstVisit("post-its")
 
   return (
     <m.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.22, ease: [0.25, 0.1, 0.15, 1] }}
+      transition={{ duration: 0.18, ease: [0.25, 0.1, 0.15, 1] }}
       className="fixed inset-0 z-30 flex flex-col bg-background"
     >
       <div className="flex shrink-0 items-center gap-2 border-b border-border p-4">
@@ -51,14 +52,16 @@ export function PostIts() {
             description="Tu n'as aucune annonce de ton établissement pour le moment."
           />
         ) : (
-          <FadeIn
-            className="mx-auto w-full max-w-7xl columns-2 gap-3 px-4 py-4 sm:columns-3 lg:columns-4 2xl:columns-5"
-            onClick={page.openViewer}
-          >
-            {page.notes.map((note) => (
-              <PostItCard key={note.key} note={note} />
+          <div className="mx-auto w-full max-w-7xl columns-2 gap-3 px-4 py-4 sm:columns-3 lg:columns-4 2xl:columns-5">
+            {page.notes.map((note, index) => (
+              <PostItCard
+                key={note.key}
+                note={note}
+                enterIndex={animateCards ? index : undefined}
+                onImageClick={page.openImage}
+              />
             ))}
-          </FadeIn>
+          </div>
         )}
       </div>
 

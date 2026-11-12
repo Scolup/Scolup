@@ -203,3 +203,207 @@ export function htmlToText(html: string): string {
     .replace(/<[^>]*>/g, "")
   return decodeHtmlEntities(text).trim()
 }
+
+// ---- Assainissement -------------------------------------------------------
+// Le HTML des devoirs, messages, cours et post-its vient de l'ENT : on ne le
+// place jamais tel quel dans la page. Liste blanche de balises, d'attributs et
+// de propriétés de style ; le reste est retiré (balises dangereuses) ou
+// « déballé » (balises inconnues : on garde leur texte). Le document analysé
+// par DOMParser est inerte : rien ne s'exécute ni ne se charge pendant le tri.
+
+const ALLOWED_TAGS = new Set([
+  "a",
+  "abbr",
+  "b",
+  "blockquote",
+  "br",
+  "caption",
+  "code",
+  "col",
+  "colgroup",
+  "dd",
+  "div",
+  "dl",
+  "dt",
+  "em",
+  "figcaption",
+  "figure",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "hr",
+  "i",
+  "img",
+  "li",
+  "ol",
+  "p",
+  "pre",
+  "s",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "table",
+  "tbody",
+  "td",
+  "tfoot",
+  "th",
+  "thead",
+  "tr",
+  "u",
+  "ul",
+])
+
+// Retirées avec tout leur contenu (jamais déballées).
+const DROPPED_TAGS = new Set([
+  "script",
+  "style",
+  "iframe",
+  "frame",
+  "frameset",
+  "object",
+  "embed",
+  "applet",
+  "form",
+  "input",
+  "button",
+  "textarea",
+  "select",
+  "option",
+  "link",
+  "meta",
+  "base",
+  "svg",
+  "math",
+  "template",
+  "noscript",
+  "audio",
+  "video",
+  "source",
+  "track",
+  "canvas",
+  "dialog",
+])
+
+const TAG_ATTRIBUTES: Record<string, string[]> = {
+  a: ["href"],
+  img: ["src", "alt", "width", "height"],
+  td: ["colspan", "rowspan"],
+  th: ["colspan", "rowspan", "scope"],
+  col: ["span"],
+  colgroup: ["span"],
+  ol: ["start"],
+}
+
+// Mise en forme que l'ENT utilise vraiment (couleurs, gras...), sans rien de
+// ce qui positionne ou charge une ressource.
+const ALLOWED_STYLE_PROPERTIES = new Set([
+  "color",
+  "background-color",
+  "font-weight",
+  "font-style",
+  "text-decoration",
+  "text-align",
+])
+const SAFE_STYLE_VALUE = /^[#\w\s.,%()-]+$/
+const DATA_IMAGE = /^data:image\/(png|jpe?g|gif|webp);base64,[a-z0-9+/=]+$/i
+
+// Uniquement des adresses absolues : une adresse relative n'a pas de sens ici
+// (l'ENT n'est pas l'origine de l'app) et `javascript:` est refusé d'office.
+function safeUrl(value: string, protocols: readonly string[]): string | null {
+  const trimmed = value.trim()
+  try {
+    return protocols.includes(new URL(trimmed).protocol) ? trimmed : null
+  } catch {
+    return null
+  }
+}
+
+function cleanStyle(element: Element): void {
+  const style = element.getAttribute("style")
+  if (style === null) return
+  const kept: string[] = []
+  for (const declaration of style.split(";")) {
+    const separator = declaration.indexOf(":")
+    if (separator === -1) continue
+    const property = declaration.slice(0, separator).trim().toLowerCase()
+    const value = declaration.slice(separator + 1).trim()
+    if (
+      ALLOWED_STYLE_PROPERTIES.has(property) &&
+      SAFE_STYLE_VALUE.test(value) &&
+      !/url|expression|javascript/i.test(value)
+    ) {
+      kept.push(`${property}: ${value}`)
+    }
+  }
+  if (kept.length > 0) element.setAttribute("style", kept.join("; "))
+  else element.removeAttribute("style")
+}
+
+function cleanAttributes(element: Element, tag: string): void {
+  const allowed = new Set(TAG_ATTRIBUTES[tag] ?? [])
+  for (const attribute of Array.from(element.attributes)) {
+    const name = attribute.name.toLowerCase()
+    if (name === "style" || name === "title" || allowed.has(name)) continue
+    element.removeAttribute(attribute.name)
+  }
+  cleanStyle(element)
+
+  if (tag === "a") {
+    const href = element.getAttribute("href")
+    const safe =
+      href === null
+        ? null
+        : safeUrl(href, ["http:", "https:", "mailto:", "tel:"])
+    if (safe === null) {
+      element.removeAttribute("href")
+    } else {
+      element.setAttribute("href", safe)
+      element.setAttribute("target", "_blank")
+      element.setAttribute("rel", "noopener noreferrer")
+    }
+  }
+
+  if (tag === "img") {
+    const src = element.getAttribute("src")
+    const safe =
+      src === null
+        ? null
+        : DATA_IMAGE.test(src.trim())
+          ? src.trim()
+          : safeUrl(src, ["http:", "https:"])
+    if (safe === null) element.remove()
+    else element.setAttribute("src", safe)
+  }
+}
+
+function cleanChildren(parent: Node): void {
+  for (const child of Array.from(parent.childNodes)) {
+    // 3 = texte, 1 = élément ; commentaires et le reste partent.
+    if (child.nodeType === 3) continue
+    if (child.nodeType !== 1) {
+      parent.removeChild(child)
+      continue
+    }
+    const element = child as Element
+    const tag = element.tagName.toLowerCase()
+    if (DROPPED_TAGS.has(tag)) {
+      element.remove()
+      continue
+    }
+    cleanChildren(element)
+    if (ALLOWED_TAGS.has(tag)) cleanAttributes(element, tag)
+    else element.replaceWith(...Array.from(element.childNodes))
+  }
+}
+
+export function sanitizeHtml(html: string): string {
+  if (!html) return ""
+  const doc = new DOMParser().parseFromString(html, "text/html")
+  cleanChildren(doc.body)
+  return doc.body.innerHTML
+}

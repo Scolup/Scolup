@@ -58,7 +58,7 @@ export const BottomNavigationItem = (
         "p-2",
         "text-muted-foreground",
         "cursor-pointer",
-        "transition-all duration-150",
+        "transition-[color,transform] duration-150",
         "active:scale-95",
         "hover:text-foreground",
         "aria-selected:text-primary-text",

@@ -3,25 +3,12 @@ import type { ShopItem } from "@/features/shop/shopRules"
 // Limited-edition collections, in display order: the Christmas preview
 // first, then the limited editions. Every collection used in the catalog
 // must be listed here.
-export const COLLECTIONS: Record<string, { label: string; hint: string }> = {
-  noel: { label: "Avant-première Noël", hint: "En exclusivité" },
-  halloween: { label: "Exclusivité Halloween", hint: "Édition limitée" },
+export const COLLECTIONS: Record<string, { label: string }> = {
+  noel: { label: "Noël" },
+  halloween: { label: "Exclusivité Halloween" },
 }
 
 const COLLECTION_ORDER = ["noel", "halloween"] as const
-
-// Hard shelves-off dates per collection: once the line passes, the whole
-// category vanishes from the shop; kept purchases stay usable. Times are
-// read in the local timezone.
-const DEADLINES: Partial<Record<(typeof COLLECTION_ORDER)[number], Date>> = {
-  halloween: new Date("2026-11-12T09:00:00"), // the Thursday after the 2026 edition
-}
-
-// Start dates: a collection is hidden until this date (local time).
-// Christmas appears after Halloween ends (Nov 12).
-const START_DATES: Partial<Record<(typeof COLLECTION_ORDER)[number], Date>> = {
-  noel: new Date("2026-11-12T09:00:00"),
-}
 
 // "5 j 23 h", "2 h 50 min", "30 min" — the text after "Fin dans" on the
 // limited pack card. Empty once the deadline passed.
@@ -45,12 +32,12 @@ export interface ShopEntry {
   active: boolean
   missing: number // rubies still missing (0 = affordable)
   featured?: boolean // the shelf's headliner theme
+  coded?: boolean // a redeemed price code lowers this item
 }
 
 interface CollectionDef {
   id: (typeof COLLECTION_ORDER)[number]
   label: string
-  hint: string
   entries: ShopEntry[]
   endsAt?: Date // set while the limited edition is still running
 }
@@ -80,28 +67,33 @@ export function layoutShop(
     const def = COLLECTIONS[id]
     const group = entries.filter((entry) => entry.item.collection === id)
     if (group.length === 0) continue
-    const startsAt = START_DATES[id]
+    // Use per-item dates (all items in a collection share the same dates)
+    const startsAt = group[0]?.item.startsAt
+    const endsAt = group[0]?.item.endsAt
     if (startsAt && now < startsAt) continue // the limited edition hasn't started yet
-    const endsAt = DEADLINES[id]
     if (endsAt && now >= endsAt) continue // the limited edition is over
     collections.push({
       id,
       label: def.label,
-      hint: def.hint,
       entries: withFeaturedTheme(group),
       endsAt,
     })
   }
 
   const permanent = entries.filter((entry) => {
-    const id = entry.item.collection
-    if (!id) return true
-    if (!(id in COLLECTIONS)) return true // catalog surgery: keep showing
-    const startsAt = START_DATES[id as keyof typeof START_DATES]
-    if (startsAt && now < startsAt) return false // the edition hasn't started yet
-    const endsAt = DEADLINES[id as keyof typeof DEADLINES]
-    if (!endsAt) return false // the live collection owns the card
-    return now >= endsAt && entry.owned
+    // Collection items live only in their own section, never under
+    // "Couleurs & thèmes", even while their edition is running.
+    if (entry.item.collection) return false
+    const startsAt = entry.item.startsAt
+    const endsAt = entry.item.endsAt
+    // Items without event dates are always permanent colors/themes
+    if (!startsAt && !endsAt) return true
+    // Items not yet started are not shown
+    if (startsAt && now < startsAt) return false
+    // Items past their end date are not shown
+    if (endsAt && now >= endsAt) return false
+    // Items within their window are shown
+    return true
   })
 
   return {

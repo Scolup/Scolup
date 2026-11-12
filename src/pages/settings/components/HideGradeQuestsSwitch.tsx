@@ -34,9 +34,9 @@ export function HideGradeQuestsSwitch() {
           void setSetting(HIDE_GRADE_QUESTS, checked).then(refreshQuests)
         }}
         aria-label="Masquer les quêtes liées aux notes"
-        className="flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full bg-muted p-0.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 motion-reduce:transition-none data-checked:bg-primary"
+        className="flex h-7 w-12 shrink-0 press-sm cursor-pointer items-center rounded-full bg-muted p-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 motion-reduce:transition-none data-checked:bg-primary"
       >
-        <SwitchPrimitive.Thumb className="size-6 rounded-full bg-card shadow-sm transition-transform motion-reduce:transition-none data-checked:translate-x-5" />
+        <SwitchPrimitive.Thumb className="size-6 rounded-full bg-card shadow-sm transition-transform duration-200 ease-(--ease-spring) motion-reduce:transition-none data-checked:translate-x-5" />
       </SwitchPrimitive.Root>
     </div>
   )

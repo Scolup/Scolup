@@ -2,7 +2,6 @@ import { summarizeGroups } from "../grouping"
 import { InlineError } from "@/components/InlineError"
 import { EmptyState } from "@/components/EmptyState"
 import { ProgressRing } from "@/components/ProgressRing"
-import { FadeIn } from "@/components/FadeIn"
 import { useDelayedLoading } from "@/hooks/useDelayedLoading"
 import { HomeworkListSkeleton } from "./HomeworkListSkeleton"
 import { OrderedGroups } from "./DayGroupLists"
@@ -38,13 +37,11 @@ export function HomeworkRows({
   }
 
   return (
-    <FadeIn>
-      <OrderedGroups
-        groups={summary.ordered}
-        pending={pending}
-        onToggle={onToggle}
-        onSelect={onSelect}
-      />
-    </FadeIn>
+    <OrderedGroups
+      groups={summary.ordered}
+      pending={pending}
+      onToggle={onToggle}
+      onSelect={onSelect}
+    />
   )
 }

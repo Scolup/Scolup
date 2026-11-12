@@ -20,7 +20,7 @@ export function contactDisplayName(
   return entry.civilite ? `${entry.civilite} ${full}` : full
 }
 
-export function toContact(entry: unknown): Contact | null {
+function toContact(entry: unknown): Contact | null {
   const obj = entry as {
     id?: number | string
     type?: string

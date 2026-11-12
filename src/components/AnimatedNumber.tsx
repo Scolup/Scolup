@@ -14,6 +14,9 @@ export function AnimatedNumber({
   return (
     <span className={cn("inline-flex tabular-nums", className)}>
       {value.split("").map((char, index) => (
+        // La position est l'identité du caractère ici : c'est elle qui garde
+        // les chiffres inchangés en place pendant que les autres roulent.
+        // react-doctor-disable-next-line react-doctor/no-array-index-as-key
         <span key={index} className="relative inline-flex overflow-hidden">
           <AnimatePresence mode="popLayout" initial={false}>
             <m.span
@@ -21,7 +24,7 @@ export function AnimatedNumber({
               initial={{ y: "65%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "-65%", opacity: 0 }}
-              transition={{ duration: 0.25, ease: EASE_OUT }}
+              transition={{ duration: 0.2, ease: EASE_OUT }}
               className="inline-block"
             >
               {char === " " ? " " : char}

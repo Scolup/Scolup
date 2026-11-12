@@ -184,8 +184,9 @@ export async function syncHomework(
     await store.put(JSON.stringify(ledger), LEDGER_KEY)
     if (!contractDropped) {
       contractDropped = true
-      for (const legacyKey of LEGACY_CONTRACT_KEYS)
-        await store.delete(legacyKey)
+      await Promise.all(
+        LEGACY_CONTRACT_KEYS.map((legacyKey) => store.delete(legacyKey))
+      )
     }
     await tx.done
     markDirty()
@@ -225,8 +226,9 @@ export async function syncGrades(grades: any[]): Promise<void> {
     const before = progress[GRADE_STREAK_ID]?.count ?? 0
     let streak = before
     const kept = new Map<string, number>() // grade key -> streak after it
+    const gradesByKey = new Map(grades.map((grade) => [grade.key, grade]))
     for (const grade of result.fresh) {
-      const full = grades.find((candidate) => candidate.key === grade.key)
+      const full = gradesByKey.get(grade.key)
       if (!full) continue
       const keeps = gradeKeepsStreak(full, grades, resolveSubjectCoef, method)
       if (keeps === null) continue

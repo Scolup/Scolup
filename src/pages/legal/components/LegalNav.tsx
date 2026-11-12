@@ -1,7 +1,7 @@
 import { Link } from "react-router"
 import { DOCS, type DocId } from "../docs"
 
-const PILL = "rounded-full px-3.5 py-2 text-sm font-medium transition-colors"
+const PILL = "rounded-full px-3.5 py-2 text-sm font-medium press"
 
 export function LegalNav({ doc }: { doc: DocId }) {
   return (

@@ -1,10 +1,10 @@
-import { Suspense, useCallback, useEffect, useState } from "react"
+import { Activity, Suspense, useCallback, useEffect, useState } from "react"
 import type { CSSProperties } from "react"
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router"
 import { BottomNavigation } from "@/components/ui/shark/bottom-navigation"
 import { Spinner } from "@/components/ui/spinner"
 import { AppToast } from "@/components/AppToast"
-import { DecoBurst } from "@/components/DecoOrnament"
+import { RewardBurst } from "@/components/RewardBurst"
 import { OfflineBanner } from "@/components/OfflineBanner"
 import { ReauthSheet } from "@/components/ReauthSheet"
 import {
@@ -21,6 +21,7 @@ import {
 import { useSplashTask } from "@/services/splash"
 import { subscribeQuestToast } from "@/features/quests/service"
 import { toastText } from "@/features/quests/toast"
+import { subscribeCelebrate } from "@/lib/celebrate"
 import { cn } from "@/lib/utils"
 import { useMessagesBadge } from "@/pages/messages/hooks/useMessagesBadge"
 import { syncAppBadge } from "@/services/appBadge"
@@ -36,9 +37,38 @@ import {
   PostIts,
   RubiesPage,
 } from "./lazyPages"
-import { pathForTab, TabBar, tabForPath } from "./TabBar"
+import { pathForTab, tabForPath } from "./tabs"
+import { TabBar } from "./TabBar"
 import { useScrollMemory } from "./useScrollMemory"
 import { useTabBarShortcut } from "./useTabBarShortcut"
+
+// Les onglets, dans l'ordre de la barre. « /settings » et « / » sont tous les
+// deux l'accueil. Chaque onglet visité reste monté dans une <Activity> : on
+// retrouve l'écran tel qu'on l'a laissé (état, données, défilement), sans
+// rechargement, et ses effets (rafraîchissements) sont suspendus tant qu'il
+// est masqué.
+const TAB_KEYS = ["", "messages", "agenda", "homework", "grades"]
+const PAGE_SHIFT_PX = 12
+
+const SETTINGS_PATH = /^\/settings(?:\/([^/]+))?\/?$/
+
+// Écran affiché pour un chemin : l'accueil pour « / » et les réglages, sinon
+// le premier segment (un onglet, ou un écran secondaire).
+function pageKeyForPath(pathname: string): string {
+  if (pathname === "/" || SETTINGS_PATH.test(pathname)) return ""
+  return pathname.split("/")[1] ?? ""
+}
+
+function isTabKey(key: string): boolean {
+  return TAB_KEYS.includes(key)
+}
+
+// Ordre d'affichage pour le sens de l'animation ; les écrans secondaires
+// (plein écran, avec leur propre entrée) viennent après les onglets.
+function pageOrder(key: string): number {
+  const index = TAB_KEYS.indexOf(key)
+  return index === -1 ? TAB_KEYS.length : index
+}
 
 function TabFallback() {
   return (
@@ -57,6 +87,43 @@ export function MainLayout({
   const unreadMessages = useMessagesBadge()
   const tabBarHidden = useTabBarShortcut()
   const scrollRef = useScrollMemory(pathname)
+  // Entrée de page : on arrive de la droite en avançant, de la gauche en
+  // reculant. Rien ne joue au tout premier affichage (le splash couvre).
+  const pageKey = pageKeyForPath(pathname)
+  const [page, setPage] = useState({
+    key: pageKey,
+    order: pageOrder(pageKey),
+    shift: 0,
+    animate: false,
+    visited: isTabKey(pageKey) ? [pageKey] : [],
+  })
+  if (page.key !== pageKey) {
+    const order = pageOrder(pageKey)
+    setPage({
+      key: pageKey,
+      order,
+      shift: order > page.order ? PAGE_SHIFT_PX : -PAGE_SHIFT_PX,
+      animate: isTabKey(pageKey),
+      visited:
+        isTabKey(pageKey) && !page.visited.includes(pageKey)
+          ? [...page.visited, pageKey]
+          : page.visited,
+    })
+  }
+  const settingsMatch = SETTINGS_PATH.exec(pathname)
+  const visitedKeys = new Set(page.visited)
+  const tabElements: Record<string, React.ReactNode> = {
+    "": (
+      <HomeRoute
+        settings={settingsMatch !== null}
+        sectionId={settingsMatch?.[1]}
+      />
+    ),
+    messages: <Messages />,
+    agenda: <Agenda />,
+    homework: <Homework />,
+    grades: <Grades />,
+  }
   const [questToast, setQuestToast] = useState<string | null>(null)
   // Each quest reward bumps this tick: the active deco theme celebrates it.
   const [rewardTick, setRewardTick] = useState(0)
@@ -72,6 +139,11 @@ export function MainLayout({
       setRewardTick((tick) => tick + 1)
     })
   }, [])
+
+  useEffect(
+    () => subscribeCelebrate(() => setRewardTick((tick) => tick + 1)),
+    []
+  )
 
   // On précharge tous les écrans une seconde après le démarrage.
   useEffect(() => {
@@ -125,7 +197,7 @@ export function MainLayout({
       >
         <OfflineBanner />
         <ReauthSheet />
-        <DecoBurst tick={rewardTick} />
+        <RewardBurst tick={rewardTick} />
         <AppToast
           message={questToast}
           tone="success"
@@ -136,28 +208,35 @@ export function MainLayout({
           ref={scrollRef}
           className="flex-1 overflow-y-auto pb-[calc(var(--tabbar-height)+env(safe-area-inset-bottom))]"
         >
-          <Suspense fallback={<TabFallback />}>
-            <Routes>
-              <Route index element={<HomeRoute />} />
-              <Route
-                path="shop"
-                element={<Navigate to="/rubis?tab=boutique" replace />}
-              />
-              <Route path="rubis" element={<RubiesPage />} />
-              <Route path="messages" element={<Messages />} />
-              <Route path="agenda" element={<Agenda />} />
-              <Route path="homework" element={<Homework />} />
-              <Route path="grades" element={<Grades />} />
-              <Route path="absences" element={<Absences />} />
-              <Route path="post-its" element={<PostIts />} />
-              <Route path="settings" element={<HomeRoute settings />} />
-              <Route
-                path="settings/:sectionId"
-                element={<HomeRoute settings />}
-              />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
+          {TAB_KEYS.filter((key) => visitedKeys.has(key)).map((key) => (
+            <Activity key={key} mode={key === page.key ? "visible" : "hidden"}>
+              {/* Réaffiché, l'onglet rejoue son entrée : l'animation CSS
+                  redémarre quand le wrapper repasse de display: none à
+                  affiché. */}
+              <div
+                className={page.animate ? "page-enter" : "contents"}
+                style={{ "--page-dx": `${page.shift}px` } as CSSProperties}
+              >
+                <Suspense fallback={<TabFallback />}>
+                  {tabElements[key]}
+                </Suspense>
+              </div>
+            </Activity>
+          ))}
+          {!isTabKey(page.key) && (
+            <Suspense fallback={<TabFallback />}>
+              <Routes>
+                <Route
+                  path="shop"
+                  element={<Navigate to="/rubis?tab=boutique" replace />}
+                />
+                <Route path="rubis" element={<RubiesPage />} />
+                <Route path="absences" element={<Absences />} />
+                <Route path="post-its" element={<PostIts />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          )}
         </div>
 
         <TabBar

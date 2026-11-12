@@ -1,5 +1,8 @@
+// Chargé à la demande par les deux seuls consommateurs (GradesWidget et
+// AverageCard, via React.lazy) : recharts n'entre pas dans le bundle initial.
+// react-doctor-disable-next-line react-doctor/prefer-dynamic-import
 import { Area, AreaChart, CartesianGrid, YAxis } from "recharts"
-import { useRef, useState } from "react"
+import { memo, useRef, useState } from "react"
 import {
   ChartContainer,
   ChartTooltip,
@@ -14,7 +17,9 @@ const trendChartConfig = {
 
 const SUPPRESS_MS = 250
 
-export function GradesTrendChart({
+// Mémoïsé : le parent se re-rend à chaque point survolé (la moyenne affichée
+// change), le graphe lui-même n'a pas à être recalculé pour autant.
+export const GradesTrendChart = memo(function GradesTrendChart({
   trend,
   domain,
   interactive = true,
@@ -100,8 +105,10 @@ export function GradesTrendChart({
           strokeWidth={2}
           dot={false}
           activeDot={isFocused}
+          animationDuration={450}
+          animationEasing="ease-out"
         />
       </AreaChart>
     </ChartContainer>
   )
-}
+})

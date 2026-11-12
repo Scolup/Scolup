@@ -10,7 +10,7 @@ export function syncFileName(deviceId: string): string {
 
 // Tolère le suffixe " (1)" que le cloud pourrait ajouter si un envoi sous un
 // nom existant créait un doublon au lieu d'écraser.
-export function deviceIdOf(libelle: string): string | null {
+function deviceIdOf(libelle: string): string | null {
   const match = /^sync-([a-z0-9]{8,32})(?: \(\d+\))?\.json$/.exec(libelle)
   return match ? match[1] : null
 }

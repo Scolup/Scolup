@@ -18,7 +18,7 @@ function WidgetShell({
   return (
     <section
       aria-label={label}
-      className="flex min-h-[76px] flex-col justify-center gap-1 rounded-3xl border border-border/70 bg-card p-4"
+      className="flex min-h-[76px] content-in flex-col justify-center gap-1 rounded-3xl border border-border/70 bg-card p-4"
     >
       {children}
     </section>
