@@ -2,13 +2,17 @@
 // AverageCard, via React.lazy) : recharts n'entre pas dans le bundle initial.
 // react-doctor-disable-next-line react-doctor/prefer-dynamic-import
 import { Area, AreaChart, CartesianGrid, YAxis } from "recharts"
-import { memo, useRef, useState } from "react"
+import { memo, useId, useRef, useState } from "react"
 import {
   ChartContainer,
   ChartTooltip,
   type ChartConfig,
 } from "@/components/ui/chart"
 import type { TrendPoint } from "@/features/grades/types"
+import {
+  SCOLUP_LOGO_PATH,
+  SCOLUP_LOGO_TRANSFORM,
+} from "@/features/shop/decoThemes"
 import { triggerHapticLight } from "@/services/haptics"
 
 const trendChartConfig = {
@@ -23,15 +27,20 @@ export const GradesTrendChart = memo(function GradesTrendChart({
   trend,
   domain,
   interactive = true,
+  scolupPattern = false,
   onFocus,
   className,
 }: {
   trend: TrendPoint[]
   domain: [number, number]
   interactive?: boolean
+  // Evomoyenne theme: the area is filled with a tiled Scolup logo instead of
+  // a flat tint.
+  scolupPattern?: boolean
   onFocus?: (average: number | null) => void
   className?: string
 }) {
+  const patternId = `scolup-${useId().replace(/:/g, "")}`
   // Dernier cran survolé : le graphe se touche, chaque point traversé
   // émet une micro-vibration.
   const lastActive = useRef<number | string | null>(null)
@@ -95,12 +104,35 @@ export const GradesTrendChart = memo(function GradesTrendChart({
       >
         <CartesianGrid vertical={false} />
         <YAxis hide domain={domain} />
+        {scolupPattern && (
+          <defs>
+            <pattern
+              id={patternId}
+              width="44"
+              height="44"
+              patternUnits="userSpaceOnUse"
+            >
+              <rect
+                width="44"
+                height="44"
+                fill="var(--color-average)"
+                opacity="0.08"
+              />
+              <path
+                d={SCOLUP_LOGO_PATH}
+                transform={`translate(10 10) ${SCOLUP_LOGO_TRANSFORM}`}
+                fill="var(--color-average)"
+                opacity="0.26"
+              />
+            </pattern>
+          </defs>
+        )}
         {interactive && <ChartTooltip cursor={false} content={() => null} />}
         <Area
           dataKey="average"
           type="monotone"
-          fill="var(--color-average)"
-          fillOpacity={0.25}
+          fill={scolupPattern ? `url(#${patternId})` : "var(--color-average)"}
+          fillOpacity={scolupPattern ? 1 : 0.25}
           stroke="var(--color-average)"
           strokeWidth={2}
           dot={false}

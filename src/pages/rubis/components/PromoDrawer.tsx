@@ -1,15 +1,14 @@
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Coupon01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
+import { Key01Icon } from "@hugeicons/core-free-icons"
 import { Input } from "@/components/ui/input"
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer"
-import { SHOP_ITEMS } from "@/features/shop/shopRules"
-import type { PromoReward } from "@/features/shop/promoCodes"
-import type { RedeemStatus } from "@/features/shop/shop"
-import { usePromoCode } from "../hooks/usePromoCode"
+import { cn } from "@/lib/utils"
+import { usePromoCode, type JoseSpeech } from "../hooks/usePromoCode"
+import { Jose } from "./Jose"
+import { RewardReveal } from "./RewardReveal"
 
-// One place to redeem a code, whatever it gives: rubies, a free item or a
-// lower price. The item drawer no longer carries its own promo field.
+// José's vault: type a code, then touch José. With a code he answers (a
+// mystery, a "warm", or the reward); with nothing typed he whispers a hint.
 export function PromoDrawer({
   open,
   onOpenChange,
@@ -32,143 +31,97 @@ export function PromoDrawer({
     <Drawer open={open} onOpenChange={close}>
       <DrawerContent>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-          <DrawerTitle className="flex items-center gap-2 text-lg font-semibold text-card-foreground">
+          <DrawerTitle className="flex items-center justify-center gap-2 text-lg font-semibold text-card-foreground">
             <HugeiconsIcon
-              icon={Coupon01Icon}
+              icon={Key01Icon}
               className="size-5"
               aria-hidden="true"
             />
-            Un code à utiliser ?
+            Le coffre de José
           </DrawerTitle>
 
-          {reward ? (
-            <RewardReveal
-              reward={reward}
-              onDone={() => close(false)}
-              onSeeShop={() => {
-                promo.reset()
-                onSeeShop()
-              }}
+          <div className="mt-4 flex flex-col gap-4">
+            <Bubble speech={promo.speech} />
+            <Jose
+              mood={promo.speech.mood}
+              tick={promo.speech.tick}
+              busy={promo.busy}
+              onTouch={() => void promo.touchJose()}
             />
-          ) : (
-            <PromoForm promo={promo} />
-          )}
+            {reward ? (
+              <RewardReveal
+                reward={reward}
+                onDone={() => close(false)}
+                onSeeShop={() => {
+                  promo.reset()
+                  onSeeShop()
+                }}
+              />
+            ) : (
+              <PromoField promo={promo} />
+            )}
+          </div>
         </div>
       </DrawerContent>
     </Drawer>
   )
 }
 
-function PromoForm({ promo }: { promo: ReturnType<typeof usePromoCode> }) {
-  const error =
-    promo.result && promo.result.status !== "ok"
-      ? errorText(promo.result.status)
-      : ""
-
+function Bubble({ speech }: { speech: JoseSpeech }) {
   return (
-    <form
-      className="mt-5 flex flex-col gap-3"
-      onSubmit={(event) => {
-        event.preventDefault()
-        void promo.submit()
-      }}
+    <div
+      role="status"
+      className="relative flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl bg-muted px-4 py-3 text-center"
     >
-      <p className="text-sm text-muted-foreground">
-        Saisis ton code : des rubis, un article offert ou un prix réduit.
+      <p key={speech.tick} className="content-in text-sm text-foreground">
+        {speech.text}
       </p>
-      <div className="flex gap-2">
-        <Input
-          id="promo-code"
-          aria-label="Code"
-          value={promo.code}
-          onChange={(event) => promo.setCode(event.target.value)}
-          placeholder="Saisir un code"
-          autoComplete="off"
-          autoCapitalize="characters"
-          spellCheck={false}
-          maxLength={128}
-          aria-invalid={Boolean(error)}
-          aria-describedby="promo-code-status"
-          className="min-h-11 min-w-0 flex-1"
-        />
-        <Button
-          type="submit"
-          className="min-h-11"
-          disabled={!promo.code.trim() || promo.busy}
-        >
-          Valider
-        </Button>
-      </div>
-      <p
-        id="promo-code-status"
-        role="status"
-        className="min-h-5 text-sm text-destructive"
-      >
-        {error}
-      </p>
-    </form>
-  )
-}
-
-function RewardReveal({
-  reward,
-  onDone,
-  onSeeShop,
-}: {
-  reward: PromoReward
-  onDone: () => void
-  onSeeShop: () => void
-}) {
-  const label =
-    reward.kind === "rubies"
-      ? ""
-      : (SHOP_ITEMS.find((item) => item.id === reward.itemId)?.label ?? "")
-
-  return (
-    <div className="mt-5 flex flex-col gap-4">
-      <div className="flex items-center gap-3 rounded-2xl bg-emerald-500/10 px-4 py-3.5">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-          <HugeiconsIcon
-            icon={Tick02Icon}
-            className="size-5"
-            aria-hidden="true"
-          />
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground">
-            {rewardText(reward, label)}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Code validé, profite bien !
-          </p>
-        </div>
-      </div>
-      {reward.kind === "rubies" ? (
-        <Button onClick={onDone} className="h-11 w-full">
-          Continuer
-        </Button>
-      ) : (
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onDone} className="h-11 flex-1">
-            Plus tard
-          </Button>
-          <Button onClick={onSeeShop} className="h-11 flex-1">
-            Voir dans la boutique
-          </Button>
-        </div>
-      )}
+      {speech.length ? (
+        <p className="content-in text-sm tracking-[0.35em] text-muted-foreground">
+          <span className="sr-only">{speech.length} caractères</span>
+          <span aria-hidden="true">{"•".repeat(speech.length)}</span>
+        </p>
+      ) : null}
+      <span
+        aria-hidden="true"
+        className="absolute -bottom-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 bg-muted"
+      />
     </div>
   )
 }
 
-function rewardText(reward: PromoReward, label: string): string {
-  if (reward.kind === "rubies") return `+${reward.amount} rubis`
-  if (reward.kind === "free-item") return `${label} débloqué`
-  return `${label} à ${reward.price} rubis`
-}
-
-function errorText(status: RedeemStatus): string {
-  if (status === "invalid") return "Ce code n’existe pas."
-  if (status === "used") return "Ce code a déjà été utilisé."
-  return "Impossible de valider le code pour le moment."
+function PromoField({ promo }: { promo: ReturnType<typeof usePromoCode> }) {
+  return (
+    <form
+      className="flex flex-col gap-2"
+      onSubmit={(event) => {
+        event.preventDefault()
+        void promo.touchJose()
+      }}
+    >
+      <div
+        className={cn(
+          promo.shaking &&
+            "animate-[shake_0.4s_var(--ease-out)] motion-reduce:animate-none"
+        )}
+        onAnimationEnd={promo.endShake}
+      >
+        <Input
+          id="promo-code"
+          aria-label="Code secret"
+          value={promo.code}
+          onChange={(event) => promo.setCode(event.target.value)}
+          placeholder="Chuchote ton code…"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={128}
+          className="min-h-12 text-center font-mono text-lg tracking-[0.2em] uppercase placeholder:font-sans placeholder:text-base placeholder:tracking-normal placeholder:normal-case"
+        />
+      </div>
+      <p className="text-center text-xs text-muted-foreground">
+        Touche José pour valider ou avoir un indice.
+      </p>
+    </form>
+  )
 }

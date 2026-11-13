@@ -25,3 +25,13 @@ export function triggerHapticLight(): void {
 export function triggerHapticMedium(): void {
   buzz([15, 40, 15])
 }
+
+// Un code trouvé : une petite fanfare qui monte.
+export function triggerHapticReward(): void {
+  buzz([20, 40, 20, 40, 80])
+}
+
+// Un code raté : un « non » sec, discret.
+export function triggerHapticNope(): void {
+  buzz([25, 35, 12])
+}

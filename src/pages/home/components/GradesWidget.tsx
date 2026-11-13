@@ -37,6 +37,7 @@ import {
 import { fetchGrades } from "@/features/grades/fetchGrades"
 import { gradeLabel, recentGrades } from "@/features/grades/grade"
 import { type Grade } from "@/features/grades/types"
+import { useTheme } from "@/components/ThemeProvider"
 
 const GradesTrendChart = lazy(() =>
   import("@/pages/grades/components/GradesTrendChart").then((m) => ({
@@ -58,6 +59,7 @@ export function GradesWidget() {
   // Moyenne à la date survolée, comme sur la page notes : tant qu'un point
   // du mini-graphe a le focus, elle remplace la moyenne actuelle.
   const [focusedAverage, setFocusedAverage] = useState<number | null>(null)
+  const { decoTheme } = useTheme()
   const { data: lastSeen = 0 } = useAsync(() => readLastSeen("grades"), [])
   const liveGrades = useLiveRefresh("grades")
   const { method, scale } = useAverageSettings()
@@ -166,6 +168,7 @@ export function GradesWidget() {
             <GradesTrendChart
               trend={trend}
               domain={trendDomain}
+              scolupPattern={decoTheme === "evomoyenne"}
               onFocus={setFocusedAverage}
               className="h-[110px] w-full"
             />

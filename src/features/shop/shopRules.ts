@@ -20,6 +20,7 @@ interface BaseShopItem {
   icon?: typeof GiftIcon // shop logo, when the item deserves its own visual
   startsAt?: Date // when the item becomes available (local time)
   endsAt?: Date // when the item disappears (local time)
+  secret?: boolean // unlocked by a code, never sold in the shop
 }
 
 export interface AccentShopItem extends BaseShopItem {
@@ -242,6 +243,20 @@ export const SHOP_ITEMS: ShopItem[] = [
     foreground: "#ffffff",
     image:
       "radial-gradient(120% 120% at 50% 20%, #4f46e5 0%, #818cf8 55%, #fde68a 100%)",
+  },
+  {
+    id: "theme-evomoyenne",
+    kind: "theme",
+    label: "Thème Evomoyenne",
+    description:
+      "Un thème secret aux couleurs d'Evomoyenne, signé du logo Scolup. Il ne s'achète pas : il se souffle à José.",
+    price: 0,
+    value: "evomoyenne",
+    color: "#0284c7",
+    foreground: "#ffffff",
+    image:
+      "radial-gradient(120% 120% at 50% 20%, #0284c7 0%, #38bdf8 55%, #e0f2fe 100%)",
+    secret: true,
   },
 ]
 

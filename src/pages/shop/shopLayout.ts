@@ -81,6 +81,8 @@ export function layoutShop(
   }
 
   const permanent = entries.filter((entry) => {
+    // A secret item is only ever unlocked by its code, never displayed.
+    if (entry.item.secret) return false
     // Collection items live only in their own section, never under
     // "Couleurs & thèmes", even while their edition is running.
     if (entry.item.collection) return false

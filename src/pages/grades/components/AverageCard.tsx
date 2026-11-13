@@ -10,6 +10,7 @@ import { countUpValue } from "@/lib/countUp"
 import { formatAverage, formatAverageValue } from "@/features/grades/averages"
 import { type AverageScale, type TrendPoint } from "@/features/grades/types"
 import { useAverageSettings } from "@/features/grades/averageSettings"
+import { useTheme } from "@/components/ThemeProvider"
 import { AnimatedNumber } from "@/components/AnimatedNumber"
 
 const GradesTrendChart = lazy(() =>
@@ -70,6 +71,7 @@ export function AverageCard({
   hasTrend: boolean
 }) {
   const { scale } = useAverageSettings()
+  const { decoTheme } = useTheme()
   const countRef = useRef<HTMLSpanElement>(null)
   useCountUp(average, scale, countRef)
   // Tant qu'un point du graphe a le focus, sa moyenne s'affiche en direct
@@ -114,6 +116,7 @@ export function AverageCard({
           <GradesTrendChart
             trend={trend}
             domain={trendDomain}
+            scolupPattern={decoTheme === "evomoyenne"}
             onFocus={setFocusedAverage}
           />
         </Suspense>

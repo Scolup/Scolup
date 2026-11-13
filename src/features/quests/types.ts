@@ -15,6 +15,7 @@ export type QuestEvent =
   | "week-streak"
   | "grade-streak"
   | "purchase"
+  | "code-found"
 
 // Details of an event, so a quest can look only at what matters to it.
 export interface QuestPayload {

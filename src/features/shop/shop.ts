@@ -1,5 +1,14 @@
 import { reloadRubies } from "./rubies"
-import { findPromo, type PromoReward } from "./promoCodes"
+import {
+  findPromo,
+  huntable,
+  isFound,
+  isLive,
+  isNearMiss,
+  promoId,
+  rewardsOf,
+  type PromoReward,
+} from "./promoCodes"
 import { track } from "@/features/quests/service"
 import { periodKey } from "@/features/quests/period"
 import { getDB } from "@/services/storage"
@@ -11,15 +20,8 @@ import {
   type PurchaseStatus,
   type WeekStats,
 } from "./shopRules"
-import {
-  balanceOf,
-  coupon,
-  earnNow,
-  hasEarned,
-  ownedOf,
-  spend,
-  weeksOf,
-} from "./wallet"
+import { balanceOf, coupon, earnNow, ownedOf, spend, weeksOf } from "./wallet"
+import { buildVault, EMPTY_VAULT, type VaultState } from "./vault"
 import { readWallet, writeWallet } from "./walletStore"
 
 export interface ShopState {
@@ -86,11 +88,34 @@ export async function buyItem(
 
 // ---- Codes promo ----------------------------------------------------------
 
+export async function loadVault(): Promise<VaultState> {
+  try {
+    const db = await getDB()
+    const wallet = await readWallet((key) => db.get("shop", key))
+    return buildVault(wallet, new Date())
+  } catch {
+    return EMPTY_VAULT
+  }
+}
+
 export type RedeemStatus = "ok" | "invalid" | "used" | "error"
 
 export interface RedeemResult {
   status: RedeemStatus
   reward?: PromoReward
+  message?: string // la réplique de José pour ce code, quand il en a une
+  near?: boolean // code inconnu, mais à une faute de frappe d'un vrai code
+}
+
+// « Tu chauffes » : le code tapé ressemble à un code encore à trouver.
+async function isNearMissOfHidden(code: string): Promise<boolean> {
+  try {
+    const db = await getDB()
+    const wallet = await readWallet((key) => db.get("shop", key))
+    return isNearMiss(code, huntable(wallet, new Date()))
+  } catch {
+    return false
+  }
 }
 
 // Redeem a code into the wallet: rubies are credited at once, a free item is
@@ -99,11 +124,17 @@ export interface RedeemResult {
 // across two devices.
 export async function redeemCode(code: string): Promise<RedeemResult> {
   const promo = findPromo(code)
-  if (!promo) return { status: "invalid" }
+  if (!promo || !isLive(promo, new Date())) {
+    return { status: "invalid", near: await isNearMissOfHidden(code) }
+  }
   const reward = promo.reward
+  const rewards = rewardsOf(reward)
   if (
-    reward.kind !== "rubies" &&
-    !SHOP_ITEMS.some((item) => item.id === reward.itemId)
+    !rewards.every(
+      (entry) =>
+        entry.kind === "rubies" ||
+        SHOP_ITEMS.some((item) => item.id === entry.itemId)
+    )
   ) {
     return { status: "invalid" }
   }
@@ -112,28 +143,31 @@ export async function redeemCode(code: string): Promise<RedeemResult> {
     const tx = db.transaction("shop", "readwrite")
     const store = tx.objectStore("shop")
     const wallet = await readWallet((key) => store.get(key))
-    const id = `promo:${promo.code}`
-    const already =
-      reward.kind === "rubies"
-        ? hasEarned(wallet, id)
-        : reward.kind === "free-item"
-          ? reward.itemId in wallet.spent
-          : reward.itemId in wallet.coupons
-    if (already) {
+    if (isFound(wallet, promo)) {
       await tx.done
       return { status: "used", reward }
     }
-    const next =
-      reward.kind === "rubies"
-        ? earnNow(wallet, id, reward.amount, periodKey("weekly", new Date()))
-        : reward.kind === "free-item"
-          ? spend(wallet, reward.itemId, 0)
-          : coupon(wallet, reward.itemId, reward.price)
+    let next = wallet
+    for (const entry of rewards) {
+      if (entry.kind === "rubies") {
+        next = earnNow(
+          next,
+          promoId(promo),
+          entry.amount,
+          periodKey("weekly", new Date())
+        )
+      } else if (entry.kind === "free-item") {
+        next = spend(next, entry.itemId, 0)
+      } else {
+        next = coupon(next, entry.itemId, entry.price)
+      }
+    }
     await writeWallet(store, next)
     await tx.done
     await reloadRubies()
     markDirty()
-    return { status: "ok", reward }
+    void track("code-found", promo.code)
+    return { status: "ok", reward, message: promo.message }
   } catch {
     return { status: "error" }
   }

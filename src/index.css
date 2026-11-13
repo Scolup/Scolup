@@ -380,12 +380,238 @@
   }
 }
 
+/* José, gardien du coffre : sa pose suit data-mood (voir Jose.tsx). Seulement
+   transform et opacity ; les boucles sont des keyframes CSS. */
+.jose-head {
+  transform-origin: 100px 130px;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+.jose-brow,
+.jose-pupil,
+.jose-hand-l,
+.jose-hand-r {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+.jose-body {
+  animation: jose-float 3.2s ease-in-out infinite;
+}
+
+.jose-lid {
+  transform-box: fill-box;
+  transform-origin: top;
+  transform: scaleY(0);
+  animation: jose-blink 4.5s ease-in-out infinite;
+}
+
+.jose-spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+}
+
+.jose-eye-happy,
+.jose-mouth-happy,
+.jose-mouth-o,
+.jose-mouth-nope,
+.jose-mouth-near {
+  opacity: 0;
+}
+
+.jose[data-mood="happy"] .jose-eye-open,
+.jose[data-mood="happy"] .jose-lid,
+.jose[data-mood="happy"] .jose-mouth-idle,
+.jose[data-mood="nope"] .jose-mouth-idle,
+.jose[data-mood="near"] .jose-mouth-idle,
+.jose[data-mood="hint"] .jose-mouth-idle,
+.jose[data-mood="thinking"] .jose-mouth-idle {
+  opacity: 0;
+}
+
+.jose[data-mood="happy"] .jose-eye-happy,
+.jose[data-mood="happy"] .jose-mouth-happy,
+.jose[data-mood="nope"] .jose-mouth-nope,
+.jose[data-mood="near"] .jose-mouth-near,
+.jose[data-mood="hint"] .jose-mouth-o,
+.jose[data-mood="thinking"] .jose-mouth-o {
+  opacity: 1;
+}
+
+.jose[data-mood="happy"] .jose-body {
+  animation:
+    jose-hop 0.6s var(--ease-out) 2,
+    jose-float 3.2s ease-in-out 1.2s infinite;
+}
+
+.jose[data-mood="happy"] .jose-hand-l,
+.jose[data-mood="happy"] .jose-hand-r {
+  transform: translateY(-38px);
+}
+
+.jose[data-mood="happy"] .jose-brow {
+  transform: translateY(-4px);
+}
+
+.jose[data-mood="happy"] .jose-spark {
+  animation: jose-spark 1.1s var(--ease-out) backwards;
+}
+
+.jose[data-mood="thinking"] .jose-head {
+  animation: jose-ponder 0.8s ease-in-out infinite alternate;
+}
+
+.jose[data-mood="thinking"] .jose-pupil {
+  animation: jose-glance 0.9s ease-in-out infinite;
+}
+
+.jose[data-mood="thinking"] .jose-brow-l {
+  transform: translateY(-4px) rotate(-6deg);
+}
+
+.jose[data-mood="nope"] .jose-head {
+  animation: jose-no 0.55s var(--ease-out);
+}
+
+.jose[data-mood="nope"] .jose-brow-l {
+  transform: translateY(2px) rotate(14deg);
+}
+
+.jose[data-mood="nope"] .jose-brow-r {
+  transform: translateY(2px) rotate(-14deg);
+}
+
+.jose[data-mood="nope"] .jose-pupil {
+  transform: translateY(2px);
+}
+
+.jose[data-mood="near"] .jose-head {
+  transform: rotate(5deg);
+}
+
+.jose[data-mood="near"] .jose-brow-r {
+  transform: translateY(-5px) rotate(-8deg);
+}
+
+.jose[data-mood="near"] .jose-pupil {
+  transform: translate(-3px, 2px);
+}
+
+.jose[data-mood="hint"] .jose-head {
+  transform: rotate(-6deg) translateY(-2px);
+}
+
+.jose[data-mood="hint"] .jose-brow {
+  transform: translateY(-4px);
+}
+
+.jose[data-mood="hint"] .jose-hand-r {
+  transform: translate(-30px, -40px);
+}
+
+@keyframes jose-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes jose-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(0);
+  }
+  94% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes jose-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-22px);
+  }
+  70% {
+    transform: translateY(0);
+  }
+  85% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes jose-no {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(-7deg);
+  }
+  45% {
+    transform: rotate(7deg);
+  }
+  70% {
+    transform: rotate(-4deg);
+  }
+  90% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes jose-ponder {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes jose-glance {
+  0%,
+  100% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes jose-spark {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.6);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page-enter > *,
   .rise,
   .content-in,
   [data-deco-motion] {
     animation: none !important;
+  }
+
+  .jose * {
+    animation: none !important;
+    transition: none !important;
   }
 }
 

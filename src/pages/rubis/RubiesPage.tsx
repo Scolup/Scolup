@@ -4,7 +4,7 @@ import { m } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowLeftIcon,
-  Coupon01Icon,
+  Key01Icon,
   WifiDisconnected01Icon,
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
@@ -65,16 +65,16 @@ export function RubiesPage() {
           </h1>
           <Button
             variant="outline"
-            aria-label="J’ai un code"
+            aria-label="Le coffre de José"
             className="ml-auto h-11 shrink-0 gap-1.5 rounded-full px-3.5"
             onClick={() => setCodeOpen(true)}
           >
             <HugeiconsIcon
-              icon={Coupon01Icon}
+              icon={Key01Icon}
               className="size-4"
               aria-hidden="true"
             />
-            Code
+            Coffre
           </Button>
           {tab === "shop" && (
             <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-2.5 py-1.5">

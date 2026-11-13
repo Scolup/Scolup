@@ -328,4 +328,12 @@ export const QUESTS: QuestDef[] = [
     reward: 15,
     event: "purchase",
   },
+  {
+    id: "chuchoteur",
+    title: "Chuchoteur",
+    description: "Trouver un code secret et le souffler à José",
+    reward: 15,
+    event: "code-found",
+    secret: true,
+  },
 ]
