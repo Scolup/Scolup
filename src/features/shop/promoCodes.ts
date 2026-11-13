@@ -54,6 +54,17 @@ export const PROMO_CODES: readonly PromoCode[] = [
     },
     message: "Merci d'être là depuis le début.",
   },
+  {
+    code: "67",
+    reward: { kind: "rubies", amount: 0 },
+    message: "gênant",
+  },
+  {
+    code: "QWERTYUIOP",
+    reward: { kind: "rubies", amount: 25 },
+    message: "Tu es anglais ?",
+    hint: "Clavier anglais...",
+  },
 ]
 
 export function normalizeCode(code: string): string {
