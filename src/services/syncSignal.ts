@@ -5,7 +5,6 @@
 const listeners = new Set<() => void>()
 
 export function markDirty(): void {
-  console.debug("[sync] markDirty called")
   for (const listener of listeners) listener()
 }
 

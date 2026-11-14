@@ -51,7 +51,6 @@ export async function claimRubies(): Promise<number> {
     const store = tx.objectStore("shop")
     const wallet = await readWallet((key) => store.get(key))
     const amount = pendingOf(wallet)
-    console.debug("[rubies] claimRubies: pending =", amount)
     if (amount > 0) await writeWallet(store, claimAll(wallet))
     await tx.done
     if (amount > 0) {

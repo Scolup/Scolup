@@ -17,7 +17,15 @@ import {
 } from "./merge"
 import { isSyncedSetting } from "./keys"
 
+// Règle de compatibilité : DOC_VERSION n'augmente que pour un changement qui
+// casse la lecture des anciens champs. Une nouveauté (révisions, etc.)
+// s'ajoute comme champ FACULTATIF, sans changer de version : les appareils pas
+// encore mis à jour l'ignorent au lieu de rejeter tout le fichier, et la
+// synchronisation ne se coupe pas en deux. Quand la version monte, les
+// nouveaux appareils lisent encore les fichiers des anciens (de
+// MIN_DOC_VERSION à DOC_VERSION).
 export const DOC_VERSION = 1
+const MIN_DOC_VERSION = 1
 
 export interface SyncState {
   settings: Record<string, SyncedSetting>
@@ -71,8 +79,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value)
 }
 
+function isReadableVersion(v: unknown): boolean {
+  return (
+    typeof v === "number" &&
+    Number.isInteger(v) &&
+    v >= MIN_DOC_VERSION &&
+    v <= DOC_VERSION
+  )
+}
+
 // Lit un document venu du cloud. Renvoie null s'il est illisible ou d'une
-// autre version : on l'ignore plutôt que de risquer de corrompre l'état local.
+// version que nous ne savons pas lire (trop récente) : on l'ignore plutôt que
+// de risquer de corrompre l'état local. Les champs inconnus sont ignorés.
 export function parseDoc(text: string): SyncDoc | null {
   let raw: unknown
   try {
@@ -80,7 +98,7 @@ export function parseDoc(text: string): SyncDoc | null {
   } catch {
     return null
   }
-  if (!isRecord(raw) || raw.v !== DOC_VERSION) return null
+  if (!isRecord(raw) || !isReadableVersion(raw.v)) return null
   if (
     typeof raw.accountId !== "string" ||
     typeof raw.deviceId !== "string" ||

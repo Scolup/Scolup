@@ -120,15 +120,14 @@ export async function markSeen(key: string): Promise<void> {
   await setSetting(`seen:${key}`, String(Date.now()))
 }
 
-// Wipes every trace of Scolup preferences from the device. The user stays
-// logged in (the session is Litedirecte's), so only a reload is needed.
+// Wipes every trace of Scolup data from the device (preferences, rubies,
+// quests...), called on logout so the next account on this browser starts
+// clean. It clears every object store rather than a fixed list, so a store
+// added later is wiped too without having to remember this function. The
+// cloud copy is untouched: it restores the data at the next login.
 export async function clearAllData(): Promise<void> {
   const db = await getDB()
-  await Promise.all([
-    db.clear("settings"),
-    db.clear("subjects"),
-    db.clear("meta"),
-  ])
+  await Promise.all(Array.from(db.objectStoreNames, (name) => db.clear(name)))
   try {
     for (const key of Object.keys(localStorage)) {
       if (key.startsWith("scolup:")) localStorage.removeItem(key)

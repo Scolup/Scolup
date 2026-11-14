@@ -200,27 +200,21 @@ function applyToUi(applied: Applied, state: SyncState): void {
 }
 
 async function runOnce(): Promise<void> {
-  console.debug("[sync] runOnce start")
   if (!(await ld.auth.loadSession())) {
-    console.debug("[sync] no session")
     return
   }
   const account = ld.auth.getAccount()
   if (!account) {
-    console.debug("[sync] no account")
     return
   }
   const accountId = String(account.id)
   const me = deviceId()
-  console.debug("[sync] account:", accountId, "device:", me)
 
   const listing = await listSyncFolder()
   if (!listing) {
-    console.debug("[sync] no listing")
     return
   }
   const groups = groupByDevice(listing.files)
-  console.debug("[sync] device groups:", [...groups.keys()])
 
   // 1. Lire les autres appareils. Un fichier illisible est ignoré, jamais fatal.
   const peers: SyncDoc[] = []
@@ -229,29 +223,17 @@ async function runOnce(): Promise<void> {
     [...groups].map(async ([id, nodes]) => {
       if (id === me) return
       try {
-        console.debug("[sync] reading peer", id)
         const text = await readText(nodes[0])
         const doc = parseDoc(decodeBase64(text))
         if (!doc) {
-          console.debug("[sync] peer", id, "parse failed")
           return
         }
         if (doc.deviceId !== id || doc.accountId !== accountId) {
-          console.debug("[sync] peer", id, "mismatch (deviceId/accountId)")
           return
         }
         if (Date.now() - doc.savedAt > STALE_MS) {
-          console.debug("[sync] peer", id, "stale")
           stale.push(...nodes)
         } else {
-          console.debug(
-            "[sync] peer",
-            id,
-            "ok, rev:",
-            doc.rev,
-            "savedAt:",
-            doc.savedAt
-          )
           peers.push(doc)
         }
       } catch (e) {
@@ -261,23 +243,13 @@ async function runOnce(): Promise<void> {
   )
 
   // 2. Fusionner dans la base locale (une seule transaction).
-  console.debug("[sync] merging", peers.length, "peer(s)")
   const { state, applied } = await mergeIntoLocal(peers)
-  console.debug("[sync] applied:", applied)
   applyToUi(applied, state)
 
   // 3. Réécrire NOTRE fichier si l'état a changé depuis le dernier envoi.
   const own = groups.get(me) ?? []
   const print = fingerprint(state)
   const lastPrint = readStored(FINGERPRINT_KEY)
-  console.debug(
-    "[sync] fingerprint:",
-    print,
-    "last:",
-    lastPrint,
-    "own files:",
-    own.length
-  )
   if (print !== lastPrint || own.length === 0) {
     const rev = Number(readStored(REV_KEY) ?? 0) + 1
     const doc: SyncDoc = {
@@ -297,17 +269,13 @@ async function runOnce(): Promise<void> {
     )
     writeStored(FINGERPRINT_KEY, print)
     writeStored(REV_KEY, String(rev))
-    console.debug("[sync] wrote own file rev", rev)
     // Doublons de NOTRE fichier uniquement : ceux des autres sont à eux.
     await removeNodes(own.slice(1)).catch(() => {})
-  } else {
-    console.debug("[sync] no local changes, skipping write")
   }
 
   // 4. Oublier les appareils muets depuis longtemps (leur état est déjà fondu
   // dans les fichiers des appareils actifs).
   await removeNodes(stale).catch(() => {})
-  console.debug("[sync] runOnce done")
 }
 
 let running = false
@@ -315,22 +283,18 @@ let again = false
 
 export async function syncNow(): Promise<void> {
   if (running) {
-    console.debug("[sync] syncNow: already running, scheduling another pass")
     again = true
     return
   }
-  console.debug("[sync] syncNow start")
   running = true
   updateStatus({ state: "syncing", error: undefined })
   try {
     if (browserOffline()) {
-      console.debug("[sync] offline, skipping")
       updateStatus({ state: "idle", startup: "done", offline: true })
       return
     }
     for (let pass = 0; pass < MAX_PASSES; pass++) {
       again = false
-      console.debug("[sync] pass", pass + 1)
       await runOnce()
       if (!again) break
     }
@@ -341,7 +305,6 @@ export async function syncNow(): Promise<void> {
       startup: "done",
       offline: false,
     })
-    console.debug("[sync] syncNow done")
   } catch (error) {
     // Hors ligne, cloud absent, session expirée... : l'app reste utilisable
     // en local. Un autre échec garde le splash et retente le premier passage.
@@ -365,28 +328,20 @@ export async function syncNow(): Promise<void> {
 // Démarre la synchronisation : un passage au lancement, un après chaque
 // écriture locale (anti-rebond), un au retour du réseau.
 export function startCloudSync(): () => void {
-  console.debug("[sync] startCloudSync")
   let timer: ReturnType<typeof setTimeout> | undefined
   const schedule = (delay: number) => {
     clearTimeout(timer)
     timer = setTimeout(() => void syncNow(), delay)
   }
   const offDirty = onDirty(() => {
-    console.debug(
-      "[sync] markDirty received, scheduling sync in",
-      DEBOUNCE_MS,
-      "ms"
-    )
     schedule(DEBOUNCE_MS)
   })
   const onOnline = () => {
-    console.debug("[sync] online event, scheduling immediate sync")
     schedule(0)
   }
   // Dès la coupure, on ferme boutique et quêtes : leur état local n'est plus
   // garanti. Le prochain passage réussi les rouvrira.
   const onOffline = () => {
-    console.debug("[sync] offline event")
     updateStatus({ offline: true })
   }
   window.addEventListener("online", onOnline)
@@ -404,6 +359,5 @@ export function startCloudSync(): () => void {
 
 // Au retour au premier plan (déjà espacé de 60 s par useForegroundRefresh).
 export function requestSync(): void {
-  console.debug("[sync] requestSync")
   void syncNow()
 }

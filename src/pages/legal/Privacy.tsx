@@ -46,8 +46,12 @@ export function Privacy() {
         </li>
       </ul>
       <p>
-        Tout disparaît en vous déconnectant ou en effaçant les données du site
-        dans votre navigateur. Rien n'est envoyé à Scolup.
+        Tout ce qui est stocké sur votre appareil disparaît en vous
+        déconnectant ou en effaçant les données du site dans votre navigateur.
+        La copie conservée dans le dossier « Scolup » de votre cloud
+        EcoleDirecte n'est pas supprimée à la déconnexion : elle vous permet de
+        retrouver vos rubis à la prochaine connexion, et vous pouvez la
+        supprimer vous-même depuis EcoleDirecte. Rien n'est envoyé à Scolup.
       </p>
 
       <h2>Cookies, traceurs et vos droits</h2>

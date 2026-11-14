@@ -38,7 +38,6 @@ function readJson<T>(raw: unknown, fallback: T): T {
 export async function mergeIntoLocal(
   remotes: SyncState[]
 ): Promise<{ state: SyncState; applied: Applied }> {
-  console.debug("[sync] mergeIntoLocal: remotes =", remotes.length)
   const db = await getDB()
   const tx = db.transaction(
     ["settings", "meta", "subjects", "shop", "quests"],
@@ -74,12 +73,6 @@ export async function mergeIntoLocal(
     null
   )
   const localWallet = await readWallet((key) => shopStore.get(key))
-  console.debug(
-    "[sync] local wallet earned:",
-    Object.keys(localWallet.earned).length,
-    "claimed:",
-    Object.keys(localWallet.claimed).length
-  )
   const local: SyncState = {
     settings,
     subjects,
@@ -96,26 +89,8 @@ export async function mergeIntoLocal(
     },
   }
 
-  // Log remote wallets
-  remotes.forEach((r, i) => {
-    console.debug(
-      "[sync] remote",
-      i,
-      "wallet earned:",
-      Object.keys(r.wallet.earned).length,
-      "claimed:",
-      Object.keys(r.wallet.claimed).length
-    )
-  })
-
   // ---- Fusion
   const merged = remotes.reduce(mergeStates, local)
-  console.debug(
-    "[sync] merged wallet earned:",
-    Object.keys(merged.wallet.earned).length,
-    "claimed:",
-    Object.keys(merged.wallet.claimed).length
-  )
 
   // ---- Écriture : seulement ce qui a changé
   const applied: Applied = {
@@ -141,11 +116,8 @@ export async function mergeIntoLocal(
     })
   )
   if (canonical(local.wallet) !== canonical(merged.wallet)) {
-    console.debug("[sync] wallet changed, writing")
     await writeWallet(shopStore, merged.wallet)
     applied.wallet = true
-  } else {
-    console.debug("[sync] wallet unchanged")
   }
   const questParts: [string, unknown, unknown][] = [
     [PROGRESS_KEY, local.quests.progress, merged.quests.progress],
