@@ -9,14 +9,23 @@ export type PromoReward =
   | SimpleReward
   | { kind: "bundle"; rewards: readonly SimpleReward[] }
 
-export interface PromoCode {
-  code: string
+export interface PromoStep {
   reward: PromoReward
-  // Ce que José dit quand l'élève trouve le code (sinon une phrase générique).
+  // Ce que José dit quand l'élève valide cette étape (sinon une phrase
+  // générique).
   message?: string
   // Un indice volontairement vague : José le glisse quand on le touche avec le
-  // champ vide. Sans indice, le code reste un pur secret.
+  // champ vide. Sans indice, le code reste un pur secret. Texte simple, rendu
+  // par RichHtml : `<strong>` pour appuyer un mot.
   hint?: string
+}
+
+export interface PromoCode extends PromoStep {
+  code: string
+  // Une seconde étape, pour un code qui se répète : la même clé reste
+  // utilisable tant qu'elle n'est pas validée, avec son propre indice et sa
+  // propre récompense.
+  again?: PromoStep
   // Fenêtre de disponibilité (heure locale), comme les articles de la boutique :
   // hors de la fenêtre, le code n'existe plus pour José.
   startsAt?: Date
@@ -28,7 +37,8 @@ export interface PromoCode {
 // bundle livré, et le portefeuille reste local : un code n'est qu'une surprise,
 // jamais un secret. Récompenses possibles : des rubis, un article offert, un
 // article à prix réduit (retenu dans le portefeuille jusqu'à l'achat), ou
-// plusieurs à la fois (`bundle`).
+// plusieurs à la fois (`bundle`). Un code peut aussi se répéter : `again` donne
+// une seconde validation, avec son propre indice et sa propre récompense.
 // NOTE: les `hint` et `message` ci-dessous sont des textes provisoires : à
 // réécrire pour coller à l'origine réelle de chaque code.
 export const PROMO_CODES: readonly PromoCode[] = [
@@ -63,7 +73,18 @@ export const PROMO_CODES: readonly PromoCode[] = [
     code: "QWERTYUIOP",
     reward: { kind: "rubies", amount: 25 },
     message: "Tu es anglais ?",
-    hint: "Clavier anglais...",
+    hint: "L’alphabet selon un clavier...",
+  },
+  {
+    code: "GIVERUBIS",
+    reward: { kind: "rubies", amount: 1 },
+    message: "Here's your ruby !",
+    hint: "Va réviser ton anglais, et je te <strong>donne rubis</strong>",
+    again: {
+      reward: { kind: "rubies", amount: 75 },
+      message: "Comme une impression de déjà vu...",
+      hint: "Parfois, se répéter n’est pas une mauvaise chose...",
+    },
   },
 ]
 
@@ -82,9 +103,20 @@ export function findPromo(
   )
 }
 
-// Id du fait enregistré dans le portefeuille pour un code de rubis.
-export function promoId(promo: PromoCode): string {
-  return `promo:${promo.code}`
+// Id du fait enregistré dans le portefeuille pour une étape de code.
+export function promoId(promo: PromoCode, step = 0): string {
+  const base = `promo:${promo.code}`
+  return step === 0 ? base : `${base}:${step}`
+}
+
+// Les étapes d'un code, dans l'ordre où elles s'ouvrent.
+export function stepsOf(promo: PromoCode): readonly PromoStep[] {
+  const first: PromoStep = {
+    reward: promo.reward,
+    message: promo.message,
+    hint: promo.hint,
+  }
+  return promo.again ? [first, promo.again] : [first]
 }
 
 export function isLive(promo: PromoCode, now: Date): boolean {
@@ -99,11 +131,15 @@ export function rewardsOf(reward: PromoReward): readonly SimpleReward[] {
   return reward.kind === "bundle" ? reward.rewards : [reward]
 }
 
-// Un code est « trouvé » quand le portefeuille porte déjà tous ses effets :
-// c'est ce qui le rend utilisable une seule fois, même d'un appareil à l'autre.
-export function isFound(wallet: Wallet, promo: PromoCode): boolean {
-  return rewardsOf(promo.reward).every((reward) => {
-    if (reward.kind === "rubies") return hasEarned(wallet, promoId(promo))
+function stepFound(
+  wallet: Wallet,
+  promo: PromoCode,
+  step: PromoStep,
+  index: number
+): boolean {
+  return rewardsOf(step.reward).every((reward) => {
+    if (reward.kind === "rubies")
+      return hasEarned(wallet, promoId(promo, index))
     if (reward.kind === "free-item") return reward.itemId in wallet.spent
     // For price codes: new format stores in coupons, old format in spent
     // Check coupons (new format) first, then fall back to spent (old format)
@@ -114,6 +150,27 @@ export function isFound(wallet: Wallet, promo: PromoCode): boolean {
         wallet.spent[reward.itemId] <= reward.price)
     )
   })
+}
+
+// L'étape que le coffre attend : la première que l'élève n'a pas encore
+// validée. `null` quand le code a été trouvé en entier.
+export function openStep(
+  wallet: Wallet,
+  promo: PromoCode
+): { step: PromoStep; index: number } | null {
+  const steps = stepsOf(promo)
+  for (let index = 0; index < steps.length; index++) {
+    if (!stepFound(wallet, promo, steps[index], index)) {
+      return { step: steps[index], index }
+    }
+  }
+  return null
+}
+
+// Un code est « trouvé » quand toutes ses étapes sont validées : c'est ce qui
+// le rend utilisable une seule fois, même d'un appareil à l'autre.
+export function isFound(wallet: Wallet, promo: PromoCode): boolean {
+  return openStep(wallet, promo) === null
 }
 
 // Les codes encore à trouver : ceux que José peut deviner ou souffler.

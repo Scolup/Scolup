@@ -1,8 +1,8 @@
 import {
-  isFound,
   isLive,
-  normalizeCode,
+  openStep,
   PROMO_CODES,
+  stepsOf,
   type PromoCode,
   type PromoReward,
 } from "./promoCodes"
@@ -15,7 +15,6 @@ export interface FoundCode {
 
 export interface VaultHint {
   text: string
-  length: number // nombre de caractères du code : sa « forme »
 }
 
 // Ce que le coffre de José sait de l'élève : ce qu'il a trouvé, combien il en
@@ -37,15 +36,16 @@ export function buildVault(
   const hints: VaultHint[] = []
   let total = 0
   for (const promo of promos) {
-    const isOpen = isFound(wallet, promo)
+    const open = openStep(wallet, promo)
     // Un code trouvé reste dans la collection même une fois expiré.
-    if (!isOpen && !isLive(promo, now)) continue
+    if (!open && !isLive(promo, now)) continue
     total++
-    if (isOpen) {
-      found.push({ code: promo.code, reward: promo.reward })
-    } else if (promo.hint) {
-      hints.push({ text: promo.hint, length: normalizeCode(promo.code).length })
+    if (open) {
+      if (open.step.hint) hints.push({ text: open.step.hint })
+      continue
     }
+    const steps = stepsOf(promo)
+    found.push({ code: promo.code, reward: steps[steps.length - 1].reward })
   }
   return { total, found, hints }
 }

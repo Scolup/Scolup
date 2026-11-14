@@ -2,11 +2,12 @@ import { reloadRubies } from "./rubies"
 import {
   findPromo,
   huntable,
-  isFound,
   isLive,
   isNearMiss,
+  openStep,
   promoId,
   rewardsOf,
+  stepsOf,
   type PromoReward,
 } from "./promoCodes"
 import { track } from "@/features/quests/service"
@@ -127,32 +128,30 @@ export async function redeemCode(code: string): Promise<RedeemResult> {
   if (!promo || !isLive(promo, new Date())) {
     return { status: "invalid", near: await isNearMissOfHidden(code) }
   }
-  const reward = promo.reward
-  const rewards = rewardsOf(reward)
-  if (
-    !rewards.every(
+  const valid = stepsOf(promo).every((step) =>
+    rewardsOf(step.reward).every(
       (entry) =>
         entry.kind === "rubies" ||
         SHOP_ITEMS.some((item) => item.id === entry.itemId)
     )
-  ) {
-    return { status: "invalid" }
-  }
+  )
+  if (!valid) return { status: "invalid" }
   try {
     const db = await getDB()
     const tx = db.transaction("shop", "readwrite")
     const store = tx.objectStore("shop")
     const wallet = await readWallet((key) => store.get(key))
-    if (isFound(wallet, promo)) {
+    const open = openStep(wallet, promo)
+    if (!open) {
       await tx.done
-      return { status: "used", reward }
+      return { status: "used", reward: promo.reward }
     }
     let next = wallet
-    for (const entry of rewards) {
+    for (const entry of rewardsOf(open.step.reward)) {
       if (entry.kind === "rubies") {
         next = earnNow(
           next,
-          promoId(promo),
+          promoId(promo, open.index),
           entry.amount,
           periodKey("weekly", new Date())
         )
@@ -167,7 +166,11 @@ export async function redeemCode(code: string): Promise<RedeemResult> {
     await reloadRubies()
     markDirty()
     void track("code-found", promo.code)
-    return { status: "ok", reward, message: promo.message }
+    return {
+      status: "ok",
+      reward: open.step.reward,
+      message: open.step.message,
+    }
   } catch {
     return { status: "error" }
   }

@@ -8,6 +8,7 @@ import {
   emptyFieldLine,
   errorLine,
   greeting,
+  hintMood,
   nearLine,
   thinkingLine,
   usedLine,
@@ -23,7 +24,6 @@ export interface JoseSpeech {
   text: string
   mood: JoseMood
   tick: number // grows with every line, so a repeated mood replays its animation
-  length?: number // shape of the code a hint talks about
 }
 
 const wait = (ms: number) =>
@@ -46,8 +46,8 @@ export function usePromoCode() {
   }))
   const vault = useAsync(loadVault, [reload]).data ?? EMPTY_VAULT
 
-  const say = (text: string, mood: JoseMood, length?: number) =>
-    setSpeech((previous) => ({ text, mood, length, tick: previous.tick + 1 }))
+  const say = (text: string, mood: JoseMood) =>
+    setSpeech((previous) => ({ text, mood, tick: previous.tick + 1 }))
 
   // Typing calms José down; the line stays so the answer can be reread.
   const setCode = (value: string) => {
@@ -61,7 +61,7 @@ export function usePromoCode() {
   const whisperHint = () => {
     const line = emptyFieldLine(vault, hintCount, speech.text)
     setHintCount((count) => count + 1)
-    say(line.text, "hint", line.length)
+    say(line, hintMood(speech.mood))
   }
 
   const answer = (next: RedeemResult) => {
@@ -74,7 +74,7 @@ export function usePromoCode() {
       return
     }
     if (next.status === "used") {
-      say(usedLine(speech.text), "hint")
+      say(usedLine(speech.text), "nope")
       return
     }
     if (next.status === "error") {

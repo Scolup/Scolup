@@ -1,9 +1,15 @@
 import { cn } from "@/lib/utils"
 import type { JoseMood } from "@/features/shop/vaultLines"
 
-const SKIN = "#f6d7b6"
-const INK = "#3b2417"
-const MOUTH = "#7f1d1d"
+// Fixed colours (not theme tokens): the primary colour flips between light and
+// dark mode, and José has to stay a ruby-red padlock on both.
+const BODY = "#e11d48"
+const METAL = "#94a3b8"
+const INK = "#4c0519"
+const EYES = [
+  { x: 76, side: "l" },
+  { x: 124, side: "r" },
+]
 const SPARKS = [
   { x: 34, y: 62, delay: "0s" },
   { x: 168, y: 50, delay: "0.12s" },
@@ -13,9 +19,10 @@ const SPARKS = [
 const SPARK_PATH =
   "M0 -9 L2.5 -2.5 L9 0 L2.5 2.5 L0 9 L-2.5 2.5 L-9 0 L-2.5 -2.5 Z"
 
-// José, keeper of the vault. Touching him is the "validate" button: the mood
-// (data-mood) drives his face and pose in index.css. The svg is re-keyed with
-// `tick` so a repeated mood plays its one-shot animation again.
+// José, keeper of the vault: a padlock with a face. Touching him is the
+// "validate" button: the mood (data-mood) drives his face and pose in
+// index.css. The svg is re-keyed with `tick` so a repeated mood plays its
+// one-shot animation again.
 export function Jose({
   mood,
   tick,
@@ -47,141 +54,104 @@ export function Jose({
         aria-hidden="true"
         className="jose size-full overflow-visible"
       >
-        <ellipse
-          cx="100"
-          cy="201"
-          rx="52"
-          ry="6"
-          className="fill-foreground/10"
-        />
-
         <g className="jose-body">
-          <path
-            d="M40 202 C40 152 62 122 100 122 C138 122 160 152 160 202 Z"
-            className="fill-primary"
-          />
-          <path d="M100 150 L110 158 L100 177 L90 158 Z" fill="#e11d48" />
-          <path d="M90 158 L100 150 L110 158 Z" fill="#fb7185" />
-
           <g className="jose-head">
-            <circle cx="55" cy="96" r="9" fill={SKIN} />
-            <circle cx="145" cy="96" r="9" fill={SKIN} />
-            <circle cx="100" cy="90" r="46" fill={SKIN} />
-            <circle cx="72" cy="108" r="7" fill="#f9a8a8" opacity="0.5" />
-            <circle cx="128" cy="108" r="7" fill="#f9a8a8" opacity="0.5" />
+            <path
+              d="M72 100 V70 A28 28 0 0 1 128 70 V100"
+              stroke={METAL}
+              strokeWidth="14"
+              fill="none"
+            />
+            <rect x="40" y="92" width="120" height="98" rx="30" fill={BODY} />
 
-            <g transform="translate(0 -9)">
-              <path
-                d="M54 76 C52 36 148 36 146 76 C130 66 70 66 54 76 Z"
-                fill="#9f1239"
-              />
-              <rect
-                x="50"
-                y="72"
-                width="100"
-                height="8"
-                rx="4"
-                fill="#881337"
-              />
-              <circle cx="100" cy="40" r="5" fill="#9f1239" />
-            </g>
-
-            {[82, 118].map((x) => (
-              <g key={x}>
+            {EYES.map(({ x, side }) => (
+              <g key={side} className={`jose-eye-${side}`}>
                 <g className="jose-eye-open">
-                  <circle cx={x} cy="93" r="9" fill="#fff" />
+                  <circle cx={x} cy="132" r="12" fill="#fff" />
                   <circle
                     cx={x}
-                    cy="93"
-                    r="4.5"
+                    cy="132"
+                    r="6"
                     fill={INK}
                     className="jose-pupil"
                   />
                 </g>
                 <path
-                  d={`M${x - 9} 95 Q${x} 83 ${x + 9} 95`}
+                  d={`M${x - 11} 135 Q${x} 121 ${x + 11} 135`}
                   stroke={INK}
-                  strokeWidth="3.5"
+                  strokeWidth="5"
                   strokeLinecap="round"
                   fill="none"
                   className="jose-eye-happy"
                 />
                 <rect
-                  x={x - 10}
-                  y="83"
-                  width="20"
-                  height="20"
-                  rx="10"
-                  fill={SKIN}
+                  x={x - 13}
+                  y="118"
+                  width="26"
+                  height="28"
+                  rx="13"
+                  fill={BODY}
                   className="jose-lid"
                 />
               </g>
             ))}
-            <path
-              d="M71 77 Q82 72 93 76"
-              stroke={INK}
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              fill="none"
-              className="jose-brow jose-brow-l"
-            />
-            <path
-              d="M107 76 Q118 72 129 77"
-              stroke={INK}
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              fill="none"
-              className="jose-brow jose-brow-r"
-            />
-
-            <ellipse cx="100" cy="104" rx="6" ry="5" fill="#eab58a" />
 
             <path
-              d="M91 126 Q100 130 109 126"
-              stroke={MOUTH}
-              strokeWidth="3"
+              d="M88 164 Q100 170 112 164"
+              stroke={INK}
+              strokeWidth="5"
               strokeLinecap="round"
               fill="none"
               className="jose-mouth-idle"
             />
             <path
-              d="M87 122 Q100 148 113 122 Z"
-              fill={MOUTH}
+              d="M84 160 Q100 184 116 160 Z"
+              fill={INK}
+              stroke={INK}
+              strokeWidth="4"
+              strokeLinejoin="round"
               className="jose-mouth-happy"
             />
             <ellipse
               cx="100"
-              cy="127"
-              rx="4.5"
-              ry="5.5"
-              fill={MOUTH}
+              cy="166"
+              rx="6"
+              ry="7"
+              fill={INK}
               className="jose-mouth-o"
             />
             <path
-              d="M91 132 Q100 122 109 132"
-              stroke={MOUTH}
-              strokeWidth="3"
+              d="M88 172 Q100 160 112 172"
+              stroke={INK}
+              strokeWidth="5"
               strokeLinecap="round"
               fill="none"
               className="jose-mouth-nope"
             />
             <path
-              d="M91 128 Q101 130 110 122"
-              stroke={MOUTH}
-              strokeWidth="3"
+              d="M88 167 Q102 170 113 161"
+              stroke={INK}
+              strokeWidth="5"
               strokeLinecap="round"
               fill="none"
               className="jose-mouth-near"
             />
-
-            <path
-              d="M70 111 C78 98 94 102 100 111 C106 102 122 98 130 111 C122 123 106 115 100 115 C94 115 78 123 70 111 Z"
-              fill={INK}
-            />
           </g>
 
-          <circle cx="58" cy="178" r="9" fill={SKIN} className="jose-hand-l" />
-          <circle cx="142" cy="178" r="9" fill={SKIN} className="jose-hand-r" />
+          <circle
+            cx="24"
+            cy="164"
+            r="10"
+            fill={METAL}
+            className="jose-hand-l"
+          />
+          <circle
+            cx="176"
+            cy="164"
+            r="10"
+            fill={METAL}
+            className="jose-hand-r"
+          />
         </g>
 
         {SPARKS.map((spark) => (

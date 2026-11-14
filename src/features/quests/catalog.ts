@@ -298,6 +298,38 @@ export const QUESTS: QuestDef[] = [
     grades: true,
     secret: true,
   },
+  // ---- Codes: the vault ladder (one-time, the closest tier is shown) ------
+  {
+    id: "coffre-3",
+    title: "Maître du coffre",
+    description: "Trouver 3 codes dans le coffre de José",
+    reward: 50,
+    event: "code-found",
+    track: "coffre",
+    goal: 3,
+    unique: true,
+  },
+  {
+    id: "coffre-5",
+    title: "Ami de José",
+    description: "Trouver 5 codes dans le coffre de José",
+    reward: 100,
+    event: "code-found",
+    track: "coffre",
+    goal: 5,
+    unique: true,
+  },
+  {
+    id: "coffre-10",
+    title: "Cod3breaker",
+    description: "Trouver 10 codes dans le coffre de José",
+    reward: 250,
+    event: "code-found",
+    track: "coffre",
+    goal: 10,
+    unique: true,
+    secret: true,
+  },
   // ---- Tutorial (one-shot) ----------------------------------------------
   {
     id: "bienvenue",

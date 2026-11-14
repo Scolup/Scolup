@@ -3,7 +3,18 @@ import type { VaultState } from "./vault"
 // José parle peu et à demi-mot. Toutes ses répliques sont ici, pour les
 // réécrire sans toucher à l'interface.
 
-export type JoseMood = "idle" | "thinking" | "nope" | "near" | "hint" | "happy"
+export type JoseMood =
+  | "idle"
+  | "thinking"
+  | "nope"
+  | "near"
+  | "hint"
+  | "hint-wink"
+  | "hint-beckon"
+  | "happy"
+
+// The faces José pulls when whispering a hint (see index.css).
+const HINT_MOODS: readonly JoseMood[] = ["hint", "hint-wink", "hint-beckon"]
 
 const GREETINGS = [
   "Psst… Approche. Tu as quelque chose à me dire ?",
@@ -56,11 +67,11 @@ const ALL_FOUND = [
 ]
 
 // Une réplique au hasard, jamais deux fois la même d'affilée.
-export function pickDifferent(
-  pool: readonly string[],
+export function pickDifferent<T extends string>(
+  pool: readonly T[],
   previous: string,
   random: () => number = Math.random
-): string {
+): T {
   const options = pool.length > 1 ? pool.filter((l) => l !== previous) : pool
   return options[Math.floor(random() * options.length)]
 }
@@ -74,11 +85,8 @@ export const nearLine = (previous: string) => pickDifferent(NEAR, previous)
 export const usedLine = (previous: string) => pickDifferent(USED, previous)
 export const winLine = (previous: string) => pickDifferent(WIN, previous)
 export const errorLine = (previous: string) => pickDifferent(ERROR, previous)
-
-export interface EmptyLine {
-  text: string
-  length?: number // forme du code dont parle l'indice
-}
+export const hintMood = (previous: JoseMood) =>
+  pickDifferent(HINT_MOODS, previous)
 
 // Champ vide : José glisse l'indice d'un code encore caché, chaque touche
 // passant au suivant. Sans indice à donner (ou si le même reviendrait deux
@@ -88,9 +96,9 @@ export function emptyFieldLine(
   count: number,
   previous: string,
   random?: () => number
-): EmptyLine {
+): string {
   const hint = vault.hints[count % Math.max(1, vault.hints.length)]
-  if (hint && hint.text !== previous) return hint
+  if (hint && hint.text !== previous) return hint.text
   const done = vault.total > 0 && vault.found.length === vault.total
-  return { text: pickDifferent(done ? ALL_FOUND : EMPTY, previous, random) }
+  return pickDifferent(done ? ALL_FOUND : EMPTY, previous, random)
 }

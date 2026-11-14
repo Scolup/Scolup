@@ -2,6 +2,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Key01Icon } from "@hugeicons/core-free-icons"
 import { Input } from "@/components/ui/input"
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer"
+import { RichHtml } from "@/components/RichHtml"
 import { cn } from "@/lib/utils"
 import { usePromoCode, type JoseSpeech } from "../hooks/usePromoCode"
 import { Jose } from "./Jose"
@@ -73,15 +74,12 @@ function Bubble({ speech }: { speech: JoseSpeech }) {
       role="status"
       className="relative flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl bg-muted px-4 py-3 text-center"
     >
-      <p key={speech.tick} className="content-in text-sm text-foreground">
-        {speech.text}
-      </p>
-      {speech.length ? (
-        <p className="content-in text-sm tracking-[0.35em] text-muted-foreground">
-          <span className="sr-only">{speech.length} caractères</span>
-          <span aria-hidden="true">{"•".repeat(speech.length)}</span>
-        </p>
-      ) : null}
+      <RichHtml
+        key={speech.tick}
+        as="p"
+        html={speech.text}
+        className="content-in text-sm text-foreground"
+      />
       <span
         aria-hidden="true"
         className="absolute -bottom-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 bg-muted"
