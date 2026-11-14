@@ -64,6 +64,7 @@ export function useGradesPage() {
     selectedKey !== null
       ? (model.grades.find((grade) => grade.key === selectedKey) ?? null)
       : null
+  const selectedImpact = selected ? model.impactOf(selected) : null
 
   return {
     ...model,
@@ -73,6 +74,7 @@ export function useGradesPage() {
     openGrade,
     closeGrade: () => setSelectedKey(null),
     selected,
+    selectedImpact,
     selectedSubject: selected
       ? resolveSubjectName(selected.subjectCode, selected.subject)
       : "",

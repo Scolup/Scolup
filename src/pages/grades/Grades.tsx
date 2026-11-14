@@ -27,6 +27,7 @@ export function Grades() {
         subject={page.selectedSubject}
         periodLabel={page.selectedPeriodLabel}
         evalColors={page.evalColors}
+        impact={page.selectedImpact}
         onClose={page.closeGrade}
       />
     </div>

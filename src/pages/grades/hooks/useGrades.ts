@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { errorMessage } from "@/services/errors"
 import { syncGrades } from "@/features/quests/service"
 import { ensureSubjects } from "@/features/subjects/edit"
@@ -9,6 +9,7 @@ import { useLiveRefresh } from "@/hooks/useLiveRefresh"
 import { useAverageSettings } from "@/features/grades/averageSettings"
 import {
   computeOverallAverage,
+  gradeImpact,
   groupBySubject,
 } from "@/features/grades/averages"
 import { fetchGrades } from "@/features/grades/fetchGrades"
@@ -18,7 +19,12 @@ import {
   cumulativeGeneralAverageByDay,
   computeTrendDomain,
 } from "@/features/grades/trend"
-import type { Grade, Period, TrendPoint } from "@/features/grades/types"
+import type {
+  Grade,
+  GradeImpact,
+  Period,
+  TrendPoint,
+} from "@/features/grades/types"
 
 interface GradesModel {
   grades: Grade[]
@@ -32,6 +38,7 @@ interface GradesModel {
   hasTrend: boolean
   trendDomain: [number, number]
   recentGrades: Grade[]
+  impactOf: (grade: Grade) => GradeImpact
   loading: boolean
   error: string | null
   retry: () => void
@@ -113,6 +120,10 @@ export function useGrades(): GradesModel {
     () => recentGrades(visibleGrades, RECENT_DAYS),
     [visibleGrades]
   )
+  const impactOf = useCallback(
+    (grade: Grade) => gradeImpact(grade, visibleGrades, coefOf, method),
+    [visibleGrades, coefOf, method]
+  )
 
   return {
     grades,
@@ -126,6 +137,7 @@ export function useGrades(): GradesModel {
     hasTrend: trend.some((point) => point.average !== null),
     trendDomain: domain,
     recentGrades: recent,
+    impactOf,
     loading,
     error: error
       ? errorMessage(error, "Impossible de charger les notes.")

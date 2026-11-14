@@ -22,12 +22,13 @@ Scolup is an alternative front-end for EcoleDirecte (French school portal): grad
 | Typecheck | `bun run typecheck` |
 | Build (typecheck + vite build) | `bun run build` |
 | Format (oxfmt) | `bun run format` |
-| Tests | `bun test` |
 | React Doctor | `bun run doctor` |
 | Before any production commit | `bun run precommit` (format + build) |
 | Add shadcn component | see shadcn skill |
 
 There is no linter beyond `tsc` and React Doctor. Formatting is oxfmt: no semicolons, double quotes, 2 spaces, 80 columns, Tailwind classes sorted (including inside `cn` and `cva`). Don't hand-format; run `bun run format`.
+
+Don't run every check individually at the end of a work ; instead run `bun precommit`. If it's a very small change, no need to run these checks.
 
 ## 3. Code map
 
@@ -89,7 +90,6 @@ Follow the existing split when adding a page: fetch function, data hook, page-st
 
 ### TypeScript
 `strict`, `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax` and `erasableSyntaxOnly` are on: use `import type` for types, and no enums or parameter properties.
-Tests are kept: see the *Verify* section.
 
 ### Known issues, do not touch
 - **`dangerouslySetInnerHTML`**: known and accepted. Don't fix, remove or flag existing usages.
@@ -149,7 +149,6 @@ A bug report names a symptom. Grep every caller of the function you're touching 
 
 ### Verify
 - Turn the task into a checkable goal ("fix the bug" becomes "reproduce it, then make it pass").
-- Non-trivial logic leaves one small runnable check: a `bun:test` file in `tests/` (see `tests/grades.test.ts`). Put testable logic in plain `.ts` files next to its page or feature so it can be tested without React. Trivial one-liners need no test.
 - For multi-step work, state a short plan with a verification for each step:
   ```
   1. [Step] -> verify: [check]
@@ -158,7 +157,7 @@ A bug report names a symptom. Grep every caller of the function you're touching 
 
 ### Definition of done
 - [ ] The change does what was asked, and nothing more.
-- [ ] `bun run precommit` passes (format, typecheck, build) and `bun test` passes.
+- [ ] `bun run precommit` passes (format, typecheck, build).
 - [ ] The UI works on a phone-sized viewport, with no desktop-only interactions.
 - [ ] React Doctor was run if the change was large.
 - [ ] No secrets or student data in code or logs.

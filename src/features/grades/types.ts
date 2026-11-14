@@ -36,6 +36,13 @@ export type SubjectCoefOf = (
   subject: string
 ) => number
 
+// Écart de moyenne (sur 20) entre la note comptée et la note retirée. `null`
+// quand la moyenne ne peut pas être calculée sans elle.
+export interface GradeImpact {
+  general: number | null
+  subject: number | null
+}
+
 export interface Period {
   id: string
   label: string

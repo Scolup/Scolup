@@ -1,5 +1,6 @@
 import type {
   Grade,
+  GradeImpact,
   SubjectGroup,
   SubjectCoefOf,
   AverageMethod,
@@ -168,4 +169,26 @@ export function averageForTrend(
   if (method === "weighted") return weightedAverage(grades, coefOf)
   if (method === "median") return medianAverage(grades)
   return generalAverage(groupBySubject(grades, coefOf, method))
+}
+
+// Ce que la note apporte aux moyennes actuelles : écart entre la moyenne avec
+// et sans elle, pour la moyenne générale et celle de la matière, dans le mode de
+// calcul courant. Une note non significative ou non chiffrée a un impact nul.
+export function gradeImpact(
+  grade: Grade,
+  grades: Grade[],
+  coefOf?: SubjectCoefOf,
+  method: AverageMethod = "subject"
+): GradeImpact {
+  const without = grades.filter((item) => item.key !== grade.key)
+  const inSubject = (item: Grade) => item.subject === grade.subject
+  const delta = (all: Grade[], rest: Grade[]): number | null => {
+    const full = averageForTrend(all, coefOf, method)
+    const stripped = averageForTrend(rest, coefOf, method)
+    return full === null || stripped === null ? null : full - stripped
+  }
+  return {
+    general: delta(grades, without),
+    subject: delta(grades.filter(inSubject), without.filter(inSubject)),
+  }
 }

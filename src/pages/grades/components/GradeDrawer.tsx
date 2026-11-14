@@ -1,6 +1,8 @@
 import {
   Calendar02Icon,
   Calendar03Icon,
+  ChartAverageIcon,
+  ChartEvaluationIcon,
   Clock01Icon,
   Comment01Icon,
   Mortarboard01Icon,
@@ -10,8 +12,10 @@ import { Drawer, DrawerContent } from "@/components/ui/drawer"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { DetailRow } from "@/components/DetailRow"
+import { useAverageSettings } from "@/features/grades/averageSettings"
+import { formatAverageValue } from "@/features/grades/averages"
 import { parseGradeNumber } from "@/features/grades/grade"
-import type { Grade } from "@/features/grades/types"
+import type { AverageScale, Grade, GradeImpact } from "@/features/grades/types"
 
 function formatDrawerDate(date?: Date): string {
   if (!date) return ""
@@ -23,19 +27,50 @@ function formatDrawerDate(date?: Date): string {
   })
 }
 
+// Impact signé et coloré, arrondi avant comparaison pour ne jamais colorer un
+// « 0,00 » comme positif.
+function ImpactValue({
+  impact,
+  scale,
+}: {
+  impact: number | null
+  scale: AverageScale
+}) {
+  if (impact === null) return <span className="text-sm">—</span>
+  const points = Math.round(impact * 100) / 100
+  return (
+    <span
+      className={cn(
+        "text-sm tabular-nums",
+        points > 0
+          ? "text-success"
+          : points < 0
+            ? "text-destructive"
+            : "text-muted-foreground"
+      )}
+    >
+      {points > 0 ? "+" : ""}
+      {formatAverageValue(points, scale)} pt
+    </span>
+  )
+}
+
 export function GradeDrawer({
   grade,
   subject,
   periodLabel,
   evalColors,
+  impact,
   onClose,
 }: {
   grade: Grade | null
   subject: string
   periodLabel?: string
   evalColors: string[]
+  impact: GradeImpact | null
   onClose: () => void
 }) {
+  const { scale } = useAverageSettings()
   return (
     <Drawer
       open={!!grade}
@@ -89,6 +124,24 @@ export function GradeDrawer({
             <Separator className="my-4" />
 
             <div className="flex flex-col gap-3">
+              {impact && (
+                <>
+                  <DetailRow
+                    icon={ChartAverageIcon}
+                    label="Impact sur la moyenne générale"
+                    value={
+                      <ImpactValue impact={impact.general} scale={scale} />
+                    }
+                  />
+                  <DetailRow
+                    icon={ChartEvaluationIcon}
+                    label="Impact sur la moyenne de la matière"
+                    value={
+                      <ImpactValue impact={impact.subject} scale={scale} />
+                    }
+                  />
+                </>
+              )}
               <DetailRow
                 icon={Mortarboard01Icon}
                 label="Matière"
