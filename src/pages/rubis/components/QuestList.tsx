@@ -52,6 +52,7 @@ function QuestRow({
   tiers?: number
 }) {
   const achieved = quest.state === "achieved"
+  const secret = quest.state === "secret"
 
   return (
     <div className="flex items-center gap-3 px-3.5 py-3">
@@ -64,7 +65,9 @@ function QuestRow({
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-1.5">
-          <span className="truncate text-sm font-medium">{quest.title}</span>
+          <span className="truncate text-sm font-medium">
+            {secret ? "???" : quest.title}
+          </span>
           {tier !== undefined && tiers !== undefined && (
             <span className="shrink-0 text-[11px] text-muted-foreground">
               Palier {tier}/{tiers}
@@ -73,7 +76,7 @@ function QuestRow({
         </div>
         {!achieved && (
           <div className="truncate text-xs text-muted-foreground">
-            {quest.description}
+            {secret ? "???" : quest.description}
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 import type { QuestItem } from "@/features/quests/useQuests"
 
-// One row in the shop: the closest tier of a quest track.
+// One row in the list: each tier of a track gets its own row.
 export interface QuestGroup {
   quest: QuestItem
   tier: number
@@ -9,12 +9,9 @@ export interface QuestGroup {
 
 const PERIOD_ORDER = { daily: 0, weekly: 1, once: 2 }
 
-function progress(quest: QuestItem): number {
-  return quest.count / quest.goal
-}
-
-// Ladders (25/100/250 homework...) show only their closest tier. Secret quests
-// stay hidden until achieved, and completed quests move to their own list.
+// Every quest is listed: all the tiers of a track, secret ones included (their
+// row hides the text until achieved), and completed quests move to their own
+// list.
 export function groupQuests(quests: QuestItem[]): {
   groups: QuestGroup[]
   achieved: QuestItem[]
@@ -30,16 +27,14 @@ export function groupQuests(quests: QuestItem[]): {
   const groups: QuestGroup[] = []
   for (const track of tracks.values()) {
     const tiers = [...track].sort((a, b) => a.goal - b.goal)
-    const index = tiers.findIndex((quest) => quest.state !== "achieved")
-    // A hidden tier also hides the ones behind it.
-    if (index === -1 || tiers[index].state === "secret") continue
-    groups.push({ quest: tiers[index], tier: index + 1, tiers: tiers.length })
+    tiers.forEach((quest, index) => {
+      if (quest.state === "achieved") return
+      groups.push({ quest, tier: index + 1, tiers: tiers.length })
+    })
   }
 
   groups.sort(
-    (a, b) =>
-      PERIOD_ORDER[a.quest.period] - PERIOD_ORDER[b.quest.period] ||
-      progress(b.quest) - progress(a.quest)
+    (a, b) => PERIOD_ORDER[a.quest.period] - PERIOD_ORDER[b.quest.period]
   )
 
   return {
