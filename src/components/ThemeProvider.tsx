@@ -307,12 +307,21 @@ export function ThemeProvider({
           "--secondary",
           mix(isDark ? 28 : 16, "--secondary-base")
         )
+        // List rows and fields use `bg-input/50`. Left neutral, that fill
+        // almost disappears on the theme's tinted light background, so it
+        // takes the theme hue too. Dark keeps its translucent white.
+        if (isDark) {
+          root.style.removeProperty("--input")
+        } else {
+          root.style.setProperty("--input", mix(30, "--input-base"))
+        }
       } else {
         root.style.removeProperty("--background")
         root.style.removeProperty("--card")
         root.style.removeProperty("--popover")
         root.style.removeProperty("--muted")
         root.style.removeProperty("--secondary")
+        root.style.removeProperty("--input")
       }
 
       if (!primary) {

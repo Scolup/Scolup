@@ -193,7 +193,7 @@ export function MessagePreview({
       <button
         type="button"
         onClick={onSelect}
-        className="flex w-full press-lg items-center gap-3 rounded-2xl border border-transparent bg-input/50 p-3 text-left outline-none hover:bg-muted/70 hover:shadow-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+        className="flex w-full press-lg items-center gap-3 rounded-2xl border border-transparent bg-input/50 p-3 text-left outline-none hover:bg-muted/70 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
       >
         <Avatar image={image} sender={sender} initials={initials} />
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">

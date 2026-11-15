@@ -21,7 +21,6 @@ export function PostItCard({
       style={rank !== null ? ({ "--i": rank } as CSSProperties) : undefined}
       className={cn(
         "mb-3 max-w-full min-w-0 press-lg break-inside-avoid overflow-hidden rounded-2xl border p-4",
-        "hover:shadow-md",
         rank !== null && "rise",
         note.tint
       )}

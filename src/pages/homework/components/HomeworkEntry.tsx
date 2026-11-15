@@ -207,7 +207,7 @@ export const HomeworkEntry = memo(function HomeworkEntry({
         onKeyDown={onActivateKey}
         className={cn(
           "flex min-h-11 items-center gap-3 rounded-2xl border border-transparent bg-input/50 px-3.5 py-3",
-          "hover:bg-muted/70 hover:shadow-sm has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/30",
+          "hover:bg-muted/70 has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/30",
           open && "press-lg cursor-pointer",
           done && "opacity-55"
         )}

@@ -194,8 +194,8 @@ export function CourseCard({
       style={card.style}
       className={cn(
         "flex min-w-0 items-stretch gap-3 rounded-2xl border p-3.5 text-left outline-none",
-        "transition-[box-shadow,background-color] duration-150",
-        "hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring/50",
+        "transition-[background-color] duration-150",
+        "focus-visible:ring-2 focus-visible:ring-ring/50",
         card.surface
       )}
     >

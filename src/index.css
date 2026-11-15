@@ -32,7 +32,8 @@
   --unread: var(--color-violet-600);
   --done: var(--color-emerald-700);
   --border: oklch(0.925 0.005 214.3);
-  --input: oklch(0.925 0.005 214.3);
+  --input-base: oklch(0.925 0.005 214.3);
+  --input: var(--input-base);
   --ring: oklch(0.723 0.014 214.4);
   --chart-1: oklch(0.872 0.007 219.6);
   --chart-2: oklch(0.56 0.021 213.5);
@@ -83,7 +84,8 @@
   --unread: var(--color-violet-400);
   --done: var(--color-emerald-400);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --input-base: oklch(1 0 0 / 15%);
+  --input: var(--input-base);
   --ring: oklch(0.56 0.021 213.5);
   --chart-1: oklch(0.872 0.007 219.6);
   --chart-2: oklch(0.56 0.021 213.5);
