@@ -63,31 +63,31 @@ export function RubiesPage() {
           <h1 className="truncate text-base font-semibold text-foreground">
             Rubis
           </h1>
-          <Button
-            variant="outline"
-            aria-label="Le coffre de José"
-            className="ml-auto h-11 shrink-0 gap-1.5 rounded-full px-3.5"
-            onClick={() => setCodeOpen(true)}
-          >
-            <HugeiconsIcon
-              icon={Key01Icon}
-              className="size-4"
-              aria-hidden="true"
-            />
-            Coffre
-          </Button>
           {tab === "shop" && (
-            <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-2.5 py-1.5">
-              <img
-                src="/ruby.svg"
-                alt=""
-                aria-hidden="true"
-                className="size-5"
-              />
-              <span className="text-sm font-medium text-card-foreground">
+            <>
+              <Button
+                variant="outline"
+                aria-label="Le coffre de José"
+                className="ml-auto h-11 shrink-0 gap-1.5 rounded-full px-3.5"
+                onClick={() => setCodeOpen(true)}
+              >
+                <HugeiconsIcon
+                  icon={Key01Icon}
+                  className="size-4"
+                  aria-hidden="true"
+                />
+                Coffre
+              </Button>
+              <div className="flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-border px-3.5 text-sm font-medium">
+                <img
+                  src="/ruby.svg"
+                  alt=""
+                  aria-hidden="true"
+                  className="size-4"
+                />
                 <AnimatedNumber value={String(page.rubies)} />
-              </span>
-            </div>
+              </div>
+            </>
           )}
         </div>
 
