@@ -93,51 +93,55 @@ export function SubjectGroupSection({
               onClick={() => onOpen(grade.key)}
               aria-label={`Voir le détail : ${grade.title}`}
               className={cn(
-                "flex min-h-14 w-full press-lg cursor-pointer items-center gap-3 px-4 py-3 text-left active:bg-muted/50",
+                "group/press flex min-h-14 w-full cursor-pointer items-center px-4 py-3 text-left transition-colors duration-(--duration-base) ease-(--ease-out) [-webkit-tap-highlight-color:transparent] active:bg-muted/50",
                 rank !== null && "rise",
                 index > 0 && "border-t border-border/60",
                 grade.nonSignificant && "opacity-60",
                 highlightedKey === grade.key && "bg-primary/[0.08]"
               )}
             >
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="flex min-w-0 items-center gap-2">
-                  <span className="truncate text-sm font-medium text-card-foreground">
-                    {grade.title}
+              {/* The press scale lives on the content: the row's highlight,
+                  separator and focus ring must keep their full size. */}
+              <span className="flex w-full min-w-0 items-center gap-3 transition-transform duration-(--duration-fast) ease-(--ease-out) group-active/press:scale-[0.985] motion-reduce:group-active/press:scale-100">
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate text-sm font-medium text-card-foreground">
+                      {grade.title}
+                    </span>
+                    {showCoef && (
+                      <Badge
+                        variant="outline"
+                        size="sm"
+                        pill
+                        className="shrink-0"
+                      >
+                        Coef {grade.coef}
+                      </Badge>
+                    )}
                   </span>
-                  {showCoef && (
-                    <Badge
-                      variant="outline"
-                      size="sm"
-                      pill
-                      className="shrink-0"
-                    >
-                      Coef {grade.coef}
-                    </Badge>
+                  {dateLabel && (
+                    <span className="truncate text-xs text-muted-foreground">
+                      {dateLabel}
+                    </span>
                   )}
-                </span>
-                {dateLabel && (
-                  <span className="truncate text-xs text-muted-foreground">
-                    {dateLabel}
+                  <CompetencyDots
+                    items={grade.competencies}
+                    colors={evalColors}
+                  />
+                </div>
+                {hasGradeValue(grade) && (
+                  <span
+                    style={subjectVar(color)}
+                    className={cn(
+                      "inline-flex shrink-0 items-center justify-center rounded-full border px-2.5 py-1 text-xs font-semibold tabular-nums",
+                      tintPill,
+                      tintText
+                    )}
+                  >
+                    {gradeLabel(grade)}
                   </span>
                 )}
-                <CompetencyDots
-                  items={grade.competencies}
-                  colors={evalColors}
-                />
-              </div>
-              {hasGradeValue(grade) && (
-                <span
-                  style={subjectVar(color)}
-                  className={cn(
-                    "inline-flex shrink-0 items-center justify-center rounded-full border px-2.5 py-1 text-xs font-semibold tabular-nums",
-                    tintPill,
-                    tintText
-                  )}
-                >
-                  {gradeLabel(grade)}
-                </span>
-              )}
+              </span>
             </button>
           )
         })}
