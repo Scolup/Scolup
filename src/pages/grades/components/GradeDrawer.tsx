@@ -154,14 +154,13 @@ export function GradeDrawer({
                   value={formatDrawerDate(grade.date)}
                 />
               )}
-              {grade.enteredOn &&
-                grade.enteredOn.getTime() !== grade.date?.getTime() && (
-                  <DetailRow
-                    icon={Clock01Icon}
-                    label="Saisie le"
-                    value={formatDrawerDate(grade.enteredOn)}
-                  />
-                )}
+              {grade.enteredOn && (
+                <DetailRow
+                  icon={Clock01Icon}
+                  label="Saisie le"
+                  value={formatDrawerDate(grade.enteredOn)}
+                />
+              )}
               {periodLabel && (
                 <DetailRow
                   icon={Calendar02Icon}

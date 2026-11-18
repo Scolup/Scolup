@@ -88,8 +88,8 @@ export function RecentGradesStrip({
               </span>
               <span className="flex items-end justify-between gap-2">
                 <span className="truncate text-xs text-muted-foreground">
-                  {grade.enteredOn instanceof Date
-                    ? formatDistanceToNowStrict(grade.enteredOn, {
+                  {grade.date instanceof Date
+                    ? formatDistanceToNowStrict(grade.date, {
                         addSuffix: true,
                         locale: fr,
                       })
