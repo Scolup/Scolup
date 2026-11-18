@@ -96,9 +96,12 @@ export function emptyFieldLine(
   count: number,
   previous: string,
   random?: () => number
-): string {
+): { text: string; kind: "hint" | "dialog" } {
   const hint = vault.hints[count % Math.max(1, vault.hints.length)]
-  if (hint && hint.text !== previous) return hint.text
+  if (hint && hint.text !== previous) return { text: hint.text, kind: "hint" }
   const done = vault.total > 0 && vault.found.length === vault.total
-  return pickDifferent(done ? ALL_FOUND : EMPTY, previous, random)
+  return {
+    text: pickDifferent(done ? ALL_FOUND : EMPTY, previous, random),
+    kind: "dialog",
+  }
 }

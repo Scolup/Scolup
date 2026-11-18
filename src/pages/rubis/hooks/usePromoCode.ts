@@ -23,11 +23,18 @@ const LISTEN_MS = 900
 export interface JoseSpeech {
   text: string
   mood: JoseMood
+  kind: "dialog" | "hint"
   tick: number // grows with every line, so a repeated mood replays its animation
 }
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+const HINT_MOODS: ReadonlySet<JoseMood> = new Set([
+  "hint",
+  "hint-wink",
+  "hint-beckon",
+])
 
 // State of the vault sheet: the field, José's last line, and the reward once a
 // code is found. Touching José with a code validates it; with an empty field he
@@ -42,12 +49,18 @@ export function usePromoCode() {
   const [speech, setSpeech] = useState<JoseSpeech>(() => ({
     text: greeting(),
     mood: "idle",
+    kind: "dialog",
     tick: 0,
   }))
   const vault = useAsync(loadVault, [reload]).data ?? EMPTY_VAULT
 
   const say = (text: string, mood: JoseMood) =>
-    setSpeech((previous) => ({ text, mood, tick: previous.tick + 1 }))
+    setSpeech((previous) => ({
+      text,
+      mood,
+      kind: HINT_MOODS.has(mood) ? "hint" : "dialog",
+      tick: previous.tick + 1,
+    }))
 
   // Typing calms José down; the line stays so the answer can be reread.
   const setCode = (value: string) => {
@@ -61,7 +74,7 @@ export function usePromoCode() {
   const whisperHint = () => {
     const line = emptyFieldLine(vault, hintCount, speech.text)
     setHintCount((count) => count + 1)
-    say(line, hintMood(speech.mood))
+    say(line.text, line.kind === "hint" ? hintMood(speech.mood) : "idle")
   }
 
   const answer = (next: RedeemResult) => {
@@ -108,7 +121,7 @@ export function usePromoCode() {
     setShaking(false)
     setHintCount(0)
     setReload((count) => count + 1)
-    setSpeech({ text: greeting(), mood: "idle", tick: 0 })
+    setSpeech({ text: greeting(), mood: "idle", kind: "dialog", tick: 0 })
   }
 
   return {

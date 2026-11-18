@@ -21,8 +21,10 @@ const SPARK_PATH =
 
 // José, keeper of the vault: a padlock with a face. Touching him is the
 // "validate" button: the mood (data-mood) drives his face and pose in
-// index.css. The svg is re-keyed with `tick` so a repeated mood plays its
-// one-shot animation again.
+// index.css. When a code is right ("happy"), his shackle pops up and swings
+// open: the long left leg stays hidden in the body (it is drawn behind it) so
+// the shackle can pivot around it like on a real padlock. The svg is re-keyed
+// with `tick` so a repeated mood plays its one-shot animation again.
 export function Jose({
   mood,
   tick,
@@ -56,12 +58,14 @@ export function Jose({
       >
         <g className="jose-body">
           <g className="jose-head">
-            <path
-              d="M72 100 V70 A28 28 0 0 1 128 70 V100"
-              stroke={METAL}
-              strokeWidth="14"
-              fill="none"
-            />
+            <g className="jose-shackle">
+              <path
+                d="M72 122 V70 A28 28 0 0 1 128 70 V100"
+                stroke={METAL}
+                strokeWidth="14"
+                fill="none"
+              />
+            </g>
             <rect x="40" y="92" width="120" height="98" rx="30" fill={BODY} />
 
             {EYES.map(({ x, side }) => (
