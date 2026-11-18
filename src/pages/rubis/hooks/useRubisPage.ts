@@ -6,6 +6,7 @@ import { useShop } from "@/features/shop/useShop"
 import { triggerHapticLight } from "@/services/haptics"
 import { celebrate } from "@/lib/celebrate"
 import { claimRubies } from "@/features/shop/rubies"
+import { clampRubies } from "@/features/shop/wallet"
 import { periodKey } from "@/features/quests/period"
 import { weekSummary } from "@/features/shop/shopRules"
 import { groupQuests } from "../groupQuests"
@@ -41,7 +42,7 @@ export function useRubisPage() {
   )
 
   const claim = useCallback(async () => {
-    const amount = await claimRubies()
+    const amount = clampRubies(await claimRubies())
     if (amount <= 0) return
     triggerHapticLight()
     celebrate()

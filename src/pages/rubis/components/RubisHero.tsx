@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { AnimatedNumber } from "@/components/AnimatedNumber"
 import { cn } from "@/lib/utils"
+import { clampRubies } from "@/features/shop/wallet"
 
 // Hero of the rubies page, without a card: a big ruby anchors the left edge
 // with two thirds of it visible, the balance and the week's earnings sit to
@@ -17,7 +18,10 @@ export function RubisHero({
   weekRubies: number
   onClaim: () => void
 }) {
-  const hasPending = pending > 0
+  const safeRubies = clampRubies(rubies)
+  const safePending = clampRubies(pending)
+  const safeWeekRubies = clampRubies(weekRubies)
+  const hasPending = safePending > 0
 
   return (
     // The clipping wrapper is full-bleed so the ruby's left third sits
@@ -33,10 +37,10 @@ export function RubisHero({
 
         <div className="flex min-w-0 flex-col gap-1">
           <span className="text-5xl font-semibold text-foreground">
-            <AnimatedNumber value={String(rubies)} />
+            <AnimatedNumber value={String(safeRubies)} />
           </span>
           <span className="text-sm text-muted-foreground">
-            +{weekRubies} cette semaine
+            +{safeWeekRubies} cette semaine
           </span>
         </div>
 
@@ -51,7 +55,7 @@ export function RubisHero({
           {hasPending && (
             <img src="/ruby.svg" alt="" aria-hidden="true" className="size-4" />
           )}
-          {hasPending ? `Récupérer +${pending}` : "Rien à récupérer"}
+          {hasPending ? `Récupérer +${safePending}` : "Rien à récupérer"}
         </Button>
       </div>
     </div>

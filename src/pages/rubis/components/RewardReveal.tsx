@@ -5,6 +5,7 @@ import { AnimatedNumber } from "@/components/AnimatedNumber"
 import { SPRING_POP } from "@/lib/motion"
 import { SHOP_ITEMS } from "@/features/shop/shopRules"
 import { rewardsOf, type PromoReward } from "@/features/shop/promoCodes"
+import { clampRubies } from "@/features/shop/wallet"
 
 const COUNT_DELAY_MS = 450
 
@@ -16,13 +17,13 @@ function itemOf(reward: PromoReward) {
 }
 
 function rewardText(reward: PromoReward): string {
-  if (reward.kind === "rubies") return `+${reward.amount} rubis`
+  if (reward.kind === "rubies") return `+${clampRubies(reward.amount)} rubis`
   if (reward.kind === "bundle") {
     return reward.rewards.map(rewardText).join(" et ")
   }
   const label = itemOf(reward)?.label ?? ""
   if (reward.kind === "free-item") return `${label} débloqué`
-  return `${label} à ${reward.price} rubis`
+  return `${label} à ${clampRubies(reward.price)} rubis`
 }
 
 // The moment José hands the reward over: the card pops in and, for rubies, the
@@ -37,7 +38,8 @@ export function RewardReveal({
   onSeeShop: () => void
 }) {
   const item = itemOf(reward)
-  const target = reward.kind === "rubies" ? String(reward.amount) : ""
+  const target =
+    reward.kind === "rubies" ? String(clampRubies(reward.amount)) : ""
   // A bundle is already unlocked in full: "Continuer" is enough, no shop stop.
   const settled = reward.kind === "rubies" || reward.kind === "bundle"
   const [shown, setShown] = useState("0")

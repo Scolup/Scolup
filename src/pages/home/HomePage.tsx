@@ -18,6 +18,7 @@ import { track } from "@/features/quests/service"
 import { toDayKey } from "@/lib/dates"
 import { AnimatedNumber } from "@/components/AnimatedNumber"
 import { DecoMotif } from "@/components/DecoOrnament"
+import { clampRubies } from "@/features/shop/wallet"
 
 const SCHOOL_LINKS = [
   { icon: Chair02Icon, label: "Absences", path: "/absences" },
@@ -26,7 +27,7 @@ const SCHOOL_LINKS = [
 
 export function HomePage() {
   const page = useHomePage()
-  const rubies = useRubies()
+  const rubies = clampRubies(useRubies())
   const navigate = useNavigate()
 
   useEffect(() => {

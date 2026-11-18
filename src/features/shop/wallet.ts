@@ -25,16 +25,21 @@ export interface Wallet {
 }
 
 export const WALLET_KEY = "wallet"
+export const MAX_RUBIES = 9_999_999
 const KEPT_WEEKS = 12
 
 function emptyWallet(): Wallet {
   return { earned: {}, claimed: {}, spent: {}, gifts: {}, coupons: {} }
 }
 
-function toCount(value: unknown): number {
+export function clampRubies(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value)
-    ? Math.max(0, Math.trunc(value))
+    ? Math.min(MAX_RUBIES, Math.max(0, Math.trunc(value)))
     : 0
+}
+
+function toCount(value: unknown): number {
+  return clampRubies(value)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -110,23 +115,28 @@ function sum(values: Iterable<number>): number {
 
 // Peut être négatif : deux appareils hors ligne ont pu dépenser les mêmes
 // rubis. La boutique refuse tout achat tant que le solde < prix, donc cela se
-// résorbe ; l'affichage, lui, est ramené à 0 (voir rubies.ts).
+// résorbe ; l'affichage, lui, est ramené à 0 (voir rubies.ts). Le solde ne
+// dépasse jamais MAX_RUBIES.
 export function balanceOf(wallet: Wallet): number {
   const credited = Object.entries(wallet.earned)
     .filter(([id]) => wallet.claimed[id])
     .map(([, entry]) => entry.a)
-  return (
+  return Math.min(
+    MAX_RUBIES,
     sum(credited) +
-    sum(Object.values(wallet.gifts)) -
-    sum(Object.values(wallet.spent))
+      sum(Object.values(wallet.gifts)) -
+      sum(Object.values(wallet.spent))
   )
 }
 
 export function pendingOf(wallet: Wallet): number {
-  return sum(
-    Object.entries(wallet.earned)
-      .filter(([id]) => !wallet.claimed[id])
-      .map(([, entry]) => entry.a)
+  return Math.min(
+    MAX_RUBIES,
+    sum(
+      Object.entries(wallet.earned)
+        .filter(([id]) => !wallet.claimed[id])
+        .map(([, entry]) => entry.a)
+    )
   )
 }
 
@@ -138,7 +148,7 @@ export function ownedOf(wallet: Wallet): string[] {
 export function weeksOf(wallet: Wallet): Record<string, number> {
   const totals: Record<string, number> = {}
   for (const entry of Object.values(wallet.earned)) {
-    totals[entry.w] = (totals[entry.w] ?? 0) + entry.a
+    totals[entry.w] = Math.min(MAX_RUBIES, (totals[entry.w] ?? 0) + entry.a)
   }
   const keep = Object.keys(totals).sort().slice(-KEPT_WEEKS)
   return Object.fromEntries(keep.map((week) => [week, totals[week]]))

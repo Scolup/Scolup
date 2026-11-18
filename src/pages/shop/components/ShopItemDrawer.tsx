@@ -8,6 +8,7 @@ import {
   shopItemIcon,
   type ShopItem,
 } from "@/features/shop/shopRules"
+import { clampRubies } from "@/features/shop/wallet"
 import { isDecoThemeId } from "@/features/shop/decoThemes"
 import { COLLECTIONS, type ShopEntry } from "../shopLayout"
 import { ThemePreview } from "./ThemePreview"
@@ -115,12 +116,12 @@ function PriceBox({ shown }: { shown: ShopEntry }) {
       <span className="flex shrink-0 items-center gap-1.5">
         {discount && (
           <span className="text-xs text-muted-foreground tabular-nums line-through">
-            {item.originalPrice}
+            {Math.trunc(item.originalPrice ?? 0)}
           </span>
         )}
         <span className="flex items-center gap-1 text-lg font-semibold">
           <img src="/ruby.svg" alt="" aria-hidden="true" className="size-4" />
-          {item.price}
+          {Math.trunc(item.price)}
         </span>
       </span>
     </div>
@@ -157,11 +158,11 @@ function ownedFooter(
         className="mt-4 h-11 w-full"
       >
         {shown.missing > 0 ? (
-          `Il te manque ${shown.missing} rubis`
+          `Il te manque ${clampRubies(shown.missing)} rubis`
         ) : (
           <>
             <img src="/ruby.svg" alt="" aria-hidden="true" className="size-4" />
-            Débloquer pour {shown.item.price}
+            Débloquer pour {Math.trunc(shown.item.price)}
           </>
         )}
       </Button>
