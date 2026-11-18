@@ -55,11 +55,15 @@ export const GradesTrendChart = memo(function GradesTrendChart({
 
   // Pas de carte tooltip ici : seul le point de focus marque la position,
   // la moyenne survolée remonte via `onFocus` vers la carte moyenne.
-  const clearFocus = () => {
+  const resetFocus = () => {
     lastActive.current = null
-    suppressUntil.current = Date.now() + SUPPRESS_MS
     setIsFocused(false)
     onFocus?.(null)
+  }
+
+  const clearFocus = () => {
+    resetFocus()
+    suppressUntil.current = Date.now() + SUPPRESS_MS
   }
 
   // Souris ET tactile : sur mobile, le drag n'émet jamais de mousemove
@@ -68,10 +72,17 @@ export const GradesTrendChart = memo(function GradesTrendChart({
   const handleActive = (
     state: {
       activeTooltipIndex?: number | string | null
+      isTooltipActive?: boolean
     } | null
   ) => {
     if (Date.now() < suppressUntil.current) return
-    const index = state?.activeTooltipIndex
+    // Hors de la zone de tracé, recharts garde le dernier index en mémoire :
+    // `isTooltipActive` seul indique si le pointeur est vraiment sur le graphe.
+    if (!state?.isTooltipActive) {
+      if (lastActive.current !== null) resetFocus()
+      return
+    }
+    const index = state.activeTooltipIndex
     if (index == null || index === lastActive.current) {
       return
     }
