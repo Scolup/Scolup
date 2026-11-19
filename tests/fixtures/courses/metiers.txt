@@ -1,0 +1,4 @@
+Job words
+psy = therapist
+costumier = costume designer artiste de rue = street performer magon = construction worker infirmier = nurse
+orthoptiste = optometrist thanatopracteur = mortician homme de sciences = scholar
