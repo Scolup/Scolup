@@ -72,13 +72,16 @@ function Bubble({ speech }: { speech: JoseSpeech }) {
   return (
     <div
       role="status"
-      className="relative flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl bg-muted px-4 py-3 text-center"
+      className="relative flex min-h-20 flex-col items-center justify-center rounded-2xl bg-muted px-4 py-3 text-center"
     >
       <RichHtml
         key={speech.tick}
         as="p"
         html={speech.text}
-        className="content-in text-sm text-foreground"
+        className={cn(
+          "content-in text-sm text-foreground",
+          speech.kind === "hint" && "italic"
+        )}
       />
       <span
         aria-hidden="true"

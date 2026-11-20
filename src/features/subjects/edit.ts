@@ -51,9 +51,17 @@ export async function updateSubject(
   const coef =
     patch.coef !== undefined
       ? Number.isFinite(patch.coef) && patch.coef > 0
-        ? patch.coef
-        : current.coef
-      : current.coef
+        ? Math.min(15, Math.max(1, Math.trunc(patch.coef)))
+        : current.coef !== undefined &&
+            Number.isFinite(current.coef) &&
+            current.coef > 0
+          ? Math.min(15, Math.max(1, Math.trunc(current.coef)))
+          : undefined
+      : current.coef !== undefined &&
+          Number.isFinite(current.coef) &&
+          current.coef > 0
+        ? Math.min(15, Math.max(1, Math.trunc(current.coef)))
+        : undefined
   const next: SubjectRecord = { ...current, updatedAt: Date.now() }
   if (customName) next.customName = customName
   else delete next.customName

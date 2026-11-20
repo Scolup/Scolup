@@ -131,6 +131,9 @@ export function MainLayout({
   const [questToast, setQuestToast] = useState<string | null>(null)
   // Each quest reward bumps this tick: the active deco theme celebrates it.
   const [rewardTick, setRewardTick] = useState(0)
+  const [burstPlacement, setBurstPlacement] = useState<"bottom" | "top">(
+    "bottom"
+  )
   const syncStatus = useSyncStatus()
   const [syncReady, setSyncReady] = useState(
     () => syncStatus.startup === "done" && !syncStatus.offline
@@ -140,12 +143,17 @@ export function MainLayout({
   useEffect(() => {
     return subscribeQuestToast((toast) => {
       setQuestToast(toastText(toast))
+      setBurstPlacement("top")
       setRewardTick((tick) => tick + 1)
     })
   }, [])
 
   useEffect(
-    () => subscribeCelebrate(() => setRewardTick((tick) => tick + 1)),
+    () =>
+      subscribeCelebrate(() => {
+        setBurstPlacement("bottom")
+        setRewardTick((tick) => tick + 1)
+      }),
     []
   )
 
@@ -201,10 +209,12 @@ export function MainLayout({
       >
         <OfflineBanner />
         {!pronote && <ReauthSheet />}
-        <RewardBurst tick={rewardTick} />
+        <RewardBurst tick={rewardTick} placement={burstPlacement} />
         <AppToast
           message={questToast}
           tone="success"
+          placement="top"
+          duration={3000}
           onClose={() => setQuestToast(null)}
         />
 

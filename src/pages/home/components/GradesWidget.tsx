@@ -213,8 +213,8 @@ export function GradesWidget() {
                   )}
                   <span className="truncate text-xs text-muted-foreground">
                     {resolveSubjectName(grade.subjectCode, grade.subject)}
-                    {grade.enteredOn instanceof Date &&
-                      ` · ${formatDistanceToNowStrict(grade.enteredOn, { addSuffix: true, locale: fr })}`}
+                    {grade.date instanceof Date &&
+                      ` · ${formatDistanceToNowStrict(grade.date, { addSuffix: true, locale: fr })}`}
                   </span>
                 </span>
               </span>

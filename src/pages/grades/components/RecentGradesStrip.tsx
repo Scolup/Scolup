@@ -96,8 +96,8 @@ export function RecentGradesStrip({
                         day: "numeric",
                         month: "short",
                       })
-                    : grade.enteredOn instanceof Date
-                      ? formatDistanceToNowStrict(grade.enteredOn, {
+                    : grade.date instanceof Date
+                      ? formatDistanceToNowStrict(grade.date, {
                           addSuffix: true,
                           locale: fr,
                         })

@@ -25,6 +25,7 @@ import { AnimatedNumber } from "@/components/AnimatedNumber"
 import { isPronote } from "@/services/litenote"
 import { DecoMotif } from "@/components/DecoOrnament"
 import { cn } from "@/lib/utils"
+import { clampRubies } from "@/features/shop/wallet"
 
 const ABSENCES_LINK = {
   icon: Chair02Icon,
@@ -43,7 +44,7 @@ const PRONOTE_SCHOOL_LINKS = [
 
 export function HomePage() {
   const page = useHomePage()
-  const rubies = useRubies()
+  const rubies = clampRubies(useRubies())
   const navigate = useNavigate()
   const pronote = isPronote()
 

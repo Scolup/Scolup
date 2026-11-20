@@ -85,7 +85,11 @@ export function RubiesPage() {
                   aria-hidden="true"
                   className="size-4"
                 />
-                <AnimatedNumber value={String(page.rubies)} />
+                <AnimatedNumber
+                  value={String(
+                    Math.min(9_999_999, Math.max(0, Math.trunc(page.rubies)))
+                  )}
+                />
               </div>
             </>
           )}

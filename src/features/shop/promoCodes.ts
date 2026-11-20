@@ -86,6 +86,12 @@ export const PROMO_CODES: readonly PromoCode[] = [
       hint: "Parfois, se répéter n’est pas une mauvaise chose...",
     },
   },
+  {
+    code: "TEST",
+    reward: { kind: "rubies", amount: 5 },
+    message: "Ce code est réservé à des fins de test.",
+    hint: "As-tu bien tout testé ?",
+  },
 ]
 
 export function normalizeCode(code: string): string {

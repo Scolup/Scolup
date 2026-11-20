@@ -401,6 +401,11 @@
   animation: jose-float 3.2s ease-in-out infinite;
 }
 
+/* The shackle pivots around its long left leg, which stays inside the body. */
+.jose-shackle {
+  transform-origin: 72px 100px;
+}
+
 .jose-lid {
   transform-box: fill-box;
   transform-origin: top;
@@ -447,6 +452,13 @@
   animation:
     jose-hop 0.6s var(--ease-out) 2,
     jose-float 3.2s ease-in-out 1.2s infinite;
+}
+
+/* Open state is the resting style, so it still applies when animations are
+   turned off (prefers-reduced-motion): José is open, just without the show. */
+.jose[data-mood="happy"] .jose-shackle {
+  transform: translateY(-14px) rotate(-32deg);
+  animation: jose-unlock 0.85s var(--ease-out) 0.2s backwards;
 }
 
 .jose[data-mood="happy"] .jose-hand-l,
@@ -626,6 +638,22 @@
   }
   85% {
     transform: translateY(-5px);
+  }
+}
+
+/* Pop up out of the body (the "clic"), then swing open with a small bounce. */
+@keyframes jose-unlock {
+  0% {
+    transform: translateY(0) rotate(0);
+  }
+  30% {
+    transform: translateY(-14px) rotate(0);
+  }
+  72% {
+    transform: translateY(-14px) rotate(-40deg);
+  }
+  100% {
+    transform: translateY(-14px) rotate(-32deg);
   }
 }
 

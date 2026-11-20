@@ -75,10 +75,11 @@ export function SubjectRow({ subject }: { subject: ListedSubject }) {
   }
 
   const applyCoef = (raw: string) => {
-    const parsed = raw.trim().replace(",", ".")
-    const value = parsed === "" ? 1 : Number(parsed)
-    const next = Number.isFinite(value) && value > 0 ? value : coef
-    if (next !== coef) void updateSubject(subject.id, { coef: next })
+    const digits = raw.replace(/\D/g, "")
+    const value = digits === "" ? 1 : Math.min(15, Math.max(1, Number(digits)))
+    if (Number.isFinite(value) && value !== coef) {
+      void updateSubject(subject.id, { coef: value })
+    }
   }
 
   const resetColorOnly = async () => {
@@ -175,18 +176,26 @@ export function SubjectRow({ subject }: { subject: ListedSubject }) {
               <Label htmlFor={`subject-coef-${subject.id}`}>Coefficient</Label>
               <Input
                 id={`subject-coef-${subject.id}`}
-                type="number"
-                inputMode="decimal"
-                step="any"
-                min="0"
-                value={coefDraft ?? String(coef)}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={
+                  coefDraft ??
+                  String(Math.min(15, Math.max(1, Math.trunc(coef))))
+                }
                 placeholder="1"
                 autoComplete="off"
                 onChange={(e) => {
-                  setCoefDraft(e.target.value)
-                  applyCoef(e.target.value)
+                  const digits = e.target.value.replace(/\D/g, "")
+                  const next =
+                    digits === "" ? "" : String(Math.min(15, Number(digits)))
+                  setCoefDraft(next)
+                  if (next !== "") applyCoef(next)
                 }}
-                onBlur={() => setCoefDraft(null)}
+                onBlur={() => {
+                  if (coefDraft === "") applyCoef("1")
+                  setCoefDraft(null)
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") (e.target as HTMLInputElement).blur()
                   if (e.key === "Escape") setCoefDraft(null)

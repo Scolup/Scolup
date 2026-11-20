@@ -25,7 +25,9 @@ export function resolveSubjectName(code?: string, name?: string): string {
 export function resolveSubjectCoef(code?: string, name?: string): number {
   const found = findSubject(currentSubjects(), code, name)
   const coef = found?.coef
-  if (typeof coef === "number" && Number.isFinite(coef) && coef > 0) return coef
+  if (typeof coef === "number" && Number.isFinite(coef) && coef > 0) {
+    return Math.min(15, Math.max(1, Math.trunc(coef)))
+  }
   return defaultSubjectCoef(found?.name ?? name ?? "")
 }
 
