@@ -12,6 +12,7 @@ import {
 } from "./promoCodes"
 import { track } from "@/features/quests/service"
 import { periodKey } from "@/features/quests/period"
+import { fetchPromoCodes } from "@/services/promoCodesApi"
 import { getDB } from "@/services/storage"
 import { markDirty } from "@/services/syncSignal"
 import {
@@ -91,9 +92,9 @@ export async function buyItem(
 
 export async function loadVault(): Promise<VaultState> {
   try {
-    const db = await getDB()
+    const [db, promos] = await Promise.all([getDB(), fetchPromoCodes()])
     const wallet = await readWallet((key) => db.get("shop", key))
-    return buildVault(wallet, new Date())
+    return buildVault(wallet, new Date(), promos)
   } catch {
     return EMPTY_VAULT
   }
@@ -111,9 +112,9 @@ export interface RedeemResult {
 // « Tu chauffes » : le code tapé ressemble à un code encore à trouver.
 async function isNearMissOfHidden(code: string): Promise<boolean> {
   try {
-    const db = await getDB()
+    const [db, promos] = await Promise.all([getDB(), fetchPromoCodes()])
     const wallet = await readWallet((key) => db.get("shop", key))
-    return isNearMiss(code, huntable(wallet, new Date()))
+    return isNearMiss(code, huntable(wallet, new Date(), promos))
   } catch {
     return false
   }
@@ -124,7 +125,13 @@ async function isNearMissOfHidden(code: string): Promise<boolean> {
 // wallet facts are idempotent, so a code can only be redeemed once — even
 // across two devices.
 export async function redeemCode(code: string): Promise<RedeemResult> {
-  const promo = findPromo(code)
+  let promos
+  try {
+    promos = await fetchPromoCodes()
+  } catch {
+    return { status: "error" }
+  }
+  const promo = findPromo(code, promos)
   if (!promo || !isLive(promo, new Date())) {
     return { status: "invalid", near: await isNearMissOfHidden(code) }
   }

@@ -1,7 +1,6 @@
 import {
   isLive,
   openStep,
-  PROMO_CODES,
   stepsOf,
   type PromoCode,
   type PromoReward,
@@ -30,7 +29,7 @@ export const EMPTY_VAULT: VaultState = { total: 0, found: [], hints: [] }
 export function buildVault(
   wallet: Wallet,
   now: Date,
-  promos: readonly PromoCode[] = PROMO_CODES
+  promos: readonly PromoCode[]
 ): VaultState {
   const found: FoundCode[] = []
   const hints: VaultHint[] = []
