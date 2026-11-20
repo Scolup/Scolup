@@ -1,9 +1,16 @@
-export type FolderKey = "inbox" | "sent" | "archived"
+export type FolderKey =
+  | "inbox"
+  | "sent"
+  | "archived"
+  | "all"
+  | "drafts"
+  | "trash"
 
 export interface Attachment {
   id: number
   name: string
   type: string
+  url?: string
 }
 
 interface MessageRecipient {
@@ -30,6 +37,7 @@ export interface Message {
   unread?: boolean
   initials?: string
   sent?: boolean
+  draft?: boolean
 }
 
 export interface MessageEntry {

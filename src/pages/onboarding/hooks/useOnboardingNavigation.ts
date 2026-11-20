@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router"
 import { getSetting, setSetting } from "@/services/storage"
+import { isPronote } from "@/services/litenote"
 
 const ONBOARDING_STEPS = ["theme", "login", "welcome"] as const
 
 type OnboardingStep = (typeof ONBOARDING_STEPS)[number]
+export type LoginService = "ecoledirecte" | "pronote"
 
-const SETUP_STEP_COUNT = ONBOARDING_STEPS.length - 1
+const SETUP_STEP_COUNT = 3
 
 export function useOnboardingNavigation() {
   const navigate = useNavigate()
@@ -19,6 +21,12 @@ export function useOnboardingNavigation() {
   const needsRedirect =
     !currentSegment || currentSegment === "onboarding" || stepIndex === -1
   const currentStepIndex = needsRedirect ? -1 : stepIndex
+  const service = new URLSearchParams(location.search).get("service")
+  const loginService: LoginService | null =
+    currentSegment === "login" &&
+    (service === "ecoledirecte" || service === "pronote")
+      ? service
+      : null
 
   useEffect(() => {
     if (!needsRedirect) return
@@ -60,12 +68,26 @@ export function useOnboardingNavigation() {
   }, [currentStepIndex, goToStep])
 
   const previousStep = useCallback(() => {
+    if (loginService) {
+      navigate("/onboarding/login", { replace: true })
+      return
+    }
     if (currentStepIndex > 0) goToStep(ONBOARDING_STEPS[currentStepIndex - 1])
-  }, [currentStepIndex, goToStep])
+  }, [loginService, navigate, currentStepIndex, goToStep])
 
-  const isSetupStep =
-    currentStepIndex >= 0 && currentStepIndex < SETUP_STEP_COUNT
-  const progress = isSetupStep ? currentStepIndex : 0
+  const selectLoginService = (service: LoginService | null) => {
+    navigate(
+      service ? `/onboarding/login?service=${service}` : "/onboarding/login",
+      {
+        replace: true,
+      }
+    )
+  }
+
+  const isSetupStep = currentStepIndex >= 0 && currentSegment !== "welcome"
+  const isConnecting =
+    currentSegment === "login" && (loginService !== null || isPronote())
+  const progress = isSetupStep ? currentStepIndex + Number(isConnecting) : 0
   const isFirstStep = currentStepIndex === 0
 
   return {
@@ -75,6 +97,8 @@ export function useOnboardingNavigation() {
     isRestored,
     nextStep,
     previousStep,
+    loginService,
+    selectLoginService,
     isSetupStep,
     progress,
     setupStepCount: SETUP_STEP_COUNT,

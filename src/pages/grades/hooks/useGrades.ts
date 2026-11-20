@@ -7,6 +7,7 @@ import { useSubjects } from "@/features/subjects/store"
 import { useAsync } from "@/hooks/useAsync"
 import { useLiveRefresh } from "@/hooks/useLiveRefresh"
 import { useAverageSettings } from "@/features/grades/averageSettings"
+import { isPronote } from "@/services/litenote"
 import {
   computeOverallAverage,
   gradeImpact,
@@ -27,9 +28,13 @@ import type {
 } from "@/features/grades/types"
 
 interface GradesModel {
+  pronote: boolean
   grades: Grade[]
   groups: ReturnType<typeof groupBySubject>
   overallAverage: number | null
+  classAverage?: number
+  classTrend: TrendPoint[]
+  classTrendDomain: [number, number]
   periods: Period[]
   selectedPeriod: string
   setSelectedPeriod: (id: string) => void
@@ -45,6 +50,7 @@ interface GradesModel {
 }
 
 const RECENT_DAYS = 15
+const RECENT_PRONOTE_LIMIT = 8
 const NO_GRADES: Grade[] = []
 const NO_PERIODS: Period[] = []
 
@@ -62,6 +68,7 @@ async function loadGrades() {
 }
 
 export function useGrades(): GradesModel {
+  const pronote = isPronote()
   const [reloadKey, setReloadKey] = useState(0)
   const liveGrades = useLiveRefresh("grades")
   const { data, error, loading } = useAsync(loadGrades, [reloadKey, liveGrades])
@@ -93,16 +100,24 @@ export function useGrades(): GradesModel {
     return grades.filter((grade) => grade.period === selectedPeriod)
   }, [grades, periods, selectedPeriod])
 
+  const official = data?.officialAverages?.[selectedPeriod]
   const groups = useMemo(
-    () => groupBySubject(visibleGrades, coefOf, method),
-    [visibleGrades, coefOf, method]
+    () =>
+      groupBySubject(visibleGrades, coefOf, method).map((group) => {
+        const average = official?.subjects[group.subjectCode ?? ""]
+        return average
+          ? {
+              ...group,
+              average: average.student ?? group.average,
+              classAverage: average.classAverage,
+            }
+          : group
+      }),
+    [visibleGrades, coefOf, method, official]
   )
-  const overallAverage = computeOverallAverage(
-    visibleGrades,
-    groups,
-    coefOf,
-    method
-  )
+  const overallAverage =
+    official?.student ??
+    computeOverallAverage(visibleGrades, groups, coefOf, method)
   const trend = useMemo(
     () =>
       cumulativeGeneralAverageByDay(
@@ -116,9 +131,35 @@ export function useGrades(): GradesModel {
   )
 
   const domain = useMemo(() => computeTrendDomain(trend), [trend])
+  const classTrend = useMemo(() => {
+    const classGrades = visibleGrades.flatMap((grade) =>
+      grade.classAverage === undefined
+        ? []
+        : [{ ...grade, value: String(grade.classAverage), outOf: "20" }]
+    )
+    return classGrades.length
+      ? cumulativeGeneralAverageByDay(
+          classGrades,
+          coefOf,
+          30,
+          new Date(),
+          method
+        )
+      : []
+  }, [visibleGrades, coefOf, method])
+  const classTrendDomain = useMemo(
+    () => computeTrendDomain(classTrend),
+    [classTrend]
+  )
   const recent = useMemo(
-    () => recentGrades(visibleGrades, RECENT_DAYS),
-    [visibleGrades]
+    () =>
+      pronote
+        ? visibleGrades
+            .filter((grade) => grade.date)
+            .sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0))
+            .slice(0, RECENT_PRONOTE_LIMIT)
+        : recentGrades(visibleGrades, RECENT_DAYS),
+    [pronote, visibleGrades]
   )
   const impactOf = useCallback(
     (grade: Grade) => gradeImpact(grade, visibleGrades, coefOf, method),
@@ -126,9 +167,14 @@ export function useGrades(): GradesModel {
   )
 
   return {
+    pronote,
     grades,
     groups,
     overallAverage,
+    classAverage:
+      official?.classAverage ?? classTrend.at(-1)?.average ?? undefined,
+    classTrend,
+    classTrendDomain,
     periods,
     selectedPeriod,
     setSelectedPeriod,

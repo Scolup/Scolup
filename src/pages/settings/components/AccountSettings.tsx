@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Mail01Icon, SchoolIcon } from "@hugeicons/core-free-icons"
+import {
+  isPronote,
+  loadPronoteSession,
+  pronotePortalLink,
+  pronoteProfile,
+} from "@/services/litenote"
+import { PronoteLogin } from "@/components/pronote/PronoteLogin"
+import { Button } from "@/components/ui/button"
 import { ld } from "@/services/litedirecte"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { initialsFromName } from "@/lib/utils"
@@ -15,6 +23,17 @@ interface AccountInfo {
 }
 
 function readAccount(): AccountInfo {
+  if (isPronote()) {
+    const profile = pronoteProfile()
+    return {
+      name: profile?.name ?? "",
+      initials: profile?.name ? initialsFromName(profile.name) : "?",
+      photo: null,
+      email: null,
+      school: profile?.establishmentName ?? null,
+      klass: profile?.className ?? null,
+    }
+  }
   const account = ld.auth.getAccount()
   if (!account) {
     return {
@@ -65,19 +84,54 @@ function InfoRow({
 }
 
 export function AccountSettings() {
+  const [reconnecting, setReconnecting] = useState(false)
   const [info, setInfo] = useState<AccountInfo | null>(null)
 
   useEffect(() => {
     let active = true
-    void ld.auth.loadSession().then(() => {
-      if (active) setInfo(readAccount())
-    })
+    const request = isPronote() ? loadPronoteSession() : ld.auth.loadSession()
+    void request
+      .catch(() => false)
+      .then(() => {
+        if (active) setInfo(readAccount())
+      })
     return () => {
       active = false
     }
   }, [])
 
   if (!info) return null
+  if (reconnecting) {
+    const portal = pronotePortalLink()
+    return (
+      <div className="flex flex-col gap-3">
+        <PronoteLogin
+          initialSchool={
+            portal
+              ? {
+                  url: portal,
+                  name: info.school ?? "Ton établissement PRONOTE",
+                  latitude: 0,
+                  longitude: 0,
+                  postalCode: "",
+                }
+              : undefined
+          }
+          onNext={() => {
+            setInfo(readAccount())
+            setReconnecting(false)
+          }}
+        />
+        <Button
+          variant="ghost"
+          className="min-h-11 rounded-full"
+          onClick={() => setReconnecting(false)}
+        >
+          Annuler
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -92,7 +146,8 @@ export function AccountSettings() {
           </Avatar>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold text-card-foreground">
-              {info.name || "Compte ÉcoleDirecte"}
+              {info.name ||
+                (isPronote() ? "Compte PRONOTE" : "Compte ÉcoleDirecte")}
             </span>
             {info.klass && (
               <span className="truncate text-xs text-muted-foreground">
@@ -107,6 +162,15 @@ export function AccountSettings() {
             label="Établissement"
             value={info.school}
           />
+        )}
+        {isPronote() && (
+          <Button
+            variant="outline"
+            className="min-h-11 rounded-full"
+            onClick={() => setReconnecting(true)}
+          >
+            Réassocier mon compte PRONOTE
+          </Button>
         )}
         {info.email && (
           <InfoRow icon={Mail01Icon} label="E-mail" value={info.email} />

@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { DetailRow } from "@/components/DetailRow"
 import { useAverageSettings } from "@/features/grades/averageSettings"
-import { formatAverageValue } from "@/features/grades/averages"
+import { formatAverage, formatAverageValue } from "@/features/grades/averages"
 import { parseGradeNumber } from "@/features/grades/grade"
 import type { AverageScale, Grade, GradeImpact } from "@/features/grades/types"
 
@@ -62,6 +62,7 @@ export function GradeDrawer({
   evalColors,
   impact,
   onClose,
+  showAllCoefficients = false,
 }: {
   grade: Grade | null
   subject: string
@@ -69,6 +70,7 @@ export function GradeDrawer({
   evalColors: string[]
   impact: GradeImpact | null
   onClose: () => void
+  showAllCoefficients?: boolean
 }) {
   const { scale } = useAverageSettings()
   return (
@@ -87,11 +89,13 @@ export function GradeDrawer({
                   {grade.title}
                 </span>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  {grade.coef !== "1" && grade.coef !== "0" && (
-                    <Badge variant="outline" size="sm" pill>
-                      Coef {grade.coef}
-                    </Badge>
-                  )}
+                  {!showAllCoefficients &&
+                    grade.coef !== "1" &&
+                    grade.coef !== "0" && (
+                      <Badge variant="outline" size="sm" pill>
+                        Coef {grade.coef}
+                      </Badge>
+                    )}
                   {grade.typeDevoir && (
                     <Badge variant="outline" size="sm" pill>
                       {grade.typeDevoir}
@@ -147,6 +151,20 @@ export function GradeDrawer({
                 label="Matière"
                 value={subject}
               />
+              {showAllCoefficients && (
+                <DetailRow
+                  icon={ChartEvaluationIcon}
+                  label="Coefficient"
+                  value={grade.coef.replace(".", ",")}
+                />
+              )}
+              {grade.classAverage !== undefined && (
+                <DetailRow
+                  icon={ChartAverageIcon}
+                  label="Moyenne de la classe"
+                  value={formatAverage(grade.classAverage, scale)}
+                />
+              )}
               {grade.date && (
                 <DetailRow
                   icon={Calendar03Icon}

@@ -74,6 +74,9 @@ export function GradesWidget() {
 
   const grades = data?.grades ?? NO_GRADES
   const period = data?.defaultPeriod ?? null
+  const officialAverage = period
+    ? data?.officialAverages?.[period.id]?.student
+    : undefined
 
   const { average, recent, trend, trendDomain, hasTrend, impacts } =
     useMemo(() => {
@@ -91,14 +94,16 @@ export function GradesWidget() {
         method
       )
       return {
-        average: computeOverallAverage(visible, groups, coefOf, method),
+        average:
+          officialAverage ??
+          computeOverallAverage(visible, groups, coefOf, method),
         recent: fresh,
         trend: points,
         impacts: impactsByGrade(points),
         trendDomain: computeTrendDomain(points),
         hasTrend: points.some((point) => point.average !== null),
       }
-    }, [grades, period, coefOf, method])
+    }, [grades, period, coefOf, method, officialAverage])
 
   if (error)
     return <WidgetError onRetry={() => setReloadKey((key) => key + 1)} />

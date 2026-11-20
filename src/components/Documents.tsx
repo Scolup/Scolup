@@ -44,6 +44,16 @@ export function Documents({
     } as never) as Promise<Blob>
 
   const handleDownload = async (doc: DownloadableFile) => {
+    if (doc.url) {
+      try {
+        const url = new URL(doc.url)
+        if (url.protocol !== "https:") throw new Error("Adresse non sécurisée.")
+        window.open(url.href, "_blank", "noopener,noreferrer")
+      } catch {
+        setFailure("Lien de téléchargement indisponible.")
+      }
+      return
+    }
     if (!doc.id) {
       setFailure(
         `Impossible de télécharger "${doc.name}" : identifiant manquant.`

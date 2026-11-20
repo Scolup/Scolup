@@ -19,6 +19,7 @@ export interface DownloadableFile {
   name: string
   type: string
   size?: number
+  url?: string
 }
 
 export function formatSize(bytes: number): string {

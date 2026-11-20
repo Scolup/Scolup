@@ -1,11 +1,8 @@
 import { useEffect } from "react"
-import { ld } from "@/services/litedirecte"
+import { fetchInbox } from "../fetchInbox"
 
 import { useLiveRefresh } from "@/hooks/useLiveRefresh"
-import { MESSAGE_YEAR } from "../schoolYear"
 import { countUnreadMessages } from "../folders"
-import { toMessage } from "../mappers"
-import type { MessageEntry } from "../types"
 import {
   seedUnreadMessagesCount,
   setUnreadMessagesCount,
@@ -32,15 +29,8 @@ export function useMessagesBadge(): number | null {
         }
         if (cancelled) return
         try {
-          if (!(await ld.auth.loadSession())) continue
-          const result = await ld.messages.getMessages({ year: MESSAGE_YEAR })
+          const next = countUnreadMessages(await fetchInbox())
           if (cancelled) return
-          const messages = result.messages as
-            | { received?: MessageEntry[] }
-            | undefined
-          const next = countUnreadMessages(
-            (messages?.received ?? []).map(toMessage)
-          )
           if (seed) seedUnreadMessagesCount(next)
           else setUnreadMessagesCount(next)
           return

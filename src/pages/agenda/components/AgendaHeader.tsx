@@ -1,31 +1,9 @@
-import { useState } from "react"
 import { m } from "motion/react"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  ArrowLeft01Icon,
-  ArrowRight01Icon,
-  Calendar03Icon,
-} from "@hugeicons/core-free-icons"
-import { fr } from "react-day-picker/locale/fr"
 import { cn } from "@/lib/utils"
 import { SPRING_SOFT } from "@/lib/motion"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { DateNavigator } from "@/components/DateNavigator"
 import { dayLabel } from "../labels"
-import {
-  addDays,
-  fullDateLabel,
-  isoWeekNumber,
-  monthLabel,
-  shortDayName,
-  toDayKey,
-  weekOf,
-} from "@/lib/dates"
+import { shortDayName, toDayKey, weekOf } from "@/lib/dates"
 import type { AgendaView } from "../types"
 
 interface AgendaHeaderProps {
@@ -98,79 +76,15 @@ export function AgendaHeader({
 }: AgendaHeaderProps) {
   const week = weekOf(date)
   const selectedKey = toDayKey(date)
-  const step = view === "week" ? 7 : 1
-  const [pickerOpen, setPickerOpen] = useState(false)
-
-  const go = (next: Date, dir?: number) => {
-    onDateChange(next, dir)
-  }
-
-  const pickDate = (next: Date | undefined) => {
-    if (!next) return
-    go(new Date(next.getFullYear(), next.getMonth(), next.getDate()))
-    setPickerOpen(false)
-  }
-
   return (
     <div className="relative sticky top-0 z-20 flex flex-col gap-2 border-b border-border/60 px-4 py-2">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 shrink-0 rounded-full"
-            aria-label={
-              view === "week" ? "Semaine précédente" : "Jour précédent"
-            }
-            onClick={() => go(addDays(date, -step), -1)}
-          >
-            <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
-          </Button>
-          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-            <PopoverTrigger
-              render={
-                <button
-                  type="button"
-                  aria-label="Choisir une date"
-                  title="Choisir une date"
-                  className="flex min-w-0 shrink-0 press cursor-pointer flex-col rounded-lg px-1 text-left outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/40"
-                />
-              }
-            >
-              <span className="flex items-center gap-1 truncate text-sm font-semibold text-card-foreground">
-                <HugeiconsIcon
-                  icon={Calendar03Icon}
-                  className="size-3.5 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                {view === "week"
-                  ? "Semaine " + isoWeekNumber(date)
-                  : dayLabel(date)}
-              </span>
-              <span className="truncate text-xs text-muted-foreground">
-                {view === "day" ? fullDateLabel(date) : monthLabel(date)}
-              </span>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                locale={fr}
-                captionLayout="dropdown"
-                selected={date}
-                onSelect={pickDate}
-              />
-            </PopoverContent>
-          </Popover>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 shrink-0 rounded-full"
-            aria-label={view === "week" ? "Semaine suivante" : "Jour suivant"}
-            onClick={() => go(addDays(date, step), 1)}
-          >
-            <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
-          </Button>
-        </div>
+        <DateNavigator
+          date={date}
+          view={view}
+          dayTitle={dayLabel(date)}
+          onDateChange={onDateChange}
+        />
 
         <div className="flex shrink-0 items-center gap-1">
           <ViewSwitch
@@ -206,7 +120,7 @@ export function AgendaHeader({
                 aria-selected={isSelected}
                 aria-label={dayLabel(day)}
                 aria-current={isSelected ? "date" : undefined}
-                onClick={() => go(day)}
+                onClick={() => onDateChange(day)}
                 className="group flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">

@@ -5,7 +5,6 @@ import {
   resolveSubjectColor,
   resolveSubjectName,
 } from "@/features/subjects/resolve"
-import { Badge } from "@/components/ui/badge"
 import { CompetencyDots } from "./CompetencyDots"
 import { useAverageSettings } from "@/features/grades/averageSettings"
 import { formatAverage, formatAverageValue } from "@/features/grades/averages"
@@ -76,10 +75,14 @@ export function SubjectGroupSection({
           )}
         </span>
       </h2>
+      {group.classAverage !== undefined && (
+        <p className="mb-2 text-xs text-muted-foreground">
+          Moyenne de classe {formatAverage(group.classAverage, scale)}
+        </p>
+      )}
       <div className="overflow-hidden rounded-3xl border border-border/70 bg-card">
         {group.grades.map((grade, index) => {
           const dateLabel = formatGradeDate(grade.date)
-          const showCoef = grade.coef !== "1" && grade.coef !== "0"
           const rank =
             offset === undefined ? null : entranceRank(offset + index)
           return (
@@ -104,20 +107,8 @@ export function SubjectGroupSection({
                   separator and focus ring must keep their full size. */}
               <span className="flex w-full min-w-0 items-center gap-3 transition-transform duration-(--duration-fast) ease-(--ease-out) group-active/press:scale-[0.985] motion-reduce:group-active/press:scale-100">
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="truncate text-sm font-medium text-card-foreground">
-                      {grade.title}
-                    </span>
-                    {showCoef && (
-                      <Badge
-                        variant="outline"
-                        size="sm"
-                        pill
-                        className="shrink-0"
-                      >
-                        Coef {grade.coef}
-                      </Badge>
-                    )}
+                  <span className="truncate text-sm font-medium text-card-foreground">
+                    {grade.title}
                   </span>
                   {dateLabel && (
                     <span className="truncate text-xs text-muted-foreground">

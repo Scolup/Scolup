@@ -1,4 +1,9 @@
-import { Chair02Icon, StickyNote02Icon } from "@hugeicons/core-free-icons"
+import {
+  BookOpen01Icon,
+  Chair02Icon,
+  Restaurant01Icon,
+  StickyNote02Icon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useHomePage } from "./hooks/useHomePage"
 import { AccountMenu } from "./components/AccountMenu"
@@ -17,17 +22,30 @@ import { useEffect } from "react"
 import { track } from "@/features/quests/service"
 import { toDayKey } from "@/lib/dates"
 import { AnimatedNumber } from "@/components/AnimatedNumber"
+import { isPronote } from "@/services/litenote"
 import { DecoMotif } from "@/components/DecoOrnament"
+import { cn } from "@/lib/utils"
 
+const ABSENCES_LINK = {
+  icon: Chair02Icon,
+  label: "Absences",
+  path: "/absences",
+}
 const SCHOOL_LINKS = [
-  { icon: Chair02Icon, label: "Absences", path: "/absences" },
+  ABSENCES_LINK,
   { icon: StickyNote02Icon, label: "Post-its", path: "/post-its" },
+] as const
+const PRONOTE_SCHOOL_LINKS = [
+  ABSENCES_LINK,
+  { icon: BookOpen01Icon, label: "Carnet", path: "/carnet" },
+  { icon: Restaurant01Icon, label: "Menu de la semaine", path: "/menus" },
 ] as const
 
 export function HomePage() {
   const page = useHomePage()
   const rubies = useRubies()
   const navigate = useNavigate()
+  const pronote = isPronote()
 
   useEffect(() => {
     // The day is the key: "Assidu" counts different days, not openings.
@@ -94,13 +112,20 @@ export function HomePage() {
 
       <NextQuestsCard />
 
-      <nav aria-label="Vie scolaire" className="flex gap-2">
-        {SCHOOL_LINKS.map((link) => (
+      <nav
+        aria-label="Vie scolaire"
+        className={cn("gap-2", pronote ? "grid grid-cols-3" : "flex")}
+      >
+        {(pronote ? PRONOTE_SCHOOL_LINKS : SCHOOL_LINKS).map((link) => (
           <button
             key={link.path}
             type="button"
             onClick={() => page.openPage(link.path)}
-            className="flex min-h-14 flex-1 press items-center gap-3 rounded-full border border-border/70 bg-card px-4 py-3 text-left outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
+            className={cn(
+              "flex min-h-14 min-w-0 flex-1 press items-center gap-3 rounded-full border border-border/70 bg-card px-4 py-3 text-left outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50",
+              pronote &&
+                "max-sm:flex-col max-sm:justify-center max-sm:gap-2 max-sm:rounded-3xl max-sm:px-2 max-sm:text-center"
+            )}
           >
             <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-text">
               <HugeiconsIcon
@@ -110,7 +135,12 @@ export function HomePage() {
                 aria-hidden="true"
               />
             </span>
-            <span className="min-w-0 flex-1 truncate text-sm font-medium text-card-foreground">
+            <span
+              className={cn(
+                "min-w-0 text-sm font-medium text-card-foreground",
+                pronote ? "max-sm:text-xs" : "flex-1 truncate"
+              )}
+            >
               {link.label}
             </span>
           </button>

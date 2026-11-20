@@ -2,6 +2,9 @@ import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Refresh01Icon } from "@hugeicons/core-free-icons"
 import { AppToast } from "@/components/AppToast"
+import { isPronote } from "@/services/litenote"
+import { PronoteStorageOptions } from "@/components/PronoteStorageOptions"
+import { getSettingSync, setSetting } from "@/services/storage"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticMedium } from "@/services/haptics"
@@ -9,8 +12,29 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 
 export function DataSettings() {
+  const [local, setLocal] = useState(
+    () => getSettingSync("pronote-storage") === "local"
+  )
   const [refreshing, setRefreshing] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+
+  if (isPronote())
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="px-1 text-sm text-muted-foreground">
+          Stockage et synchronisation
+        </p>
+        <PronoteStorageOptions
+          selected={local}
+          onLocal={() => {
+            void setSetting("pronote-storage", "local")
+              .then(() => setLocal(true))
+              .catch(() => setMessage("Stockage local indisponible."))
+          }}
+        />
+        <AppToast message={message} onClose={() => setMessage(null)} />
+      </div>
+    )
 
   const refreshCache = async () => {
     if (refreshing) return

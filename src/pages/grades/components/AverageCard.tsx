@@ -1,10 +1,12 @@
 import {
   lazy,
   Suspense,
+  useCallback,
   useLayoutEffect,
   useRef,
   useState,
   type RefObject,
+  type ReactNode,
 } from "react"
 import { countUpValue } from "@/lib/countUp"
 import { formatAverage, formatAverageValue } from "@/features/grades/averages"
@@ -64,48 +66,70 @@ export function AverageCard({
   trend,
   trendDomain,
   hasTrend,
+  label = "Moyenne générale",
+  control,
+  description,
 }: {
-  average: number
+  average: number | null
   trend: TrendPoint[]
   trendDomain: [number, number]
   hasTrend: boolean
+  label?: string
+  control?: ReactNode
+  description?: string
 }) {
   const { scale } = useAverageSettings()
   const { decoTheme } = useTheme()
   const countRef = useRef<HTMLSpanElement>(null)
-  useCountUp(average, scale, countRef)
+  useCountUp(average ?? 0, scale, countRef)
   // Tant qu'un point du graphe a le focus, sa moyenne s'affiche en direct
   // (le doigt pilote, chiffres qui roulent) ; au relâcher, retour à la
   // moyenne. L'état vit ici et non dans la page : le survol ne re-rend plus
   // toute la liste des notes.
-  const [focusedAverage, setFocusedAverage] = useState<number | null>(null)
+  const [focus, setFocus] = useState<{
+    trend: TrendPoint[]
+    average: number | null
+  } | null>(null)
+  const focusedAverage = focus?.trend === trend ? focus.average : null
+  const handleFocus = useCallback(
+    (point: number | null) => {
+      setFocus(point === null ? null : { trend, average: point })
+    },
+    [trend]
+  )
   return (
     <section
-      aria-label={`Moyenne générale : ${formatAverage(average, scale)}`}
+      aria-label={`${label} · ${average === null ? "Non publiée" : formatAverage(average, scale)}`}
       className="flex flex-col gap-1 rounded-3xl border border-border/70 bg-card px-4 pt-3.5 pb-2"
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-semibold text-card-foreground">
-          Moyenne générale
-        </span>
-        <span className="tabular-nums">
-          {focusedAverage !== null ? (
-            <AnimatedNumber
-              value={formatAverageValue(focusedAverage, scale)}
-              className="text-2xl font-bold text-card-foreground"
-            />
-          ) : (
-            <span
-              ref={countRef}
-              className="inline-flex text-2xl font-bold text-card-foreground tabular-nums"
-            >
-              {formatAverageValue(average, scale)}
-            </span>
-          )}
-          <span className="text-xs text-muted-foreground">
-            {scale === 100 ? " %" : `/${scale}`}
+        {control ?? (
+          <span className="text-sm font-semibold text-card-foreground">
+            {label}
           </span>
-        </span>
+        )}
+        {average === null ? (
+          <span className="text-xs text-muted-foreground">Non publiée</span>
+        ) : (
+          <span className="tabular-nums">
+            {focusedAverage !== null ? (
+              <AnimatedNumber
+                value={formatAverageValue(focusedAverage, scale)}
+                className="text-2xl font-bold text-card-foreground"
+              />
+            ) : (
+              <span
+                ref={countRef}
+                className="inline-flex text-2xl font-bold text-card-foreground tabular-nums"
+              >
+                {formatAverageValue(average, scale)}
+              </span>
+            )}
+            <span className="text-xs text-muted-foreground">
+              {scale === 100 ? " %" : `/${scale}`}
+            </span>
+          </span>
+        )}
       </div>
       {hasTrend && (
         <Suspense
@@ -117,9 +141,12 @@ export function AverageCard({
             trend={trend}
             domain={trendDomain}
             scolupPattern={decoTheme === "evomoyenne"}
-            onFocus={setFocusedAverage}
+            onFocus={handleFocus}
           />
         </Suspense>
+      )}
+      {description && (
+        <p className="py-1 text-xs text-muted-foreground">{description}</p>
       )}
     </section>
   )

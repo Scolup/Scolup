@@ -1,6 +1,7 @@
 import { toDocuments } from "@/pages/homework/mappers"
 import { useEffect, useState } from "react"
 import { getFriendlyErrorMessage } from "litedirecte"
+import { isPronote, withPronote } from "@/services/litenote"
 import { ld } from "@/services/litedirecte"
 import { toDayKey } from "@/lib/dates"
 import type { Course } from "../types"
@@ -73,6 +74,7 @@ async function fetchDayEntries(dayKey: string) {
 }
 
 export function useSessionContent(course: Course | null) {
+  const pronoteResourceId = course?.pronoteResourceId
   const dayKey = course?.start ? toDayKey(course.start) : ""
   const code = course?.subjectCode?.trim().toLowerCase() ?? ""
   const title = course?.title.trim().toLowerCase() ?? ""
@@ -90,7 +92,7 @@ export function useSessionContent(course: Course | null) {
       return
     }
     let cancelled = false
-    const fastHit = dayCache.get(dayKey)
+    const fastHit = isPronote() ? undefined : dayCache.get(dayKey)
     if (fastHit) {
       setSession(toSession(fastHit, code, title))
       setError(null)
@@ -101,9 +103,30 @@ export function useSessionContent(course: Course | null) {
     setError(null)
     ;(async () => {
       try {
-        const entries = await fetchDayEntries(dayKey)
-        if (cancelled) return
-        setSession(toSession(entries, code, title))
+        if (isPronote()) {
+          const resource = pronoteResourceId
+            ? await withPronote((client) => client.lesson(pronoteResourceId))
+            : null
+          if (!cancelled)
+            setSession({
+              html:
+                resource?.contents
+                  .map((entry) => entry.description ?? "")
+                  .filter(Boolean)
+                  .join("<hr>") || undefined,
+              documents: (
+                resource?.contents.flatMap((entry) => entry.files) ?? []
+              ).map((file, index) => ({
+                id: index + 1,
+                type: "pronote",
+                name: file.name,
+                url: file.url,
+              })),
+            })
+        } else {
+          const entries = await fetchDayEntries(dayKey)
+          if (!cancelled) setSession(toSession(entries, code, title))
+        }
       } catch (err) {
         if (cancelled) return
         const errCode = (err as { code?: string } | null)?.code
@@ -124,7 +147,7 @@ export function useSessionContent(course: Course | null) {
     return () => {
       cancelled = true
     }
-  }, [dayKey, code, title, reloadKey])
+  }, [dayKey, code, title, pronoteResourceId, reloadKey])
 
   return {
     session,

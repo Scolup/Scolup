@@ -19,6 +19,7 @@ export interface Grade {
   period: string
   competencies: Competency[]
   nonSignificant: boolean
+  classAverage?: number
 }
 
 export interface SubjectGroup {
@@ -26,6 +27,7 @@ export interface SubjectGroup {
   subjectCode?: string
   grades: Grade[]
   average: number | null
+  classAverage?: number
   coef: number
 }
 
@@ -47,6 +49,12 @@ export interface Period {
   id: string
   label: string
   annuel?: boolean
+}
+
+export interface OfficialAverages {
+  student?: number
+  classAverage?: number
+  subjects: Record<string, { student?: number; classAverage?: number }>
 }
 
 export interface TrendNewcomer {

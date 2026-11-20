@@ -1,8 +1,9 @@
+import { isPronote } from "@/services/litenote"
 import { ld } from "@/services/litedirecte"
 import { getSetting } from "@/services/storage"
 import { toEvalColors, toGrade } from "./mappers"
 import { resolvePeriod, toPeriod } from "./periods"
-import type { Grade, Period } from "./types"
+import type { Grade, OfficialAverages, Period } from "./types"
 
 interface GradesData {
   grades: Grade[]
@@ -10,11 +11,13 @@ interface GradesData {
   evalColors: string[]
   // La période à afficher : celle choisie la dernière fois, sinon la première.
   defaultPeriod: Period | null
+  officialAverages?: Record<string, OfficialAverages>
 }
 
 // Charge les notes depuis EcoleDirecte et les convertit en modèle Scolup.
 // Utilisé par la page Notes et par le widget de l'accueil.
 export async function fetchGrades(): Promise<GradesData> {
+  if (isPronote()) return (await import("./pronoteGrades")).fetchPronoteGrades()
   if (!(await ld.auth.loadSession())) {
     throw new Error("Aucune session active. Reconnecte-toi.")
   }

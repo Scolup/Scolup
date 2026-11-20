@@ -23,6 +23,7 @@ export function Grades() {
       </div>
 
       <GradeDrawer
+        showAllCoefficients={page.pronote}
         grade={page.selected}
         subject={page.selectedSubject}
         periodLabel={page.selectedPeriodLabel}

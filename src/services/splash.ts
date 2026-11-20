@@ -1,3 +1,4 @@
+import { isPronote } from "./litenote"
 import { useEffect } from "react"
 
 let revealed = false
@@ -44,7 +45,7 @@ export function revealRoute() {
 // under StrictMode's mount/unmount/mount and on route changes.
 export function useSplashTask(loading: boolean) {
   useEffect(() => {
-    if (!loading) return
+    if (!loading || isPronote()) return
     pending++
     return () => done()
   }, [loading])

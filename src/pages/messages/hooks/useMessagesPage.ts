@@ -4,6 +4,7 @@ import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticLight } from "@/services/haptics"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
+import { isPronote } from "@/services/litenote"
 import { buildPagination, PAGE_SIZE } from "../pagination"
 import {
   countUnreadMessages,
@@ -41,7 +42,8 @@ export function useMessagesPage() {
 
   const urlSearch = searchParams.get("search") ?? ""
   const requestedPage = Number(searchParams.get("page")) || 1
-  const folder = parseFolderParam(searchParams.get("folder"))
+  const pronote = isPronote()
+  const folder = parseFolderParam(searchParams.get("folder"), pronote)
   const messageParam = searchParams.get("message")
 
   const commit = useCallback(
@@ -74,9 +76,10 @@ export function useMessagesPage() {
     messageParam,
     sessionReady: store.sessionReady,
     folderMessages: store.folderMessages,
+    folder,
   })
 
-  const { folderMessages, loading } = store
+  const { folderMessages, loading, setFolderMessages } = store
   const activeMessages = folderMessages[folder]
 
   const setActiveMessages = useCallback(
@@ -94,17 +97,30 @@ export function useMessagesPage() {
     setUnreadMessagesCount(countUnreadMessages(folderMessages.inbox))
   }, [loading, folderMessages])
 
-  const selectedId = detail.selected?.id ?? null
+  const selectedId = detail.selected?.draft
+    ? null
+    : (detail.selected?.id ?? null)
   useEffect(() => {
     if (typeof selectedId !== "number") return
-    setActiveMessages((prev) =>
-      prev.some((m) => m.id === selectedId && m.unread)
-        ? prev.map((m) => (m.id === selectedId ? { ...m, unread: false } : m))
-        : prev
-    )
+    setFolderMessages((previous) => {
+      let next = previous
+      for (const key of Object.keys(previous) as FolderKey[]) {
+        if (
+          !previous[key].some(
+            (message) => message.id === selectedId && message.unread
+          )
+        )
+          continue
+        if (next === previous) next = { ...previous }
+        next[key] = previous[key].map((message) =>
+          message.id === selectedId ? { ...message, unread: false } : message
+        )
+      }
+      return next
+    })
     // A live refresh can land while the message is open with the cached list
     // still saying unread: re-apply the read state whenever that list changes.
-  }, [selectedId, activeMessages, setActiveMessages])
+  }, [selectedId, folderMessages, setFolderMessages])
 
   const query = input
   const filteredMessages = useMemo(
@@ -182,7 +198,7 @@ export function useMessagesPage() {
       detail.dismissSelected()
       pushedDrawer.current = false
       commit((params) => {
-        const serialized = serializeFolderParam(value)
+        const serialized = serializeFolderParam(value, pronote)
         if (serialized) params.set("folder", serialized)
         else params.delete("folder")
         params.delete("page")

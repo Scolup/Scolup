@@ -154,26 +154,28 @@ export function HomeworkContent({
         <Documents documents={assignment.documents} />
       )}
 
-      <DetailRow
-        icon={Comment01Icon}
-        label={
-          assignment.comments.length > 0
-            ? `Commentaires · ${assignment.comments.length}`
-            : "Commentaires"
-        }
-        value={
-          <>
-            {assignment.comments.length > 0 && (
-              <ul className="mt-2 flex flex-col gap-2">
-                {assignment.comments.map((comment) => (
-                  <CommentRow key={comment.id} comment={comment} />
-                ))}
-              </ul>
-            )}
-            <CommentForm assignment={assignment} comment={comment} />
-          </>
-        }
-      />
+      {!assignment.pronoteId && (
+        <DetailRow
+          icon={Comment01Icon}
+          label={
+            assignment.comments.length > 0
+              ? `Commentaires · ${assignment.comments.length}`
+              : "Commentaires"
+          }
+          value={
+            <>
+              {assignment.comments.length > 0 && (
+                <ul className="mt-2 flex flex-col gap-2">
+                  {assignment.comments.map((comment) => (
+                    <CommentRow key={comment.id} comment={comment} />
+                  ))}
+                </ul>
+              )}
+              <CommentForm assignment={assignment} comment={comment} />
+            </>
+          }
+        />
+      )}
 
       <Button
         type="button"

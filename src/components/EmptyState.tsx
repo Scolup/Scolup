@@ -22,7 +22,7 @@ export function EmptyState({
   icon?: typeof Award02Icon
   media?: ReactNode
   title: string
-  description: ReactNode
+  description?: ReactNode
   action?: ReactNode
   className?: string
 }) {
@@ -41,7 +41,9 @@ export function EmptyState({
             </EmptyMedia>
           </m.div>
           <EmptyTitle>{title}</EmptyTitle>
-          <EmptyDescription>{description}</EmptyDescription>
+          {description != null && (
+            <EmptyDescription>{description}</EmptyDescription>
+          )}
         </EmptyHeader>
         {action}
       </Empty>

@@ -6,10 +6,12 @@ export function HowItWorks() {
     <>
       <h2>Comment vos données vous parviennent</h2>
       <p>
-        Scolup n'est pas un portail scolaire : c'est une interface alternative
-        au portail <strong>EcoleDirecte</strong>. Vos notes, devoirs, messages,
-        absences et post-its restent sur les serveurs d'EcoleDirecte ; Scolup se
-        contente de les afficher.
+        Scolup est une interface pour <strong>ÉcoleDirecte</strong> et les
+        espaces élèves <strong>PRONOTE</strong> hébergés par Index Éducation.
+        Les deux services passent par le relais Procsy. Pour PRONOTE, vous
+        saisissez vos identifiants sur le portail officiel. Scolup associe la
+        session à partir du QR de l’espace élève et conserve les rubis et
+        préférences dans votre navigateur.
       </p>
       <p>
         Lire un message dans l'application EcoleDirecte se fait en une étape.

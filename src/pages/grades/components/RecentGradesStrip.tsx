@@ -21,17 +21,20 @@ export function RecentGradesStrip({
   grades,
   impacts,
   onPick,
+  byEvaluationDate = false,
 }: {
   grades: Grade[]
   impacts?: Map<string, number>
   onPick: (key: string) => void
+  byEvaluationDate?: boolean
 }) {
   const { scale } = useAverageSettings()
   if (grades.length === 0) return null
+  const title = byEvaluationDate ? "Dernières notes" : "Ajoutées récemment"
   return (
-    <section aria-label="Notes ajoutées récemment">
+    <section aria-label={byEvaluationDate ? title : "Notes ajoutées récemment"}>
       <h2 className="px-1 pb-2 text-sm font-semibold text-card-foreground">
-        Ajoutées récemment
+        {title}
       </h2>
       <div className="-mx-4 flex snap-x scroll-pl-4 [scrollbar-width:none] gap-2.5 overflow-x-auto px-4 pb-1 [&::-webkit-scrollbar]:hidden">
         {grades.map((grade, index) => {
@@ -88,12 +91,17 @@ export function RecentGradesStrip({
               </span>
               <span className="flex items-end justify-between gap-2">
                 <span className="truncate text-xs text-muted-foreground">
-                  {grade.enteredOn instanceof Date
-                    ? formatDistanceToNowStrict(grade.enteredOn, {
-                        addSuffix: true,
-                        locale: fr,
+                  {byEvaluationDate && grade.date
+                    ? grade.date.toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "short",
                       })
-                    : ""}
+                    : grade.enteredOn instanceof Date
+                      ? formatDistanceToNowStrict(grade.enteredOn, {
+                          addSuffix: true,
+                          locale: fr,
+                        })
+                      : ""}
                 </span>
                 <span className="flex shrink-0 flex-col items-end">
                   {hasGradeValue(grade) && (

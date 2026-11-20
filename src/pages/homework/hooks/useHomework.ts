@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { isPronote, withPronote } from "@/services/litenote"
+import { fetchPronoteHomework } from "../fetchPronoteHomework"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 import { triggerHapticLight } from "@/services/haptics"
@@ -24,18 +26,14 @@ export function useHomework() {
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const restored = await ld.auth.loadSession()
-      if (cancelled) return
-      if (!restored) {
-        setError("Aucune session active. Reconnecte-toi.")
-        setLoading(false)
-        return
-      }
-
       try {
-        const fresh = await ld.homework.getHomework()
+        const pronote = isPronote()
+        if (!pronote && !(await ld.auth.loadSession()))
+          throw new Error("Aucune session active. Reconnecte-toi.")
+        const parsed = pronote
+          ? await fetchPronoteHomework()
+          : normalizeCalendar(await ld.homework.getHomework())
         if (cancelled) return
-        const parsed = normalizeCalendar(fresh)
         await ensureSubjects(
           parsed.map((assignment) => ({
             code: assignment.subjectCode,
@@ -111,14 +109,17 @@ export function useToggleDone(
       triggerHapticLight()
 
       try {
-        if (next) await ld.homework.markAsDone([assignment.id])
+        const pronoteId = assignment.pronoteId
+        if (pronoteId)
+          await withPronote((client) => client.markHomework(pronoteId, next))
+        else if (next) await ld.homework.markAsDone([assignment.id])
         else await ld.homework.markAsUndone([assignment.id])
         // The ledger learns the new state first: quests must know whether
         // Scolup is the one completing this homework (see mergeLedger).
         await syncHomework([{ ...assignment, done: next }], true)
         if (next) {
           // The id makes each homework count once, however often it is ticked.
-          const id = String(assignment.id)
+          const id = assignment.pronoteId ?? String(assignment.id)
           const dueDay = toDayKey(assignment.due)
           const today = toDayKey(new Date())
           void track("homework-done", id)

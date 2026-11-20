@@ -1,10 +1,5 @@
 import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  Archive04Icon,
-  Cancel01Icon,
-  Search01Icon,
-  SentIcon,
-} from "@hugeicons/core-free-icons"
+import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons"
 import {
   Select,
   SelectContent,
@@ -14,20 +9,24 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { folderIcon, folderLabel } from "../folders"
+import { folderDetails, getFolderOptions } from "../folders"
 import { type FolderKey } from "../types"
 
 export function FolderSearchBar({
+  pronote,
   folder,
   onFolderChange,
   input,
   onInputChange,
 }: {
+  pronote: boolean
   folder: FolderKey
   onFolderChange: (value: FolderKey) => void
   input: string
   onInputChange: (value: string) => void
 }) {
+  const options = getFolderOptions(pronote)
+  const selected = folderDetails(folder)
   return (
     <div className="relative sticky top-0 z-10 flex flex-row items-center gap-2 border-b border-border/60 px-4 py-2">
       <Select
@@ -36,37 +35,35 @@ export function FolderSearchBar({
           if (value) onFolderChange(value as FolderKey)
         }}
       >
-        <SelectTrigger className="w-fit shrink-0">
+        <SelectTrigger className="w-fit shrink-0" aria-label="Dossier">
           <SelectValue>
-            {(value: string | null) => {
-              const key = (value ?? "inbox") as FolderKey
-              return (
-                <span className="flex items-center gap-1.5">
-                  <HugeiconsIcon
-                    icon={folderIcon(key)}
-                    className="size-4 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                  {folderLabel(key)}
-                </span>
-              )
-            }}
+            {() => (
+              <span className="flex items-center gap-1.5">
+                <HugeiconsIcon
+                  icon={selected.icon}
+                  className="size-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                {selected.label}
+              </span>
+            )}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectItem value="inbox">
-              <HugeiconsIcon icon={Archive04Icon} className="size-4" />
-              Principal
-            </SelectItem>
-            <SelectItem value="sent">
-              <HugeiconsIcon icon={SentIcon} className="size-4" />
-              Envoyés
-            </SelectItem>
-            <SelectItem value="archived">
-              <HugeiconsIcon icon={Archive04Icon} className="size-4" />
-              Archivés
-            </SelectItem>
+            {options.map((value) => {
+              const { icon, label } = folderDetails(value)
+              return (
+                <SelectItem key={value} value={value}>
+                  <HugeiconsIcon
+                    icon={icon}
+                    className="size-4"
+                    aria-hidden="true"
+                  />
+                  {label}
+                </SelectItem>
+              )
+            })}
           </SelectGroup>
         </SelectContent>
       </Select>
@@ -83,7 +80,9 @@ export function FolderSearchBar({
           onChange={(event) => onInputChange(event.target.value)}
           placeholder="Rechercher…"
           className="pr-8 pl-8"
-          aria-label="Rechercher un message"
+          aria-label={
+            pronote ? "Rechercher une discussion" : "Rechercher un message"
+          }
         />
         {input && (
           <button

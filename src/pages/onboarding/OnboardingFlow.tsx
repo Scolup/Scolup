@@ -21,6 +21,8 @@ export function OnboardingFlow({
     isRestored,
     nextStep,
     previousStep,
+    loginService,
+    selectLoginService,
     isSetupStep,
     progress,
     setupStepCount,
@@ -61,6 +63,8 @@ export function OnboardingFlow({
             <OnboardingStepRenderer
               stepIndex={currentStepIndex}
               onNext={nextStep}
+              service={loginService}
+              onSelectService={selectLoginService}
             />
           </m.div>
         </AnimatePresence>

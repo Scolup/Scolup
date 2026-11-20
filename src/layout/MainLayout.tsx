@@ -6,6 +6,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { AppToast } from "@/components/AppToast"
 import { RewardBurst } from "@/components/RewardBurst"
 import { OfflineBanner } from "@/components/OfflineBanner"
+import { isPronote } from "@/services/litenote"
 import { ReauthSheet } from "@/components/ReauthSheet"
 import {
   refreshVisibleResources,
@@ -30,12 +31,14 @@ import { HomeRoute } from "./HomeRoute"
 import {
   Absences,
   Agenda,
+  Carnet,
   Grades,
   Homework,
   Messages,
   pageLoaders,
   PostIts,
   RubiesPage,
+  SchoolMenus,
 } from "./lazyPages"
 import { pathForTab, tabForPath } from "./tabs"
 import { TabBar } from "./TabBar"
@@ -85,6 +88,7 @@ export function MainLayout({
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const unreadMessages = useMessagesBadge()
+  const pronote = isPronote()
   const tabBarHidden = useTabBarShortcut()
   const scrollRef = useScrollMemory(pathname)
   // Entrée de page : on arrive de la droite en avançant, de la gauche en
@@ -196,7 +200,7 @@ export function MainLayout({
         }}
       >
         <OfflineBanner />
-        <ReauthSheet />
+        {!pronote && <ReauthSheet />}
         <RewardBurst tick={rewardTick} />
         <AppToast
           message={questToast}
@@ -232,7 +236,22 @@ export function MainLayout({
                 />
                 <Route path="rubis" element={<RubiesPage />} />
                 <Route path="absences" element={<Absences />} />
-                <Route path="post-its" element={<PostIts />} />
+                <Route
+                  path="carnet"
+                  element={pronote ? <Carnet /> : <Navigate to="/" replace />}
+                />
+                <Route
+                  path="menus"
+                  element={
+                    pronote ? <SchoolMenus /> : <Navigate to="/" replace />
+                  }
+                />
+                <Route
+                  path="post-its"
+                  element={
+                    pronote ? <Navigate to="/carnet" replace /> : <PostIts />
+                  }
+                />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
@@ -240,6 +259,7 @@ export function MainLayout({
         </div>
 
         <TabBar
+          pronote={pronote}
           hidden={tabBarHidden}
           unread={unreadMessages}
           active={tabForPath(pathname)}

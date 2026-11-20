@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { isPronote } from "@/services/litenote"
 import { ld } from "@/services/litedirecte"
 import type { Resource } from "litedirecte"
 
@@ -13,6 +14,11 @@ export function useLiveRefresh(resource: Resource | undefined): number {
   const [version, setVersion] = useState(0)
   useEffect(() => {
     if (!resource) return undefined
+    if (isPronote()) {
+      const refresh = () => setVersion((value) => value + 1)
+      window.addEventListener("scolup:pronote-refresh", refresh)
+      return () => window.removeEventListener("scolup:pronote-refresh", refresh)
+    }
     const stop = ld.cache.watch(resource, () =>
       setVersion((value) => value + 1)
     )

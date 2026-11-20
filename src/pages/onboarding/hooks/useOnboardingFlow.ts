@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react"
-import { pageTransitionVariants, type Direction } from "../pageTransitions"
+import {
+  pageTransitionVariants,
+  type Direction,
+} from "@/lib/onboardingTransitions"
 
 export function useStepDirection(currentStepIndex: number) {
   const previousIndex = useRef(currentStepIndex)
@@ -17,7 +20,7 @@ export function useStepDirection(currentStepIndex: number) {
 export function useOnboardingPrefetch() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void import("../components/LoginForm")
+      void import("../components/ProviderLogin")
       void import("../components/Welcome")
     }, 1000)
     return () => window.clearTimeout(timer)

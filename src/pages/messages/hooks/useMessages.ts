@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { isPronote } from "@/services/litenote"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 
 import { useLiveRefresh } from "@/hooks/useLiveRefresh"
 import { MESSAGE_YEAR } from "../schoolYear"
 import { toLists } from "../mappers"
+import { emptyMessageFolders } from "../folders"
 import {
   extractAttachments,
   messageBody,
@@ -14,13 +16,8 @@ import {
 import { type FolderKey, type Message, type MessageEntry } from "../types"
 
 export function useMessages() {
-  const [folderMessages, setFolderMessages] = useState<
-    Record<FolderKey, Message[]>
-  >({
-    inbox: [],
-    sent: [],
-    archived: [],
-  })
+  const [folderMessages, setFolderMessages] =
+    useState<Record<FolderKey, Message[]>>(emptyMessageFolders)
   const [loading, setLoading] = useState(true)
   const [sessionReady, setSessionReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,20 +28,19 @@ export function useMessages() {
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const restored = await ld.auth.loadSession()
-      if (cancelled) return
-      if (!restored) {
-        setError("Aucune session active. Reconnecte-toi.")
-        setLoading(false)
-        return
-      }
-      setSessionReady(true)
-
       try {
-        const result = await ld.messages.getMessages({ year: MESSAGE_YEAR })
+        const pronote = isPronote()
+        if (!pronote && !(await ld.auth.loadSession()))
+          throw new Error("Aucune session active. Reconnecte-toi.")
+        if (cancelled) return
+        setSessionReady(true)
+        const lists = pronote
+          ? await (await import("../pronoteMessages")).fetchPronoteMessages()
+          : toLists(
+              (await ld.messages.getMessages({ year: MESSAGE_YEAR })).messages
+            )
         if (cancelled) return
         loaded.current = true
-        const lists = toLists(result.messages)
         setFolderMessages(lists)
         setError(null)
         setLoading(false)
@@ -80,6 +76,7 @@ export function useRestoreSelectedMessage(opts: {
   messageParam: string | null
   sessionReady: boolean
   folderMessages: Record<FolderKey, Message[]>
+  folder: FolderKey
 }) {
   const [selected, setSelected] = useState<Message | null>(null)
   const selectedIdRef = useRef<number | null>(null)
@@ -88,7 +85,7 @@ export function useRestoreSelectedMessage(opts: {
   const [contentRefreshing, setContentRefreshing] = useState(false)
   const [contentError, setContentError] = useState<string | null>(null)
 
-  const { messageParam, sessionReady, folderMessages } = opts
+  const { messageParam, sessionReady, folderMessages, folder } = opts
 
   const openMessage = useCallback(async (targetId: number, base?: Message) => {
     if (selectedIdRef.current === targetId) return
@@ -101,6 +98,27 @@ export function useRestoreSelectedMessage(opts: {
 
     setContentLoading(!hadContent)
     setContentRefreshing(hadContent)
+
+    if (isPronote()) {
+      try {
+        if (!base) throw new Error("Message PRONOTE indisponible.")
+        const updated = await (
+          await import("../pronoteMessages")
+        ).openPronoteMessage(base)
+        if (selectedIdRef.current === targetId) setSelected(updated)
+      } catch (err) {
+        if (selectedIdRef.current === targetId)
+          setContentError(
+            errorMessage(err, "Impossible de charger ce message.")
+          )
+      } finally {
+        if (selectedIdRef.current === targetId) {
+          setContentLoading(false)
+          setContentRefreshing(false)
+        }
+      }
+      return
+    }
 
     ld.messages
       .getMessage(targetId, {
@@ -192,16 +210,19 @@ export function useRestoreSelectedMessage(opts: {
     if (targetId === suppressedIdRef.current) return
     if (selectedIdRef.current === targetId) return
 
-    const allMessages: Message[] = Object.values(folderMessages).flat()
-    const found = allMessages.find((m) => m.id === targetId)
+    const found =
+      folderMessages[folder].find((m) => m.id === targetId) ??
+      Object.values(folderMessages)
+        .flat()
+        .find((m) => m.id === targetId)
     if (found) {
       void openMessage(found.id, found)
       return
     }
 
-    if (!sessionReady) return
+    if (!sessionReady || isPronote()) return
     void openMessage(targetId)
-  }, [messageParam, sessionReady, folderMessages, openMessage])
+  }, [messageParam, sessionReady, folderMessages, folder, openMessage])
 
   const displaySelected =
     selected ??

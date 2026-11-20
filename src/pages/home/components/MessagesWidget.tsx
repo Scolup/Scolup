@@ -13,11 +13,13 @@ import type { Message } from "@/pages/messages/types"
 import { WidgetSkeleton } from "./WidgetSkeleton"
 import { WidgetEmpty, WidgetError } from "./WidgetState"
 import { useSplashTask } from "@/services/splash"
+import { isPronote } from "@/services/litenote"
 
 const NO_MESSAGES: Message[] = []
 
 export function MessagesWidget() {
   const navigate = useNavigate()
+  const pronote = isPronote()
   const [reloadKey, setReloadKey] = useState(0)
   const liveMessages = useLiveRefresh("messages")
   const { data, error, loading } = useAsync(fetchInbox, [
@@ -55,13 +57,17 @@ export function MessagesWidget() {
       <WidgetEmpty
         icon={MailOpen01Icon}
         title="Tout est lu"
-        hint="Tu n'as aucun message non lu."
+        hint={
+          pronote
+            ? "Tu n'as aucune discussion non lue."
+            : "Tu n'as aucun message non lu."
+        }
       />
     )
 
   return (
     <section
-      aria-label="Messages non lus"
+      aria-label={pronote ? "Discussions non lues" : "Messages non lus"}
       className="flex content-in flex-col gap-1.5 rounded-3xl border border-border/70 bg-card p-4"
     >
       <button
@@ -73,7 +79,7 @@ export function MessagesWidget() {
         className="flex min-h-11 press-lg items-center justify-between gap-2 rounded-2xl px-3.5 outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         <span className="truncate text-sm font-semibold text-card-foreground">
-          Messages
+          {pronote ? "Discussions" : "Messages"}
         </span>
         <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
           {`${unread.length} non lu${unread.length > 1 ? "s" : ""}`}

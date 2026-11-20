@@ -1,5 +1,6 @@
 import path from "path"
 import { execSync } from "node:child_process"
+import { realpathSync } from "node:fs"
 import { createRequire } from "node:module"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
@@ -9,13 +10,16 @@ import { VitePWA } from "vite-plugin-pwa"
 const { version } = createRequire(import.meta.url)("./package.json") as {
   version: string
 }
+// On Windows, a terminal can open the project with different folder casing.
+// Use the same on-disk path for Vite's root and source aliases.
+const projectRoot = realpathSync.native(import.meta.dirname)
 
 // The build id is the commit Scolup was built from, so a released CalVer version
 // can still be told apart from the next rebuild of it.
 function commitHash(): string {
   try {
     return execSync("git rev-parse --short HEAD", {
-      cwd: import.meta.dirname,
+      cwd: projectRoot,
       stdio: ["ignore", "pipe", "ignore"],
     })
       .toString()
@@ -27,6 +31,7 @@ function commitHash(): string {
 }
 
 export default defineConfig({
+  root: projectRoot,
   plugins: [
     react(),
     tailwindcss(),
@@ -53,8 +58,11 @@ export default defineConfig({
     __APP_BUILD__: JSON.stringify(commitHash()),
   },
   resolve: {
+    dedupe: ["react", "react-dom"],
     alias: {
-      "@": path.resolve(import.meta.dirname, "./src"),
+      "@": path.resolve(projectRoot, "src"),
+      // Litenote's standalone build still imports Pawnote 1.6.2.
+      pawnote: "@blockshub/pawnote-lts",
     },
   },
   server: {

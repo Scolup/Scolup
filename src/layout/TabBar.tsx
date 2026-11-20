@@ -28,11 +28,13 @@ function unreadLabel(count: number): string {
 
 export function TabBar({
   hidden,
+  pronote,
   unread,
   active,
   onRetap,
 }: {
   hidden: boolean
+  pronote: boolean
   unread: number | null
   active: string
   onRetap: () => void
@@ -69,7 +71,7 @@ export function TabBar({
               {count > 0 && <UnreadBadge key={count} count={count} />}
             </BottomNavigationItemIcon>
             <BottomNavigationItemLabel>
-              {tab.label}
+              {pronote && isMessages ? "Discussions" : tab.label}
               {count > 0 && (
                 <span className="sr-only">{unreadLabel(count)}</span>
               )}

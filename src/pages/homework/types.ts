@@ -44,6 +44,7 @@ export interface HomeworkDocument {
   name: string
   type: string
   size?: number
+  url?: string
 }
 
 export interface HomeworkComment {
@@ -56,6 +57,7 @@ export interface HomeworkComment {
 export interface Assignment {
   key: string
   id: number
+  pronoteId?: string
   due: Date
   dueKey: string
   subject: string

@@ -6,6 +6,7 @@ import {
   SproutIcon,
 } from "@hugeicons/core-free-icons"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { isPronote } from "@/services/litenote"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -158,9 +159,9 @@ export function AccountMenu({
           <DialogHeader>
             <DialogTitle>Se déconnecter ?</DialogTitle>
             <DialogDescription>
-              Tu seras déconnecté de ton compte ÉcoleDirecte et tes réglages
-              enregistrés sur cet appareil seront effacés. Tu devras ressaisir
-              tes identifiants pour utiliser Scolup.
+              {isPronote()
+                ? "Ta session PRONOTE sera fermée. Tu retrouveras tes rubis, tes quêtes et tes réglages en reconnectant le même compte sur cet appareil."
+                : "Tu seras déconnecté de ton compte ÉcoleDirecte et tes réglages enregistrés sur cet appareil seront effacés. Tu devras ressaisir tes identifiants pour utiliser Scolup."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

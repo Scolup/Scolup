@@ -1,3 +1,5 @@
+import { isPronote } from "@/services/litenote"
+import { fetchPronoteAttendance } from "./pronoteAttendance"
 import { ld } from "@/services/litedirecte"
 import { isNoAttendanceData, parseAttendance } from "./mappers"
 import type { AttendancePayload } from "./types"
@@ -9,6 +11,7 @@ export const EMPTY_ATTENDANCE: AttendancePayload = {
 }
 
 export async function fetchAttendance(): Promise<AttendancePayload> {
+  if (isPronote()) return fetchPronoteAttendance()
   if (!(await ld.auth.loadSession())) {
     throw new Error("Aucune session active. Reconnecte-toi.")
   }

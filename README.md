@@ -13,6 +13,10 @@
 
 ## 🚀 Features
 
+Scolup uses [Litedirecte](https://github.com/Scolup/Litedirecte) for ÉcoleDirecte and the separate Litenote SDK for hosted PRONOTE student accounts. Litenote sends requests through the existing Procsy Worker.
+
+For local PRONOTE development, place the Litenote repository next to Scolup, install its dependencies with `bun install`, and build it with `bun run build`. Then run `bun install` in Scolup. On Windows, use Bun 1.4.4 or later for the sibling `file:../Litenote` dependency. Earlier versions can fail with `EPERM`; run `bun upgrade` from your terminal before installing.
+
 | Feature | EcoleDirecte | Scolup |
 | --- | :---: | :---: |
 | Fast | ❌ | ✅ |

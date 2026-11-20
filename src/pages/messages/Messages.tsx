@@ -1,6 +1,7 @@
 import { AnimatePresence, m } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PencilEdit01Icon } from "@hugeicons/core-free-icons"
+import { isPronote, pronotePortalLink } from "@/services/litenote"
 import { Button } from "@/components/ui/button"
 import { useMessagesPage } from "./hooks/useMessagesPage"
 import { useCompose } from "./hooks/useCompose"
@@ -11,9 +12,13 @@ import { ComposeDrawer } from "./components/ComposeDrawer"
 import { AppToast } from "@/components/AppToast"
 
 export function Messages() {
+  const pronote = isPronote()
+  const portal = pronotePortalLink()
   const page = useMessagesPage()
   const compose = useCompose(page.retry)
-  const contactsState = useContacts(compose.open || !!page.selected)
+  const contactsState = useContacts(
+    !pronote && (compose.open || !!page.selected)
+  )
   const actionError = compose.error ?? page.actionError
   const dismissActionError = () => {
     compose.clearError()
@@ -24,6 +29,7 @@ export function Messages() {
     <>
       <AppToast message={actionError} onClose={dismissActionError} />
       <MessageList
+        pronote={pronote}
         folder={page.folder}
         onFolderChange={page.setFolder}
         input={page.query}
@@ -60,8 +66,12 @@ export function Messages() {
             }}
           >
             <Button
-              onClick={compose.openNew}
-              aria-label="Nouveau message"
+              onClick={() => {
+                if (pronote && portal)
+                  window.open(portal, "_blank", "noopener,noreferrer")
+                else if (!pronote) compose.openNew()
+              }}
+              aria-label={pronote ? "Écrire sur PRONOTE" : "Nouveau message"}
               className="size-14 rounded-full shadow-lg"
               size="icon"
             >
@@ -78,10 +88,12 @@ export function Messages() {
         onRetry={page.retrySelected}
         onClose={page.closeMessage}
         onMarkUnread={
-          page.selected ? () => page.markUnread(page.selected!) : undefined
+          !pronote && page.selected
+            ? () => page.markUnread(page.selected!)
+            : undefined
         }
         onReply={
-          page.selected
+          !pronote && page.selected
             ? () => compose.openReply(page.selected!, contactsState.contacts)
             : undefined
         }

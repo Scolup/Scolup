@@ -1,5 +1,10 @@
 import { useCallback, useState } from "react"
 import { useLocation, useNavigate } from "react-router"
+import {
+  isPronote,
+  loadPronoteSession,
+  logoutPronote,
+} from "@/services/litenote"
 import { ld } from "@/services/litedirecte"
 import { useAsync } from "@/hooks/useAsync"
 import { accountDisplayName } from "@/services/account"
@@ -17,7 +22,10 @@ export function useHomePage() {
   const [aboutOpen, setAboutOpen] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
-  const { loading } = useAsync(() => ld.auth.loadSession(), [pathname])
+  const { loading } = useAsync(
+    () => (isPronote() ? loadPronoteSession() : ld.auth.loadSession()),
+    [pathname]
+  )
 
   // The account is already in memory, so reading it synchronously keeps the
   // name from flashing to "?" on every pathname-driven refetch.
@@ -46,7 +54,8 @@ export function useHomePage() {
     setLoggingOut(true)
     setActionError(null)
     try {
-      await ld.auth.logout()
+      if (isPronote()) await logoutPronote()
+      else await ld.auth.logout()
       await clearAllData()
       await resetOnboarding()
       setConfirmOpen(false)

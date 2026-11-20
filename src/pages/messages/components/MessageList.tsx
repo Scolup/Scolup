@@ -43,6 +43,7 @@ function MessageListSkeleton({ rows = 8 }: { rows?: number }) {
 }
 
 interface MessageListProps {
+  pronote: boolean
   folder: FolderKey
   onFolderChange: (value: FolderKey) => void
   input: string
@@ -66,6 +67,7 @@ interface MessageListProps {
 }
 
 export function MessageList({
+  pronote,
   folder,
   onFolderChange,
   input,
@@ -100,6 +102,7 @@ export function MessageList({
       className="relative isolate flex min-h-[50dvh] w-full flex-col gap-0"
     >
       <FolderSearchBar
+        pronote={pronote}
         folder={folder}
         onFolderChange={onFolderChange}
         input={input}

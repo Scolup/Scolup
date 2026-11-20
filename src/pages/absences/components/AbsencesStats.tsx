@@ -1,30 +1,6 @@
-import { cn } from "@/lib/utils"
+import { StatCard } from "@/components/StatCard"
 import type { AttendanceStats } from "../types"
 import { formatMinutes } from "../stats"
-
-function StatCard({
-  value,
-  label,
-  accent,
-}: {
-  value: string
-  label: string
-  accent?: boolean
-}) {
-  return (
-    <div className="flex flex-col items-center gap-0.5 rounded-2xl border border-border/70 bg-card px-2 py-3 text-center">
-      <span
-        className={cn(
-          "text-xl font-bold tabular-nums",
-          accent ? "text-destructive" : "text-card-foreground"
-        )}
-      >
-        {value}
-      </span>
-      <span className="text-xs text-muted-foreground">{label}</span>
-    </div>
-  )
-}
 
 export function AbsencesStats({ stats }: { stats: AttendanceStats }) {
   return (

@@ -1,10 +1,11 @@
 import { lazy, Suspense } from "react"
 import { ThemeChoose } from "./ThemeChoose"
 import { Spinner } from "@/components/ui/spinner"
+import type { LoginService } from "../hooks/useOnboardingNavigation"
 
 const LoginForm = lazy(() =>
-  import("./LoginForm").then((m) => ({
-    default: m.LoginForm,
+  import("./ProviderLogin").then((m) => ({
+    default: m.ProviderLogin,
   }))
 )
 const Welcome = lazy(() =>
@@ -24,11 +25,15 @@ function StepFallback() {
 interface StepRendererProps {
   stepIndex: number
   onNext: () => void
+  service: LoginService | null
+  onSelectService: (service: LoginService | null) => void
 }
 
 export function OnboardingStepRenderer({
   stepIndex,
   onNext,
+  service,
+  onSelectService,
 }: StepRendererProps) {
   switch (stepIndex) {
     case 0:
@@ -36,7 +41,11 @@ export function OnboardingStepRenderer({
     case 1:
       return (
         <Suspense fallback={<StepFallback />}>
-          <LoginForm onNext={onNext} />
+          <LoginForm
+            onNext={onNext}
+            service={service}
+            onSelectService={onSelectService}
+          />
         </Suspense>
       )
     case 2:

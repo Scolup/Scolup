@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react"
+import { isPronote } from "@/services/litenote"
 import { ld } from "@/services/litedirecte"
 import { requestSync } from "@/services/cloudSync"
 
@@ -11,7 +12,7 @@ function shouldRefresh(): boolean {
   const now = Date.now()
   if (now - lastAttempt < REFRESH_MIN_MS) return false
   try {
-    const lastSync = ld.sync.getState().lastSync
+    const lastSync = isPronote() ? undefined : ld.sync.getState().lastSync
     if (lastSync && now - lastSync < REFRESH_MIN_MS) return false
   } catch {
     // État de synchronisation illisible : on rafraîchit quand même.
@@ -26,6 +27,10 @@ function shouldRefresh(): boolean {
 // `useLiveRefresh`.
 export function refreshVisibleResources(): void {
   if (!shouldRefresh()) return
+  if (isPronote()) {
+    window.dispatchEvent(new Event("scolup:pronote-refresh"))
+    return
+  }
   void ld.getAll().catch(() => {})
   requestSync()
 }

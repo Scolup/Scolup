@@ -9,6 +9,7 @@
 // écritures simultanées se rattrapent d'elles-mêmes au passage suivant.
 
 import { useSyncExternalStore } from "react"
+import { isPronote } from "./litenote"
 import { EdNetworkError } from "litedirecte"
 import { reloadRubies } from "@/features/shop/rubies"
 import { refreshQuests } from "@/features/quests/service"
@@ -146,6 +147,7 @@ export function useSyncStatus(): SyncStatus {
 // Repart pour un premier passage : l'app se remasque jusqu'au prochain
 // résultat (lancement, retour d'onboarding, reconnexion).
 export function beginStartupSync(): void {
+  if (isPronote()) return
   clearStartupRetry()
   updateStatus({ startup: "pending", offline: browserOffline() })
 }
@@ -180,7 +182,7 @@ function isOfflineFailure(error: unknown): boolean {
 
 // ---- Un passage ---------------------------------------------------------------
 
-function applyToUi(applied: Applied, state: SyncState): void {
+export function applySyncStateToUi(applied: Applied, state: SyncState): void {
   if (applied.wallet) void reloadRubies()
   if (applied.quests) refreshQuests()
   if (applied.subjects) void reloadSubjects()
@@ -244,7 +246,7 @@ async function runOnce(): Promise<void> {
 
   // 2. Fusionner dans la base locale (une seule transaction).
   const { state, applied } = await mergeIntoLocal(peers)
-  applyToUi(applied, state)
+  applySyncStateToUi(applied, state)
 
   // 3. Réécrire NOTRE fichier si l'état a changé depuis le dernier envoi.
   const own = groups.get(me) ?? []
@@ -282,6 +284,7 @@ let running = false
 let again = false
 
 export async function syncNow(): Promise<void> {
+  if (isPronote()) return
   if (running) {
     again = true
     return
@@ -328,6 +331,15 @@ export async function syncNow(): Promise<void> {
 // Démarre la synchronisation : un passage au lancement, un après chaque
 // écriture locale (anti-rebond), un au retour du réseau.
 export function startCloudSync(): () => void {
+  if (isPronote()) {
+    updateStatus({
+      startup: "done",
+      offline: false,
+      state: "idle",
+      error: undefined,
+    })
+    return () => {}
+  }
   let timer: ReturnType<typeof setTimeout> | undefined
   const schedule = (delay: number) => {
     clearTimeout(timer)

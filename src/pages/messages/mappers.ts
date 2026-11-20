@@ -1,5 +1,6 @@
 import { initialsFromName } from "@/lib/utils"
 import { decodeHtmlEntities } from "@/lib/html"
+import { emptyMessageFolders } from "./folders"
 import type {
   FolderKey,
   Attachment,
@@ -15,6 +16,7 @@ export function toLists(messages: {
   archived?: MessageEntry[]
 }): Record<FolderKey, Message[]> {
   return {
+    ...emptyMessageFolders(),
     inbox: (messages?.received ?? []).map(toMessage),
     sent: (messages?.sent ?? []).map((m) => ({ ...toMessage(m), sent: true })),
     archived: (messages?.archived ?? []).map(toMessage),

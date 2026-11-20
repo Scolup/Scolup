@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
+import { isPronote } from "@/services/litenote"
+import { fetchPronoteTimetable } from "../fetchPronoteTimetable"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
 
@@ -18,15 +20,18 @@ async function fetchWeek(startKey: string, endKey: string): Promise<Course[]> {
   const cached = inflight.get(startKey)
   if (cached) return cached
   const promise = (async () => {
-    const restored = await ld.auth.loadSession()
-    if (!restored) throw new Error("Aucune session active. Reconnecte-toi.")
-    const payload = await ld.timetable.getTimetable({
-      startDate: startKey,
-      endDate: endKey,
-    })
-    // No `force`: on a live refresh the poll has just rewritten this entry, so
-    // the cached read is free and still current.
-    const list = normalizeTimetable(payload)
+    let list: Course[]
+    if (isPronote()) list = await fetchPronoteTimetable(startKey, endKey)
+    else {
+      if (!(await ld.auth.loadSession()))
+        throw new Error("Aucune session active. Reconnecte-toi.")
+      list = normalizeTimetable(
+        await ld.timetable.getTimetable({
+          startDate: startKey,
+          endDate: endKey,
+        })
+      )
+    }
     void ensureSubjects(
       list.map((course) => ({
         code: course.subjectCode,

@@ -43,6 +43,7 @@ export interface Course {
   modified: boolean
   hasHomework: boolean
   hasLessonContent: boolean
+  pronoteResourceId?: string
 }
 
 export type AgendaView = "day" | "week"

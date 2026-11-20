@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import { m } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PaintBoardIcon } from "@hugeicons/core-free-icons"
@@ -12,6 +11,7 @@ import {
   type ThemeColor,
 } from "@/components/AccentColorPicker"
 import { staggerContainer, fadeUp } from "@/lib/motion"
+import { OnboardingConfirmButton } from "./OnboardingConfirmButton"
 
 interface ThemeChooseProps extends React.ComponentProps<"div"> {
   onNext?: () => void
@@ -69,43 +69,12 @@ export function ThemeChoose({ className, onNext }: ThemeChooseProps) {
         />
       </m.div>
 
-      <m.div
-        variants={fadeUp()}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        className="flex flex-col gap-3"
-      >
-        <Button
-          type="button"
-          disabled={!selected || confirmed}
-          onClick={handleConfirm}
-          className="relative overflow-hidden disabled:cursor-not-allowed"
-        >
-          {confirmed ? (
-            <m.span
-              className="flex items-center gap-2"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={3}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="size-4"
-              >
-                <path d="M5 13l4 4L19 7" />
-              </svg>
-              Celle-là !
-            </m.span>
-          ) : (
-            <span className="flex items-center gap-2">Celle-là !</span>
-          )}
-        </Button>
-      </m.div>
+      <OnboardingConfirmButton
+        label="Celle-là !"
+        confirmed={confirmed}
+        disabled={!selected}
+        onClick={handleConfirm}
+      />
     </m.div>
   )
 }
