@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { useRubies } from "@/features/shop/useRubies"
 import { useShop } from "@/features/shop/useShop"
-import { useTheme } from "@/components/ThemeProvider"
+import { useTheme } from "@/components/themeContext"
 import { celebrate } from "@/lib/celebrate"
 import { triggerHapticLight } from "@/services/haptics"
 import { buyItem } from "@/features/shop/shop"

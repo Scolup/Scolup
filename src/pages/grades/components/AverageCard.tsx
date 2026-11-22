@@ -10,7 +10,7 @@ import { countUpValue } from "@/lib/countUp"
 import { formatAverage, formatAverageValue } from "@/features/grades/averages"
 import { type AverageScale, type TrendPoint } from "@/features/grades/types"
 import { useAverageSettings } from "@/features/grades/averageSettings"
-import { useTheme } from "@/components/ThemeProvider"
+import { useTheme } from "@/components/themeContext"
 import { AnimatedNumber } from "@/components/AnimatedNumber"
 
 const GradesTrendChart = lazy(() =>

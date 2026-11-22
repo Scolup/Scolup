@@ -1,5 +1,6 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { m } from "motion/react"
+import type { CSSProperties } from "react"
 import {
   BottomNavigationItem,
   BottomNavigationItemIcon,
@@ -7,6 +8,7 @@ import {
   BottomNavigationList,
 } from "@/components/ui/shark/bottom-navigation"
 import { TABS } from "./tabs"
+import "./tabBar.css"
 
 const ICON_SPRING = { type: "spring", stiffness: 500, damping: 18 } as const
 
@@ -31,16 +33,30 @@ export function TabBar({
   unread,
   active,
   onRetap,
+  glass,
 }: {
   hidden: boolean
   unread: number | null
   active: string
   onRetap: () => void
+  glass: boolean
 }) {
   if (hidden) return null
 
   return (
     <BottomNavigationList>
+      {glass && (
+        <span
+          aria-hidden="true"
+          className="tabbar-indicator"
+          style={
+            {
+              "--tab-count": TABS.length,
+              "--active-tab": TABS.findIndex((tab) => tab.value === active),
+            } as CSSProperties
+          }
+        />
+      )}
       {TABS.map((tab) => {
         const isActive = tab.value === active
         // Seul l'onglet Messages affiche un badge de messages non lus.

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import type { CSSProperties } from "react"
-import { useTheme } from "@/components/ThemeProvider"
+import { useTheme } from "./themeContext"
 import { DECO_THEMES, isDecoThemeId } from "@/features/shop/decoThemes"
 import { cn } from "@/lib/utils"
 

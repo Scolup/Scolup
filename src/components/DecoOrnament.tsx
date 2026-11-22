@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { cn } from "@/lib/utils"
-import { useTheme } from "@/components/ThemeProvider"
+import { useTheme } from "./themeContext"
 import { DECO_THEMES, isDecoThemeId } from "@/features/shop/decoThemes"
 
 // The active deco theme (shop "thèmes"). A theme is a whole-app identity, not

@@ -52,6 +52,11 @@ const PAGE_SHIFT_PX = 12
 
 const SETTINGS_PATH = /^\/settings(?:\/([^/]+))?\/?$/
 
+const iphoneWebApp =
+  /\biPhone\b/.test(navigator.userAgent) &&
+  ((navigator as Navigator & { standalone?: boolean }).standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches)
+
 // Écran affiché pour un chemin : l'accueil pour « / » et les réglages, sinon
 // le premier segment (un onglet, ou un écran secondaire).
 function pageKeyForPath(pathname: string): string {
@@ -192,8 +197,11 @@ export function MainLayout({
 
   return (
     <div
-      className={cn("mx-auto flex w-full flex-col", className)}
-      style={{ "--tabbar-height": "3.5rem" } as CSSProperties}
+      className={cn(
+        "mx-auto flex w-full flex-col [--tabbar-height:3.5rem]",
+        iphoneWebApp && "iphone-web-app",
+        className
+      )}
       {...props}
     >
       <BottomNavigation
@@ -254,6 +262,7 @@ export function MainLayout({
           unread={unreadMessages}
           active={tabForPath(pathname)}
           onRetap={handleRetap}
+          glass={iphoneWebApp}
         />
       </BottomNavigation>
     </div>

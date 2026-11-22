@@ -1,11 +1,10 @@
 import * as React from "react"
-import { use } from "react"
 import { getSetting, getSettingSync, setSetting } from "@/services/storage"
 import { SETTINGS_SYNCED_EVENT } from "@/features/sync/keys"
 import { SHOP_ITEMS, type AccentShopItem } from "@/features/shop/shopRules"
 import { DECO_THEMES, isDecoThemeId } from "@/features/shop/decoThemes"
+import { ThemeContext, type Theme } from "./themeContext"
 
-type Theme = "dark" | "light" | "system"
 type ResolvedTheme = "dark" | "light"
 
 type ThemeProviderProps = {
@@ -13,15 +12,6 @@ type ThemeProviderProps = {
   defaultTheme?: Theme
   storageKey?: string
   disableTransitionOnChange?: boolean
-}
-
-type ThemeProviderState = {
-  theme: Theme
-  setTheme: (theme: Theme) => void
-  accentColor: string
-  setAccentColor: (color: string) => void
-  decoTheme: string
-  setDecoTheme: (value: string) => void
 }
 
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
@@ -49,10 +39,6 @@ const ACCENT_COLORS: Record<
     ])
   ),
 }
-
-const ThemeProviderContext = React.createContext<
-  ThemeProviderState | undefined
->(undefined)
 
 function isTheme(value: string | null): value is Theme {
   if (value === null) {
@@ -374,18 +360,8 @@ export function ThemeProvider({
   )
 
   return (
-    <ThemeProviderContext.Provider {...props} value={value}>
+    <ThemeContext.Provider {...props} value={value}>
       {children}
-    </ThemeProviderContext.Provider>
+    </ThemeContext.Provider>
   )
-}
-
-export const useTheme = () => {
-  const context = use(ThemeProviderContext)
-
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider")
-  }
-
-  return context
 }

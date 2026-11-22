@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { PaintBoardIcon } from "@hugeicons/core-free-icons"
 import { useState } from "react"
 import { setSetting } from "@/services/storage"
-import { useTheme } from "@/components/ThemeProvider"
+import { useTheme } from "@/components/themeContext"
 import { useShop } from "@/features/shop/useShop"
 import {
   AccentColorPicker,

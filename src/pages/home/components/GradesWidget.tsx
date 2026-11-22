@@ -37,7 +37,7 @@ import {
 import { fetchGrades } from "@/features/grades/fetchGrades"
 import { gradeLabel, recentGrades } from "@/features/grades/grade"
 import { type Grade } from "@/features/grades/types"
-import { useTheme } from "@/components/ThemeProvider"
+import { useTheme } from "@/components/themeContext"
 
 const GradesTrendChart = lazy(() =>
   import("@/pages/grades/components/GradesTrendChart").then((m) => ({

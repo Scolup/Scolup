@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Switch as SwitchPrimitive } from "@base-ui/react/switch"
-import { useTheme } from "@/components/ThemeProvider"
+import { useTheme } from "@/components/themeContext"
 import { getSetting, setSetting } from "@/services/storage"
 import { track } from "@/features/quests/service"
 import { triggerHapticLight } from "@/services/haptics"

@@ -1,5 +1,5 @@
 import { AccentColorPicker } from "@/components/AccentColorPicker"
-import { useTheme } from "@/components/ThemeProvider"
+import { useTheme } from "@/components/themeContext"
 import { isDecoThemeId } from "@/features/shop/decoThemes"
 import { track } from "@/features/quests/service"
 import { useShop } from "@/features/shop/useShop"
