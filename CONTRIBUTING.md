@@ -32,7 +32,8 @@ You can then start your live preview with `bun dev`. It will be available at [lo
 * At every production commit (this means before a PR is merged or in a commit directly pushed to main), **run `bun precommit`**. This will run checks and format with oxfmt.
 * When making a commit, follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/). When making a new branch, follow [conventional branch](https://conventionalbranch.org).
 * If you're working on a big or breaking change, discuss it in an issue with the admins before opening a PR, and link that issue in your PR.
-* To work on Scolup, _fork the project_ and target your PR to either `main` or another official branch.
+* To work on Scolup if you have push permissions, **ONLY PUSH DIRECTLY TO MAIN FOR SMALL CHANGES**. Bigger changes need a PR and proper planning.
+* To work on Scolup if you don't have push permissions, _fork the project_ and target your PR to either `main` or another official branch.
 * Versioning is managed only by the project admins. Please do not change it directly.
 
 <div align="center">
@@ -52,6 +53,8 @@ We follow Calendar Versioning (CalVer). A new version will be released at least 
 Working with AI is something we **totally accept**, but to these conditions :
 * You are honest and *do not* lie when we ask if your work has been partially or fully vibe-coded
 * You are **capable of explaining your changes**
+* You stay responsible of the code you published
+* Your code is qualitative and respects every rule
 
 We already wrote resources specifically for agents so they understand the codebase and know how to work with it.
 
