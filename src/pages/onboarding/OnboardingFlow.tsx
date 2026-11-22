@@ -31,7 +31,7 @@ export function OnboardingFlow({
   useOnboardingPrefetch()
 
   if (needsRedirect && isRestored) {
-    return <Navigate to="/onboarding/theme" replace />
+    return <Navigate to="/onboarding/who" replace />
   }
 
   if (needsRedirect) {

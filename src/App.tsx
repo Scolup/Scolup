@@ -86,7 +86,7 @@ export default function App() {
               hasCompletedOnboarding ? (
                 <MainLayout />
               ) : (
-                <Navigate to="/onboarding/theme" replace />
+                <Navigate to="/onboarding/who" replace />
               )
             }
           />

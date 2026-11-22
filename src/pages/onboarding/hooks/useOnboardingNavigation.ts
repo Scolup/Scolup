@@ -2,11 +2,27 @@ import { useCallback, useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router"
 import { getSetting, setSetting } from "@/services/storage"
 
-const ONBOARDING_STEPS = ["theme", "login", "welcome"] as const
+const ONBOARDING_STEPS = ["who", "login", "sync", "theme", "welcome"] as const
 
 type OnboardingStep = (typeof ONBOARDING_STEPS)[number]
 
-const SETUP_STEP_COUNT = ONBOARDING_STEPS.length - 1
+// "sync" est un écran de transition : il ne compte pas dans la progression.
+const SETUP_STEP_COUNT = 3
+
+async function hasThemeSettings(): Promise<boolean> {
+  // L'écran de transition laisse le temps à la synchronisation de rapatrier
+  // les réglages du compte, y compris depuis un autre appareil.
+  const { syncNow } = await import("@/services/cloudSync")
+  await syncNow()
+  const [accent, deco] = await Promise.all([
+    getSetting("accent-color"),
+    getSetting("deco-theme"),
+  ])
+  return (
+    (typeof accent === "string" && accent.length > 0) ||
+    (typeof deco === "string" && deco.length > 0)
+  )
+}
 
 export function useOnboardingNavigation() {
   const navigate = useNavigate()
@@ -54,7 +70,12 @@ export function useOnboardingNavigation() {
     [navigate]
   )
 
-  const nextStep = useCallback(() => {
+  const nextStep = useCallback(async () => {
+    // Une couleur ou un thème déjà enregistré rend l'étape inutile.
+    if (currentStepIndex === 2 && (await hasThemeSettings())) {
+      goToStep("welcome")
+      return
+    }
     const nextIdx = Math.min(currentStepIndex + 1, ONBOARDING_STEPS.length - 1)
     goToStep(ONBOARDING_STEPS[nextIdx])
   }, [currentStepIndex, goToStep])
@@ -64,9 +85,13 @@ export function useOnboardingNavigation() {
   }, [currentStepIndex, goToStep])
 
   const isSetupStep =
-    currentStepIndex >= 0 && currentStepIndex < SETUP_STEP_COUNT
-  const progress = isSetupStep ? currentStepIndex : 0
-  const isFirstStep = currentStepIndex === 0
+    currentSegment !== "sync" &&
+    currentStepIndex >= 0 &&
+    currentStepIndex < ONBOARDING_STEPS.length - 1
+  const progress =
+    currentStepIndex > 2 ? currentStepIndex - 1 : currentStepIndex
+  // Le sync avance tout seul et la première étape n'a rien avant elle.
+  const isFirstStep = currentStepIndex === 0 || currentStepIndex === 2
 
   return {
     currentSegment,

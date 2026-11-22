@@ -1,5 +1,7 @@
 import { lazy, Suspense } from "react"
+import { SyncStep } from "./SyncStep"
 import { ThemeChoose } from "./ThemeChoose"
+import { WhoAreYou } from "./WhoAreYou"
 import { Spinner } from "@/components/ui/spinner"
 
 const LoginForm = lazy(() =>
@@ -32,7 +34,7 @@ export function OnboardingStepRenderer({
 }: StepRendererProps) {
   switch (stepIndex) {
     case 0:
-      return <ThemeChoose onNext={onNext} />
+      return <WhoAreYou onNext={onNext} />
     case 1:
       return (
         <Suspense fallback={<StepFallback />}>
@@ -40,6 +42,10 @@ export function OnboardingStepRenderer({
         </Suspense>
       )
     case 2:
+      return <SyncStep onNext={onNext} />
+    case 3:
+      return <ThemeChoose onNext={onNext} />
+    case 4:
       return (
         <Suspense fallback={<StepFallback />}>
           <Welcome onNext={onNext} />

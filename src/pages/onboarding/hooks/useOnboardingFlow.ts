@@ -17,7 +17,6 @@ export function useStepDirection(currentStepIndex: number) {
 export function useOnboardingPrefetch() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void import("../components/LoginForm")
       void import("../components/Welcome")
     }, 1000)
     return () => window.clearTimeout(timer)

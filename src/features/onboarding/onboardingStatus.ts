@@ -40,7 +40,7 @@ export async function resetOnboarding(): Promise<void> {
   store.set(false)
   await Promise.all([
     setSetting("onboardingCompleted", false),
-    setSetting("onboardingStep", "theme"),
+    setSetting("onboardingStep", "who"),
   ])
 }
 
