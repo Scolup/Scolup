@@ -53,9 +53,13 @@ async function fetchWeek(startKey: string, endKey: string): Promise<Course[]> {
   }
 }
 
-function neighborKeys(startKey: string): Array<{ start: string; end: string }> {
+function neighborKeys(
+  startKey: string,
+  endKey: string
+): Array<{ start: string; end: string }> {
   const monday = parseDateKey(startKey)
-  if (!monday) return []
+  if (monday?.getDay() !== 1 || toDayKey(addDays(monday, 6)) !== endKey)
+    return []
   const prevMonday = addDays(monday, -7)
   const nextMonday = addDays(monday, 7)
   return [
@@ -116,7 +120,7 @@ export function useAgenda(startKey: string, endKey: string) {
 
     const prefetchTimer = setTimeout(() => {
       if (cancelled) return
-      for (const n of neighborKeys(startKey)) {
+      for (const n of neighborKeys(startKey, endKey)) {
         if (fetchedWeeks.has(n.start) || inflight.has(n.start)) continue
         fetchWeek(n.start, n.end).catch(() => {})
       }

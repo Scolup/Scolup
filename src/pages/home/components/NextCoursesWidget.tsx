@@ -1,10 +1,9 @@
-import { useMemo } from "react"
 import { useNavigate } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowRight01Icon, Calendar03Icon } from "@hugeicons/core-free-icons"
 import { resolveSubjectName } from "@/features/subjects/resolve"
 import { courseRelativeLabel, dayLabel } from "@/pages/agenda/labels"
-import { formatTime, toDayKey, weekOf } from "@/lib/dates"
+import { addDays, formatTime, toDayKey, weekOf } from "@/lib/dates"
 import { triggerHapticLight } from "@/services/haptics"
 import { nextDayWithCourses } from "../nextDay"
 import { useAgenda } from "@/pages/agenda/hooks/useAgenda"
@@ -13,18 +12,25 @@ import { WidgetSkeleton } from "./WidgetSkeleton"
 import { WidgetEmpty, WidgetError } from "./WidgetState"
 import { useSplashTask } from "@/services/splash"
 
+const WEEKEND_LOOKAHEAD_DAYS = 28
+
 export function NextCoursesWidget() {
   const navigate = useNavigate()
-  const week = useMemo(() => weekOf(new Date()), [])
-  const startKey = toDayKey(week[0])
-  const endKey = toDayKey(week[6])
+  const now = new Date()
+  const weekday = now.getDay()
+  const weekend = weekday === 0 || weekday === 6
+  const week = weekOf(now)
+  const startKey = toDayKey(weekend ? now : week[0])
+  const endKey = toDayKey(
+    weekend ? addDays(now, WEEKEND_LOOKAHEAD_DAYS) : week[6]
+  )
   const { courses, loading, error, refresh } = useAgenda(startKey, endKey)
 
   useSplashTask(loading)
   const showSkeleton = useDelayedLoading(loading)
 
-  const day = useMemo(() => nextDayWithCourses(courses), [courses])
-  const firstLabel = day ? courseRelativeLabel(day.list[0]) : null
+  const day = nextDayWithCourses(courses, now)
+  const firstLabel = day ? courseRelativeLabel(day.list[0], now) : null
 
   if (error) return <WidgetError onRetry={refresh} />
   if (loading && courses.length === 0) {

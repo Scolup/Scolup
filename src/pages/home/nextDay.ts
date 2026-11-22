@@ -8,7 +8,7 @@ interface NextDaySlice {
 }
 
 // Le prochain jour avec des cours à venir : aujourd'hui s'il en reste,
-// sinon le jour suivant dans la semaine chargée.
+// sinon le premier jour de cours dans la période chargée.
 export function nextDayWithCourses(
   courses: Course[],
   now = new Date()
@@ -17,6 +17,7 @@ export function nextDayWithCourses(
   const upcoming = courses
     .filter(
       (course) =>
+        course.kind === "course" &&
         !course.cancelled &&
         course.start &&
         course.end &&
