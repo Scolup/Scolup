@@ -54,6 +54,11 @@ export const PROMO_CODES: readonly PromoCode[] = [
     message: "Désolés de t'avoir volé.",
   },
   {
+    code: "SRY-ED",
+    reward: { kind: "rubies", amount: 300 },
+    message: "Désolés de t'avoir forcé à utiliser EcoleDirecte",
+  },
+  {
     code: "EVOMOYENNE-OG",
     reward: {
       kind: "bundle",

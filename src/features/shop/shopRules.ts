@@ -261,10 +261,10 @@ export const SHOP_ITEMS: ShopItem[] = [
 ]
 
 // ---- Flash sale ----------------------------------------------------------
-// Half price on every permanent color, for the whole day of 27 November 2026
-// (local time). Collection items keep their own price.
+// Half price on every permanent color, from 27 November through 1 December
+// 2026 included (local time). Collection items keep their own price.
 const FLASH_SALE_START = new Date("2026-11-27T00:00:00")
-const FLASH_SALE_END = new Date("2026-11-28T00:00:00")
+const FLASH_SALE_END = new Date("2026-12-02T00:00:00")
 
 // The item as the shop must show and sell it right now: during the flash sale
 // a permanent color comes half price, its normal price crossed out.
