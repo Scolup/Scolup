@@ -30,7 +30,7 @@ export function HowItWorks() {
         appel suit donc ce trajet :
       </p>
       <p>
-        Scolup → <strong>Procsy</strong> (proxy.api.scolup.com) →{" "}
+        Scolup → <strong>Procsy</strong> (proxy.scolup.com) →{" "}
         <strong>EcoleDirecte</strong> (api.ecoledirecte.com) → retour par le
         même chemin.
       </p>
