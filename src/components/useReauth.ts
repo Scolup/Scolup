@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import type { LoginChallenge } from "litedirecte"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
+import {
+  clearRenewTokenExpired,
+  renewTokenExpiredStore,
+} from "@/services/apiErrorStore"
 import { resetOnboarding } from "@/features/onboarding/onboardingStatus"
 
 type ReauthPhase = "credentials" | "2fa"
@@ -9,6 +13,8 @@ type ReauthPhase = "credentials" | "2fa"
 export interface ReauthModel {
   /** True while Litedirecte reports that the session needs a fresh login. */
   required: boolean
+  /** The renew-token call answered 526 instead of a usable token. */
+  renewExpired: boolean
   phase: ReauthPhase
   challenge: LoginChallenge | null
   identifier: string
@@ -23,7 +29,7 @@ export interface ReauthModel {
   logout: () => void
 }
 
-function isAuthRequired(): boolean {
+function isSyncAuthRequired(): boolean {
   try {
     return ld.sync.getState().state === "auth-required"
   } catch {
@@ -33,11 +39,13 @@ function isAuthRequired(): boolean {
 
 /**
  * Drives the re-authentication sheet. Litedirecte flags an unrecoverable
- * session through `ld.sync` (`auth-required`); a successful `ld.auth.login`
- * clears it, which closes the sheet on its own.
+ * session through `ld.sync` (`auth-required`); a 526 from the renew-token call
+ * is tracked in `renewTokenExpiredStore`. A successful login clears both.
  */
 export function useReauth(): ReauthModel {
-  const [required, setRequired] = useState(isAuthRequired)
+  const [syncRequired, setSyncRequired] = useState(isSyncAuthRequired)
+  const renewExpired = renewTokenExpiredStore.use()
+  const required = syncRequired || renewExpired
   const [phase, setPhase] = useState<ReauthPhase>("credentials")
   const [challenge, setChallenge] = useState<LoginChallenge | null>(null)
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null)
@@ -52,12 +60,9 @@ export function useReauth(): ReauthModel {
   }, [required])
 
   useEffect(() => {
-    const off = ld.sync.onChange((state) => {
-      if (state.state === "auth-required") {
-        setRequired(true)
-      }
+    return ld.sync.onChange((state) => {
+      setSyncRequired(state.state === "auth-required")
     })
-    return off
   }, [])
 
   // A new expiry means a fresh form: drop any previous challenge or error.
@@ -92,7 +97,8 @@ export function useReauth(): ReauthModel {
       .login(identifier, password, { rememberMe: true })
       .then((result) => {
         if (result.type === "success") {
-          setRequired(false)
+          clearRenewTokenExpired()
+          setSyncRequired(false)
           return
         }
         setChallenge(result)
@@ -110,6 +116,10 @@ export function useReauth(): ReauthModel {
       setError(null)
       challenge
         .answer(index)
+        .then(() => {
+          clearRenewTokenExpired()
+          setSyncRequired(false)
+        })
         .catch((err) => {
           setError(errorMessage(err, "Réponse incorrecte."))
           setSelectedChoice(null)
@@ -127,6 +137,7 @@ export function useReauth(): ReauthModel {
   }, [])
 
   const logout = useCallback(() => {
+    clearRenewTokenExpired()
     void ld.auth.logout().catch(() => {})
     void resetOnboarding().finally(() => {
       window.location.href = "/"
@@ -135,6 +146,7 @@ export function useReauth(): ReauthModel {
 
   return {
     required,
+    renewExpired,
     phase,
     challenge,
     identifier: ld.auth.getAccount()?.identifiant ?? "",

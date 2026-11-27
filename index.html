@@ -40,6 +40,12 @@
       #splash img {
         width: 6rem;
         height: 6rem;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: transform 100ms ease-out;
+      }
+      #splash img:active {
+        transform: scale(0.94);
       }
       .dark #splash {
         /* Same token as --background in dark mode (src/index.css). */

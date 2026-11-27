@@ -225,7 +225,9 @@ export function ReauthSheet() {
             <div className="flex flex-col gap-1">
               <DrawerTitle>Session expirée</DrawerTitle>
               <DrawerDescription>
-                Reconnecte-toi pour continuer à utiliser Scolup.
+                {reauth.renewExpired
+                  ? "Le renouvellement de ta session a échoué. Reconnecte-toi pour continuer."
+                  : "Reconnecte-toi pour continuer à utiliser Scolup."}
               </DrawerDescription>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react"
 import type { LoginChallenge } from "litedirecte"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
+import { clearRenewTokenExpired } from "@/services/apiErrorStore"
 
 type LoginPhase = "credentials" | "2fa"
 
@@ -73,8 +74,10 @@ export function useLogin(onNext?: () => void): LoginModel {
       ld.auth
         .login(identifier, password, { rememberMe: true })
         .then((result) => {
-          if (result.type === "success") onNext?.()
-          else {
+          if (result.type === "success") {
+            clearRenewTokenExpired()
+            onNext?.()
+          } else {
             setChallenge(result)
             setPhase("2fa")
           }
@@ -93,7 +96,10 @@ export function useLogin(onNext?: () => void): LoginModel {
       setError(null)
       challenge
         .answer(index)
-        .then(() => onNext?.())
+        .then(() => {
+          clearRenewTokenExpired()
+          onNext?.()
+        })
         .catch((err) => {
           setError(errorMessage(err, "Réponse incorrecte."))
           setSelectedChoice(null)
