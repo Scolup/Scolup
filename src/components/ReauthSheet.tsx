@@ -1,7 +1,6 @@
 import { m, AnimatePresence } from "motion/react"
 import type { LoginChallenge } from "litedirecte"
 import { cn } from "@/lib/utils"
-import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { fadeUp } from "@/lib/motion"
 import { useReauth, type ReauthModel } from "./useReauth"
 import { Button } from "./ui/button"
@@ -10,13 +9,6 @@ import { Input } from "./ui/input"
 import { Spinner } from "./ui/spinner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Alert01Icon, EyeIcon, EyeOffIcon } from "@hugeicons/core-free-icons"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog"
 import {
   Drawer,
   DrawerContent,
@@ -216,34 +208,17 @@ function LogoutButton({
  */
 export function ReauthSheet() {
   const reauth = useReauth()
-  const isDesktop = useMediaQuery("(min-width: 640px)")
 
   if (!reauth.required) return null
 
-  if (isDesktop) {
-    return (
-      <Dialog open disablePointerDismissal onOpenChange={() => {}}>
-        <DialogContent showCloseButton={false} className="gap-5">
-          <DialogHeader className="items-center gap-3 text-center">
-            <HeaderIcon />
-            <div className="flex flex-col gap-1">
-              <DialogTitle>Session expirée</DialogTitle>
-              <DialogDescription>
-                Reconnecte-toi pour continuer à utiliser Scolup.
-              </DialogDescription>
-            </div>
-          </DialogHeader>
-
-          <ReauthForms {...reauth} />
-          <LogoutButton disabled={reauth.submitting} onClick={reauth.logout} />
-        </DialogContent>
-      </Dialog>
-    )
-  }
-
   return (
-    <Drawer open dismissible={false} onOpenChange={() => {}}>
-      <DrawerContent className="[&>div:first-child]:hidden">
+    <Drawer open dismissible={false} handleOnly onOpenChange={() => {}}>
+      <DrawerContent
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        className="[&>div:first-child]:hidden"
+      >
         <div className="flex flex-col gap-4 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <div className="flex flex-col items-center gap-3 text-center">
             <HeaderIcon />

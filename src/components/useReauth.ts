@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react"
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import type { LoginChallenge } from "litedirecte"
 import { ld } from "@/services/litedirecte"
 import { errorMessage } from "@/services/errors"
@@ -44,22 +44,36 @@ export function useReauth(): ReauthModel {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+  const seenRequired = useRef(false)
+
+  useEffect(() => {
+    if (required) ld.stopPolling()
+    else ld.resumePolling()
+  }, [required])
 
   useEffect(() => {
     const off = ld.sync.onChange((state) => {
-      setRequired(state.state === "auth-required")
+      if (state.state === "auth-required") {
+        setRequired(true)
+      }
     })
     return off
   }, [])
 
   // A new expiry means a fresh form: drop any previous challenge or error.
   useEffect(() => {
-    if (!required) return
+    if (!required) {
+      seenRequired.current = false
+      return
+    }
+    if (seenRequired.current) return
+    seenRequired.current = true
     setPhase("credentials")
     setChallenge(null)
     setSelectedChoice(null)
     setError(null)
     setSubmitting(false)
+    setShowPassword(false)
   }, [required])
 
   const submit = useCallback((event: FormEvent<HTMLFormElement>) => {
@@ -77,7 +91,10 @@ export function useReauth(): ReauthModel {
     ld.auth
       .login(identifier, password, { rememberMe: true })
       .then((result) => {
-        if (result.type === "success") return
+        if (result.type === "success") {
+          setRequired(false)
+          return
+        }
         setChallenge(result)
         setPhase("2fa")
       })

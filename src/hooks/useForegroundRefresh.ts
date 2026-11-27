@@ -26,6 +26,11 @@ function shouldRefresh(): boolean {
 // `useLiveRefresh`.
 export function refreshVisibleResources(): void {
   if (!shouldRefresh()) return
+  try {
+    if (ld.sync.getState().state === "auth-required") return
+  } catch {
+    // ignore
+  }
   void ld.getAll().catch(() => {})
   requestSync()
 }

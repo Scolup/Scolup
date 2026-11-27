@@ -166,16 +166,20 @@ function scheduleStartupRetry(): void {
   }, STARTUP_RETRY_MS)
 }
 
-// Un échec réseau ou une session expirée ne permettent pas de fusionner le
-// cloud : on ouvre l'app en mode dégradé plutôt que de rester bloqué.
-function isOfflineFailure(error: unknown): boolean {
-  if (browserOffline()) return true
-  if (error instanceof EdNetworkError) return true
+function isAuthRequired(): boolean {
   try {
     return ld.sync.getState().state === "auth-required"
   } catch {
     return false
   }
+}
+
+// Un échec réseau ou une session expirée ne permettent pas de fusionner le
+// cloud : on ouvre l'app en mode dégradé plutôt que de rester bloqué.
+function isOfflineFailure(error: unknown): boolean {
+  if (browserOffline()) return true
+  if (error instanceof EdNetworkError) return true
+  return isAuthRequired()
 }
 
 // ---- Un passage ---------------------------------------------------------------
@@ -359,5 +363,6 @@ export function startCloudSync(): () => void {
 
 // Au retour au premier plan (déjà espacé de 60 s par useForegroundRefresh).
 export function requestSync(): void {
+  if (isAuthRequired()) return
   void syncNow()
 }
