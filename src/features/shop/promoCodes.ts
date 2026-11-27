@@ -1,3 +1,4 @@
+import { parsePromoCodes } from "./parsePromoCodes"
 import { hasEarned, type Wallet } from "./wallet"
 
 export type SimpleReward =
@@ -32,72 +33,12 @@ export interface PromoCode extends PromoStep {
   endsAt?: Date
 }
 
-// Codes en clair : ajoute un objet à la liste (le code tel que l'élève le
-// tape — insensible à la casse — et sa récompense). Ils sont lisibles dans le
-// bundle livré, et le portefeuille reste local : un code n'est qu'une surprise,
-// jamais un secret. Récompenses possibles : des rubis, un article offert, un
-// article à prix réduit (retenu dans le portefeuille jusqu'à l'achat), ou
-// plusieurs à la fois (`bundle`). Un code peut aussi se répéter : `again` donne
-// une seconde validation, avec son propre indice et sa propre récompense.
-// NOTE: les `hint` et `message` ci-dessous sont des textes provisoires : à
-// réécrire pour coller à l'origine réelle de chaque code.
-export const PROMO_CODES: readonly PromoCode[] = [
-  {
-    code: "JOSEJOSE",
-    reward: { kind: "rubies", amount: 50 },
-    message: "Mon prénom, deux fois ! Personne n’avait osé.",
-    hint: "Un prénom que je ne me lasse pas d’entendre… surtout deux fois de suite.",
-  },
-  {
-    code: "SRY6",
-    reward: { kind: "price", itemId: "theme-halloween2026", price: 67 },
-    message: "Désolés de t'avoir volé.",
-  },
-  {
-    code: "SRY-ED",
-    reward: { kind: "rubies", amount: 300 },
-    message: "Désolés de t'avoir forcé à utiliser EcoleDirecte",
-  },
-  {
-    code: "EVOMOYENNE-OG",
-    reward: {
-      kind: "bundle",
-      rewards: [
-        { kind: "rubies", amount: 100 },
-        { kind: "free-item", itemId: "theme-evomoyenne" },
-      ],
-    },
-    message: "Merci d'être là depuis le début.",
-  },
-  {
-    code: "67",
-    reward: { kind: "rubies", amount: 0 },
-    message: "gênant",
-  },
-  {
-    code: "QWERTYUIOP",
-    reward: { kind: "rubies", amount: 25 },
-    message: "Tu es anglais ?",
-    hint: "L’alphabet selon un clavier...",
-  },
-  {
-    code: "GIVERUBIS",
-    reward: { kind: "rubies", amount: 1 },
-    message: "Here's your ruby !",
-    hint: "Va réviser ton anglais, et je te <strong>donne rubis</strong>",
-    again: {
-      reward: { kind: "rubies", amount: 75 },
-      message: "Comme une impression de déjà vu...",
-      hint: "Parfois, se répéter n’est pas une mauvaise chose...",
-    },
-  },
-  {
-    code: "TEST",
-    reward: { kind: "rubies", amount: 5 },
-    message: "Ce code est réservé à des fins de test.",
-    hint: "As-tu bien tout testé ?",
-  },
-]
+// Codes définis par l'hébergeur dans les variables VITE_PROMO_* (voir
+// .env.example). Le code saisi par l'élève est insensible à la casse, et le
+// portefeuille reste local : un code n'est qu'une surprise, jamais un secret.
+export const PROMO_CODES: readonly PromoCode[] = parsePromoCodes(
+  import.meta.env
+)
 
 export function normalizeCode(code: string): string {
   return code.trim().normalize("NFC").toUpperCase()
