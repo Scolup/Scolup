@@ -15,6 +15,7 @@ bun.lock
 yarn.lock
 package-lock.json
 skills-lock.json
+.env
 
 # Editor directories and files
 .vscode/*
